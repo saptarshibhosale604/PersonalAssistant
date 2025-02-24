@@ -19,7 +19,7 @@ from langchain_google_community.gmail.utils import (
     get_gmail_credentials,
 )
 
-
+from flask import Flask, request
 import os
 
 
@@ -125,12 +125,26 @@ def print_stream(graph, inputs, config):
 		else:
 			message.pretty_print()
 			agentOutput = message.content
-			
+
+
+## ## FLASK APP INITIALIZATION ## ##
+app = Flask(__name__)
+
 # Main loop to process the graph
-def Main(userInput, threadId):
+
+#def Main(userInput, threadId):
+@app.route('/')
+def Main():
+	#return "hey there, this is me"
+
+	userInput = request.args.get('userInput', 'how are you?')
+	threadId = request.args.get('threadId', '1')	
+	
+	#return "Hello there"
+	
 	# ~ RefreshGraph()
 	inputs = {"messages": [("user", userInput)]}  # Replace with actual input
-	
+
 	while True:
 		global loopCounter
 		global agentOutput
@@ -176,9 +190,10 @@ def Main(userInput, threadId):
 			return agentOutput
 			# break
 
+if __name__ == '__main__':
+	app.run(host='0.0.0.0', port=5010)
+
 # AgentCall("Give me 1 link of youtube video of linux")
 
 # print("Main return: ", Main("draft a mail about saying hi", 1))
 # print("Main return: ", Main("Give me temperature of the cpu of my pc", 1))
-
-

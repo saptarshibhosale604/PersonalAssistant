@@ -1,0 +1,15 @@
+
+version: '3'
+
+services:
+  agent:
+    build: ./Langchain
+    ports:
+      - "5010:5010"
+    networks:
+      - mynetwork
+
+networks:
+  mynetwork:
+    driver: bridge
+
