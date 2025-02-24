@@ -1,4 +1,3 @@
-
 version: '3'
 
 services:
@@ -10,13 +9,16 @@ services:
       - mynetwork
  
  ui:
-    build: ./Langchain
+    build: ./UI
     ports:
       - "5010:5010"
-    networks:
-      - mynetwork
     depends_on:
       - agent_langchain
+    networks:
+      - mynetwork
+    stdin_open: true
+    tty: true
+
 networks:
   mynetwork:
     driver: bridge

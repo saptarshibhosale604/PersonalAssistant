@@ -5,6 +5,6 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
-COPY agent.py .
+COPY cli.py .
 
-CMD ["python", "agent.py"]
+CMD ["python", "cli.py"]

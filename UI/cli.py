@@ -4,6 +4,10 @@
 #import userInputToScriptInvocation as UITSI
 #import Langchain.agent as Agent
 
+from flask import Flask, request
+import requests
+
+
 debug01 = True
 
 print("Initialized assistant.py")
@@ -178,11 +182,14 @@ def Processing(userInput):
 		# Getting responce from LLM model
 		# llmResponce = LLM.Main(userInput)
 		
+		print("agentResponce:")
 		global threadId
-		threadId += 1	
+		
+		agentResponce = "Na"	
 		#agentResponce = Agent.Main(userInput, threadId)
-		agentResponce = requests.get("http://agent_langchain:5010/userInput=userInput&threadId=threadId")
-
+		userInput = "who is the PM of India?"
+		agentResponse = requests.get(f"http://agent_langchain:5011/?userInput={userInput}&threadId={threadId}")
+		print(":agentResp:", agentResponce)
 		return agentResponce
 
 def Output(assistantOutput):
@@ -199,22 +206,23 @@ def Output(assistantOutput):
 		print("Error: Invalid outputMode:", outputMode)
 			
 
-from flask import Flask, request
-import requests
 ## ## FLASK APP INITIALIZATION ## ##
 
-app = Flask(__name__)
+#app = Flask(__name__)
+# Set debug mode to True
+#app.debug = True
 
-@app.route('/')
+#@app.route('/')
 def Main():
 	global logger
 	global mainLoopCnt
+	#return "this is from ui app"
 	
 	mainLoopCnt += 1
 	logger.info(f"mainLoopCnt: {mainLoopCnt}")
 	
-	#userInput = Input()
-	userInput = request.args.get('userInput', 'how are you?')
+	userInput = Input()
+	#userInput = request.args.get('userInput', 'how are you?')
 	
 	
 	if (userInput is not None):
@@ -223,14 +231,14 @@ def Main():
 		assistantOutput = Processing(userInput)
 
 		if (assistantOutput is not None):
-			return assistantOutput
+			return "final:", assistantOutput
 			Output(assistantOutput)
 
-if __name__ == '__main__':
-	app.run(host='0.0.0.0', port=5010)
+#if __name__ == '__main__':
+#	app.run(host='0.0.0.0', port=5010)
 		
-#while(True):
-#	Main()
+while(True):
+	Main()
 	
 # ~ userInput = "Give me a youtube video link on valorant"
 # ~ step 1 find youtube video link of valorant, step 2 run firefox cmd with that link
