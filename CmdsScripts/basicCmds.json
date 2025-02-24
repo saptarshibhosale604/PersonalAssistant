@@ -1,0 +1,6 @@
+{
+    "ram": "free -h",
+    "rom": "df -h",
+    "cpu": "top -bn1 | grep 'Cpu(s)'",
+    "screenshot": "grim ~/Pictures/Screenshots/my_screenshot.png"
+}

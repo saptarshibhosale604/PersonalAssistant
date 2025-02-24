@@ -1,0 +1,2 @@
+alias dockerBuild='docker build -t chatbot01 .'
+alias dockerRun='docker run -i chatbot01'

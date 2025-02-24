@@ -1,0 +1,31 @@
+{
+	"intents": [
+		{
+			"script": "smartSpce.py",			
+			"keywords": ["turn on", "turn off", "set temperature", "adjust light"]
+		},
+		{
+			"script": "basicCmd.py",
+			"parameter":"cpu",
+			"keywords": ["cpu usage", "cpu"]
+		},
+		{
+			"script": "basicCmd.py",
+			"parameter":"ram",
+			"keywords": ["ram usage", "ram", "memory"]
+		},
+		{
+			"script": "basicCmd.py",
+			"parameter":"rom",
+			"keywords": ["rom usage", "rom", "storage"]
+		},
+		{
+			"script": "basicCmd.py",
+			"parameter":"screenshot",
+			"keywords": ["cpu usage", "cpu"]
+		}
+		
+	]
+}
+
+
