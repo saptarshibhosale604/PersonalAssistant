@@ -2,13 +2,21 @@
 version: '3'
 
 services:
-  agent:
+ agent_langchain:
+    build: ./Langchain
+    ports:
+      - "5011:5011"
+    networks:
+      - mynetwork
+ 
+ ui:
     build: ./Langchain
     ports:
       - "5010:5010"
     networks:
       - mynetwork
-
+    depends_on:
+      - agent_langchain
 networks:
   mynetwork:
     driver: bridge
