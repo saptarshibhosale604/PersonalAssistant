@@ -2,10 +2,10 @@
 #import SpeechToText.speechToTextOnline as STT
 #import LLM.llm as LLM
 #import userInputToScriptInvocation as UITSI
-#import Langchain.agent as Agent
+import Langchain.agent as Agent
 
-from flask import Flask, request
-import requests
+#from flask import Flask, request
+#import requests
 
 
 debug01 = True
@@ -185,10 +185,10 @@ def Processing(userInput):
 		print("agentResponce:")
 		global threadId
 		
-		agentResponce = "Na"	
-		#agentResponce = Agent.Main(userInput, threadId)
-		userInput = "who is the PM of India?"
-		agentResponse = requests.get(f"http://agent_langchain:5011/?userInput={userInput}&threadId={threadId}")
+		gentResponce = "Na"	
+		agentResponce = Agent.Main(userInput, threadId)
+		#userInput = "who is the PM of India?"
+		#agentResponse = requests.get(f"http://agent_langchain:5011/?userInput={userInput}&threadId={threadId}")
 		print(":agentResp:", agentResponce)
 		return agentResponce
 
@@ -224,6 +224,7 @@ def Main():
 	userInput = Input()
 	#userInput = request.args.get('userInput', 'how are you?')
 	
+	print("userInput:",userInput)
 	
 	if (userInput is not None):
 
@@ -231,7 +232,8 @@ def Main():
 		assistantOutput = Processing(userInput)
 
 		if (assistantOutput is not None):
-			return "final:", assistantOutput
+			#print("final:", assistantOutput)
+			return
 			Output(assistantOutput)
 
 #if __name__ == '__main__':

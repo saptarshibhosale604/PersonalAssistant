@@ -19,7 +19,7 @@ from langchain_google_community.gmail.utils import (
     get_gmail_credentials,
 )
 
-from flask import Flask, request
+#from flask import Flask, request
 import os
 
 
@@ -128,17 +128,17 @@ def print_stream(graph, inputs, config):
 
 
 ## ## FLASK APP INITIALIZATION ## ##
-app = Flask(__name__)
+#app = Flask(__name__)
 
 # Main loop to process the graph
 
-#def Main(userInput, threadId):
-@app.route('/')
-def Main():
+def Main(userInput, threadId):
+#@app.route('/')
+#def Main():
 	#return "hey there, this is me"
 
-	userInput = request.args.get('userInput', 'how are you?')
-	threadId = request.args.get('threadId', '1')	
+	#userInput = request.args.get('userInput', 'how are you?')
+	#threadId = request.args.get('threadId', '1')	
 	
 	#return "Hello there"
 	
@@ -190,8 +190,8 @@ def Main():
 			return agentOutput
 			# break
 
-if __name__ == '__main__':
-	app.run(host='0.0.0.0', port=5011)
+#if __name__ == '__main__':
+#	app.run(host='0.0.0.0', port=5011)
 
 # AgentCall("Give me 1 link of youtube video of linux")
 

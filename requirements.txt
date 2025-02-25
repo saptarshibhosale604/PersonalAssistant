@@ -3,4 +3,3 @@ langgraph
 langchain_community
 langchain_google_community
 langchain-experimental
-flask
