@@ -1,12 +1,16 @@
 #import TextToSpeech.textToSpeechOnline02 as TTS
 #import SpeechToText.speechToTextOnline as STT
 #import LLM.llm as LLM
-import userInputToScriptInvocation as UITSI
+#import userInputToScriptInvocation as UITSI
 import Langchain.agent as Agent
+
+#from flask import Flask, request
+#import requests
+
 
 debug01 = True
 
-print("Initialized assistantDocker.py")
+print("Initialized assistant.py")
 
 conversationMode = "wakeUp" 	# sleep: Go to Hibernate
 						                  # wakeUp: Goint to answer the user input
@@ -178,10 +182,14 @@ def Processing(userInput):
 		# Getting responce from LLM model
 		# llmResponce = LLM.Main(userInput)
 		
+		print("agentResponce:")
 		global threadId
-		threadId += 1	
+		
+		gentResponce = "Na"	
 		agentResponce = Agent.Main(userInput, threadId)
-
+		#userInput = "who is the PM of India?"
+		#agentResponse = requests.get(f"http://agent_langchain:5011/?userInput={userInput}&threadId={threadId}")
+		print(":agentResp:", agentResponce)
 		return agentResponce
 
 def Output(assistantOutput):
@@ -198,26 +206,38 @@ def Output(assistantOutput):
 		print("Error: Invalid outputMode:", outputMode)
 			
 
+## ## FLASK APP INITIALIZATION ## ##
 
+#app = Flask(__name__)
+# Set debug mode to True
+#app.debug = True
+
+#@app.route('/')
 def Main():
 	global logger
 	global mainLoopCnt
+	#return "this is from ui app"
 	
 	mainLoopCnt += 1
 	logger.info(f"mainLoopCnt: {mainLoopCnt}")
 	
 	userInput = Input()
-	#print("app userInput:",userInput)
-
+	#userInput = request.args.get('userInput', 'how are you?')
+	
+	print("userInput:",userInput)
+	
 	if (userInput is not None):
 
 		if(debug01): print("input Not null")
 		assistantOutput = Processing(userInput)
-		
+
 		if (assistantOutput is not None):
-			#print("app assistantOutput:", assistantOutput)
-			return # temporary
+			#print("final:", assistantOutput)
+			return
 			Output(assistantOutput)
+
+#if __name__ == '__main__':
+#	app.run(host='0.0.0.0', port=5010)
 		
 while(True):
 	Main()

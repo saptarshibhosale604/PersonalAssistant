@@ -1,19 +1,12 @@
-# Use an official Python runtime as a parent image
-FROM python
+FROM python:3.9
 
-# Set the working directory in the container
-WORKDIR /app
+WORKDIR /App
 
-# Copy the requirements file
-#COPY requirements.txt .
-
-# Copy the application code
-COPY . /app
-
-# Install the dependencies
-#RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements.txt .
 RUN pip install -r requirements.txt
 
+COPY . .
 
-# Run the command to start the application when the container launches
-CMD ["python3", "app.py"]
+ENV PYTHONPATH="/App"
+
+CMD ["python", "UI/cli.py"]  # This will run cli.py as a module

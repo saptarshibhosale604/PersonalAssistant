@@ -1,7 +1,5 @@
 langchain_openai
-langchain
 langgraph
-langchain_google_community
-langchain-google-community[gmail]
 langchain_community
-langchain_experimental
+langchain_google_community
+langchain-experimental
