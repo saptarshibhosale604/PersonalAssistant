@@ -8,8 +8,8 @@
 
 from langchain_openai import ChatOpenAI
 
-from langgraph.prebuilt import create_react_agent
 from langgraph.checkpoint.memory import MemorySaver
+from langgraph.prebuilt import create_react_agent
 
 from langchain_community.tools import ShellTool, YouTubeSearchTool
 from langchain_community.tools.tavily_search import TavilySearchResults
@@ -64,6 +64,38 @@ toolShell.description += f" Note: This tool should only be called if the input e
 	# ~ print("tool: ", tool)
 	# ~ print("tool.name: ", tool.name)
 	
+
+from sqlalchemy import create_engine
+from sqlalchemy.pool import NullPool  # or another pool if needed
+from your_sql_database_module import SQLDatabase  # adjust based on your module
+
+# Create the engine by providing the correct SQLite URI.
+# Notice the four slashes after 'sqlite:' (the fourth one indicates an absolute path).
+
+# Define the database URL
+db_url = "sqlite:////home/ec2-user/Project/Rpi/PersonalAssistant/Langchain/ToolFinanceAssistant/Data/db_finance.db"
+
+# Create the engine using this URL
+engine = create_engine(db_url, poolclass=NullPool)
+
+# Create your SQLDatabase instance from the engine.
+db = SQLDatabase(engine)
+
+print("db:",db)
+
+from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
+
+toolkitSQL_DB = SQLDatabaseToolkit(db=db, llm=llm)
+
+
+# getting tool list from toolkit
+for tool in toolkitSQL_DB.get_tools():
+	#print("tool: ", tool)
+	print("tool.name: ", tool.name)
+	
+#available_tools = "sql_db_query", "sql_db_schema", "sql_db_list_tables", "sql_db_query_checker"
+needed_tools = ["sql_db_query", "sql_db_schema", "sql_db_list_tables", "sql_db_query_checker"]
+toolSQL_DB = [tool for tool in toolkitSQL_DB.get_tools() if tool.name in needed_tools]
 
 
 toolYoutube = YouTubeSearchTool()
