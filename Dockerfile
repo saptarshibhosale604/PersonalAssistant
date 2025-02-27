@@ -4,9 +4,9 @@ WORKDIR /App
 
 COPY requirements.txt .
 #Use of cache
-#RUN pip install -r requirements.txt
+RUN pip install -r requirements.txt
 #NO use of cache
-RUN pip install --no-cache-dir -r requirements.txt 
+#RUN pip install --no-cache-dir -r requirements.txt 
 
 COPY . .
 

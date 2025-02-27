@@ -1,5 +1,6 @@
 langchain_openai
 langgraph
+langgraph.prebuilt
 langchain_community
 langchain_google_community
 langchain-experimental

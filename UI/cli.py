@@ -182,14 +182,14 @@ def Processing(userInput):
 		# Getting responce from LLM model
 		# llmResponce = LLM.Main(userInput)
 		
-		print("agentResponce:")
+		#print("agentResponce:")
 		global threadId
-		
-		gentResponce = "Na"	
+		threadId += 1 # Always changing memory variable
+		#agentResponce = "Na"	
 		agentResponce = Agent.Main(userInput, threadId)
 		#userInput = "who is the PM of India?"
 		#agentResponse = requests.get(f"http://agent_langchain:5011/?userInput={userInput}&threadId={threadId}")
-		print(":agentResp:", agentResponce)
+		#print(":agentResp:", agentResponce)
 		return agentResponce
 
 def Output(assistantOutput):
@@ -224,7 +224,7 @@ def Main():
 	userInput = Input()
 	#userInput = request.args.get('userInput', 'how are you?')
 	
-	print("userInput:",userInput)
+	#print("userInput:",userInput)
 	
 	if (userInput is not None):
 
