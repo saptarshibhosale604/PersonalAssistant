@@ -1,5 +1,3 @@
-
-
 ## ## INFO ## ##
 # llm model: chat gpt
 # memory: for each new chat from assistant.py, new memory allocated, no context
@@ -8,8 +6,8 @@
 
 from langchain_openai import ChatOpenAI
 
-from langgraph.prebuilt import create_react_agent
 from langgraph.checkpoint.memory import MemorySaver
+from langgraph.prebuilt import create_react_agent
 
 from langchain_community.tools import ShellTool, YouTubeSearchTool
 from langchain_community.tools.tavily_search import TavilySearchResults
@@ -65,13 +63,45 @@ toolShell.description += f" Note: This tool should only be called if the input e
 	# ~ print("tool.name: ", tool.name)
 	
 
+from sqlalchemy import create_engine
+from sqlalchemy.pool import NullPool  # or another pool if needed
+from langchain_community.utilities.sql_database import SQLDatabase  # adjust based on your module
+
+# Create the engine by providing the correct SQLite URI.
+# Notice the four slashes after 'sqlite:' (the fourth one indicates an absolute path).
+
+# Define the database URL
+db_url = "sqlite:////root/Project/Rpi/PersonalAssistant/Langchain/ToolFinanceAssistant/Data/db_finance.db"
+
+# Create the engine using this URL
+engine = create_engine(db_url, poolclass=NullPool)
+
+# Create your SQLDatabase instance from the engine.
+db = SQLDatabase(engine)
+
+#print("db:",db)
+
+from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
+
+toolkitSQL_DB = SQLDatabaseToolkit(db=db, llm=llm)
+
+
+# getting tool list from toolkit
+#for tool in toolkitSQL_DB.get_tools():
+	#print("tool: ", tool)
+	#print("tool.name: ", tool.name)
+	
+#available_tools = "sql_db_query", "sql_db_schema", "sql_db_list_tables", "sql_db_query_checker"
+needed_tools = ["sql_db_query", "sql_db_schema", "sql_db_list_tables", "sql_db_query_checker"]
+toolSQL_DB = [tool for tool in toolkitSQL_DB.get_tools() if tool.name in needed_tools]
+
 
 toolYoutube = YouTubeSearchTool()
 toolWebSearch = TavilySearchResults(max_results=1)
 
 
 #toolsAdvance =  [toolShell] + toolGmail               	# Need for human in loop
-toolsAdvance =  [toolShell]                	# Need for human in loop
+toolsAdvance =  [toolShell] + toolSQL_DB                	# Need for human in loop
 toolsBasic = [toolYoutube, toolWebSearch]                  # No need for human in loop
 
 tools = toolsAdvance + toolsBasic
@@ -141,7 +171,7 @@ def Main(userInput, threadId):
 	#threadId = request.args.get('threadId', '1')	
 	
 	#return "Hello there"
-	
+
 	# ~ RefreshGraph()
 	inputs = {"messages": [("user", userInput)]}  # Replace with actual input
 
@@ -150,7 +180,8 @@ def Main(userInput, threadId):
 		global agentOutput
 		
 		# Variable to hold the desired thread ID
-		new_thread_id = "thread-" + str(threadId)
+		new_thread_id ="thread-" + str(threadId)
+		#print("Memory: new_thread_id:", new_thread_id)
 
 		# Update the thread_id in the config dictionary
 		config["configurable"]["thread_id"] = new_thread_id
