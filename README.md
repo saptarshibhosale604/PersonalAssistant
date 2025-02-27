@@ -3,7 +3,7 @@
 	+Docker containers
 	+Langchain framework
 	+Python
-
+	+SQL lite
 -Cmd list:
 	alias dockerBuild='docker build -t personal_assistant .'
 	alias dockerRun='docker run -it personal_assistant'
