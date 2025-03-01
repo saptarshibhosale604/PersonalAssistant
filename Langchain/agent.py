@@ -62,7 +62,7 @@ toolShell.description += f" Note: This tool should only be called if the input e
 	# ~ print("tool: ", tool)
 	# ~ print("tool.name: ", tool.name)
 	
-
+## Tool Financial assistant
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool  # or another pool if needed
 from langchain_community.utilities.sql_database import SQLDatabase  # adjust based on your module
@@ -96,15 +96,68 @@ needed_tools = ["sql_db_query", "sql_db_schema", "sql_db_list_tables", "sql_db_q
 toolSQL_DB = [tool for tool in toolkitSQL_DB.get_tools() if tool.name in needed_tools]
 
 
+
+## Tool Cron job remainder
+from langchain_core.tools import tool
+from langchain_core.messages import SystemMessage, HumanMessage
+import subprocess
+
+mycronFilePath = "/root/Project/Rpi/PersonalAssistant/Langchain/ToolCronRemainder/Data/myCronJobs"
+updateCronJobsFilePath = "/root/Project/Rpi/PersonalAssistant/Langchain/ToolCronRemainder/updateCronJobsFile.sh"
+
+CREATE_CRONJOB_PROMPT = '''From the give user input, Returns only CRON JOB output, Do not include any other text.
+from user input parse the following data:
+minute,
+hour,
+title,
+message.
+Make cron job with following format:
+<minute> <hour> * * * echo "<title> - <message>" >> /var/log/notify.log 2>&1 '''
+
+def CopyCronFile():
+	# copy local file to root crontab
+	try:
+	    result = subprocess.run([updateCronJobsFilePath], check=True, text=True, capture_output=True)
+	    print("Output:", result.stdout)
+	    print("Error:", result.stderr)
+	except subprocess.CalledProcessError as e:
+	    print("An error occurred while running the script:", e)
+
+def UpdateCronFile(data, filename):
+	#update the cron job in local file
+	with open(filename, 'a') as file:  # Open the file in append mode
+		file.write(str(data) + '\n')  # Write the data followed by a newline
+
+@tool
+def toolSetCronRemainder(userInput :str) -> str:
+	'''Expects an input including phrase 'set remainder', 'start remainder'.
+	'''
+	userInput = f"user input = '{userInput}'"
+	messages = [
+		SystemMessage(content=CREATE_CRONJOB_PROMPT),
+		HumanMessage(content=userInput)
+	]
+
+	response = llm.invoke(messages)
+	llmResponce = response.content
+	
+	UpdateCronFile(llmResponce, mycronFilePath)
+	CopyCronFile()
+	
+	return {"Cron job": llmResponce}
+
+
+
 toolYoutube = YouTubeSearchTool()
 toolWebSearch = TavilySearchResults(max_results=1)
 
 
 #toolsAdvance =  [toolShell] + toolGmail               	# Need for human in loop
 toolsAdvance =  [toolShell] + toolSQL_DB                	# Need for human in loop
+toolsIntermediate = [toolSetCronRemainder]
 toolsBasic = [toolYoutube, toolWebSearch]                  # No need for human in loop
 
-tools = toolsAdvance + toolsBasic
+tools = toolsAdvance + toolsIntermediate + toolsBasic
 
 
 # ~ tools = toolGmail
