@@ -1,0 +1,1 @@
+* * * * * echo "Test notification - Trigger notification for every minute" >> /var/log/notify.log 2>&1

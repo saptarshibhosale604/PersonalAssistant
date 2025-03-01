@@ -105,14 +105,7 @@ import subprocess
 mycronFilePath = "/root/Project/Rpi/PersonalAssistant/Langchain/ToolCronRemainder/Data/myCronJobs"
 updateCronJobsFilePath = "/root/Project/Rpi/PersonalAssistant/Langchain/ToolCronRemainder/updateCronJobsFile.sh"
 
-CREATE_CRONJOB_PROMPT = '''From the give user input, Returns only CRON JOB output, Do not include any other text.
-from user input parse the following data:
-minute,
-hour,
-title,
-message.
-Make cron job with following format:
-<minute> <hour> * * * echo "<title> - <message>" >> /var/log/notify.log 2>&1 '''
+from datetime import datetime
 
 def CopyCronFile():
 	# copy local file to root crontab
@@ -130,9 +123,22 @@ def UpdateCronFile(data, filename):
 
 @tool
 def toolSetCronRemainder(userInput :str) -> str:
-	'''Expects an input including phrase 'set remainder', 'start remainder'.
-	'''
+	'''Expects an input including phrase 'set remainder', 'start remainder'.'''
 	userInput = f"user input = '{userInput}'"
+
+	# Get the current date and time
+	currentDateTime = datetime.now()
+
+	CREATE_CRONJOB_PROMPT = f'''From the give user input, Returns only CRON JOB output, Do not include any other text.
+current date and time: {currentDateTime}
+from user input parse the following data:
+minute,
+hour,
+title,
+message.
+Make cron job with following format:
+<minute> <hour> * * * echo "<title> - <message>" >> /var/log/notify.log 2>&1 '''
+
 	messages = [
 		SystemMessage(content=CREATE_CRONJOB_PROMPT),
 		HumanMessage(content=userInput)
