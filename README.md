@@ -11,3 +11,12 @@
 	docker run -it -v /home/ec2-user/Test:/Data --rm personal_assistant /bin/sh
 	docker run -it -v /home/ec2-user/Project:/root/Project/ --rm personal_assistant /bin/sh
 
+docker build -t personal_assistant .
+docker run -d --name personal_assistant -v /home/ec2-user/Project:/root/Project/ personal_assistant 
+docker exec -it personal_assistant python UI/cli.py
+
+docker exec -it personal_assistant /bin/sh
+
+
+docker run -it --name personal_assistant -v /home/ec2-user/Project:/root/Project/ personal_assistant python UI/cli.py
+docker run -it -v /home/ec2-user/Project:/root/Project/ personal_assistant python UI/cli.py
