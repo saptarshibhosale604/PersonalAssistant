@@ -50,7 +50,7 @@ def text_to_speech(chunk):
     # subprocess.run(["cvlc", "--play-and-exit", "temp.mp3"])
     # Optionally, remove the file after playing
     # os.remove("temp.mp3")
-    # os.remove(f"{dirPath02}temp_{counterVal}.mp3")
+    os.remove(f"{dirPath02}temp_{counterVal}.mp3")
 
 
 # This is a large paragraph that you want to convert to speech. 

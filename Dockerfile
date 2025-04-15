@@ -12,4 +12,7 @@ COPY . .
 
 ENV PYTHONPATH="/App"
 
-CMD ["python", "UI/cli.py"]  # This will run cli.py as a module
+# CMD ["python", "UI/cli.py"]  # This will run cli.py as a module
+
+# This is working
+CMD ["python", "-m", "UI.cli"] 
