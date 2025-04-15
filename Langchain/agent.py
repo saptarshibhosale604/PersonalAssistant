@@ -71,29 +71,29 @@ from langchain_community.utilities.sql_database import SQLDatabase  # adjust bas
 # Notice the four slashes after 'sqlite:' (the fourth one indicates an absolute path).
 
 # Define the database URL
-db_url = "sqlite:////root/Project/Rpi/PersonalAssistant/Langchain/ToolFinanceAssistant/Data/db_finance.db"
+# db_url = "sqlite:////root/Project/Rpi/PersonalAssistant/Langchain/ToolFinanceAssistant/Data/db_finance.db"
 
-# Create the engine using this URL
-engine = create_engine(db_url, poolclass=NullPool)
+# # Create the engine using this URL
+# engine = create_engine(db_url, poolclass=NullPool)
 
-# Create your SQLDatabase instance from the engine.
-db = SQLDatabase(engine)
+# # Create your SQLDatabase instance from the engine.
+# db = SQLDatabase(engine)
 
-#print("db:",db)
+# #print("db:",db)
 
-from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
+# from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
 
-toolkitSQL_DB = SQLDatabaseToolkit(db=db, llm=llm)
+# toolkitSQL_DB = SQLDatabaseToolkit(db=db, llm=llm)
 
 
-# getting tool list from toolkit
-#for tool in toolkitSQL_DB.get_tools():
-	#print("tool: ", tool)
-	#print("tool.name: ", tool.name)
+# # getting tool list from toolkit
+# #for tool in toolkitSQL_DB.get_tools():
+# 	#print("tool: ", tool)
+# 	#print("tool.name: ", tool.name)
 	
-#available_tools = "sql_db_query", "sql_db_schema", "sql_db_list_tables", "sql_db_query_checker"
-needed_tools = ["sql_db_query", "sql_db_schema", "sql_db_list_tables", "sql_db_query_checker"]
-toolSQL_DB = [tool for tool in toolkitSQL_DB.get_tools() if tool.name in needed_tools]
+# #available_tools = "sql_db_query", "sql_db_schema", "sql_db_list_tables", "sql_db_query_checker"
+# needed_tools = ["sql_db_query", "sql_db_schema", "sql_db_list_tables", "sql_db_query_checker"]
+# toolSQL_DB = [tool for tool in toolkitSQL_DB.get_tools() if tool.name in needed_tools]
 
 
 toolYoutube = YouTubeSearchTool()
@@ -101,7 +101,8 @@ toolWebSearch = TavilySearchResults(max_results=1)
 
 
 #toolsAdvance =  [toolShell] + toolGmail               	# Need for human in loop
-toolsAdvance =  [toolShell] + toolSQL_DB                	# Need for human in loop
+# toolsAdvance =  [toolShell] + toolSQL_DB                	# Need for human in loop
+toolsAdvance =  [toolShell]             	# Need for human in loop
 toolsBasic = [toolYoutube, toolWebSearch]                  # No need for human in loop
 
 tools = toolsAdvance + toolsBasic

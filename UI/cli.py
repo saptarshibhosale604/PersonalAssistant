@@ -1,4 +1,4 @@
-#import TextToSpeech.textToSpeechOnline02 as TTS
+import TextToSpeech.textToSpeechOnline02 as TTS
 #import SpeechToText.speechToTextOnline as STT
 #import LLM.llm as LLM
 #import userInputToScriptInvocation as UITSI
@@ -15,7 +15,7 @@ print("Initialized assistant.py")
 conversationMode = "wakeUp" 	# sleep: Go to Hibernate
 						                  # wakeUp: Goint to answer the user input
 inputMode = "text" # text / speech
-outputMode = "text" # text / speech
+outputMode = "speech" # text / speech
 
 listWakeUpCalls = ["hey there", "hi there", "hey rpi"]
 listSleepCalls = ["sleep now", "go to sleep", "we are done", "got it"]
@@ -124,6 +124,8 @@ def BasicCmds(userInput):
 
 	else:
 		logger.debug("## inputMode:", inputMode, ":outputMode:" , outputMode, ":conversationMode:" , conversationMode, "##")
+		print("## inputMode:", inputMode, ":outputMode:" , outputMode, ":conversationMode:" , conversationMode, "##")
+		
 		return False
 
 def Input():	
@@ -201,7 +203,7 @@ def Output(assistantOutput):
 	if(outputMode == "text"):
 		return
 	elif(outputMode == "speech"):	
-		TTS.Main(llmResponce) 			# Text to speech
+		TTS.Main(assistantOutput) 			# Text to speech
 	else:
 		print("Error: Invalid outputMode:", outputMode)
 			
@@ -233,14 +235,18 @@ def Main():
 
 		if (assistantOutput is not None):
 			#print("final:", assistantOutput)
-			return
+			# return
 			Output(assistantOutput)
+
 
 #if __name__ == '__main__':
 #	app.run(host='0.0.0.0', port=5010)
 		
 while(True):
 	Main()
+
+# userInput = "The current Prime Minister of India is Narendra Modi. He has been in office since 2014 and is serving his third term as Prime Minister."
+# Output(userInput)
 	
 # ~ userInput = "Give me a youtube video link on valorant"
 # ~ step 1 find youtube video link of valorant, step 2 run firefox cmd with that link

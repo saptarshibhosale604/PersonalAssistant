@@ -8,12 +8,125 @@ import os
 import subprocess
 import threading
 
+# Language in which you want to convert
+language = 'en'
+
+def Main02(inputVal):
+	# Passing the text and language to the engine, 
+	# here we have marked slow=False. Which tells 
+	# the module that the converted audio should 
+	# have a high speed
+	print(inputVal)
+	
+	myobj = gTTS(text=inputVal, lang=language, slow=False)
+	
+	# Saving the converted audio in a mp3 file named
+	# welcome 
+	myobj.save("welcome.mp3")
+	
+	# Playing the converted file
+	# ~ os.system("cvlc welcome.mp3")
+	
+	# Use the --play-and-exit flag to make VLC close automatically after playback
+	subprocess.run(["cvlc", "--play-and-exit", "welcome.mp3"])
+
+counterVal = 0
+
+# dirPath02 = "/root/ProjectLinux/Python/DockerSpeechToText/Data/"
+dirPath02 = "/root/Project/Rpi/PersonalAssistant/TextToSpeech/Data/"
+
+def text_to_speech(chunk):
+    global counterVal
+    global dirPath02
+
+    counterVal += 1
+    # Create a gTTS object for the chunk
+    tts = gTTS(text=chunk, lang='en')
+    # Save the audio to a temporary file
+    print(f"Saved {dirPath02}temp_{counterVal}.mp3")
+    tts.save(f"{dirPath02}temp_{counterVal}.mp3")
+    # Play the audio file
+    SSHAudioPlay(f"temp_{counterVal}.mp3")
+    # subprocess.run(["cvlc", "--play-and-exit", "temp.mp3"])
+    # Optionally, remove the file after playing
+    # os.remove("temp.mp3")
+    # os.remove(f"{dirPath02}temp_{counterVal}.mp3")
+
+
+# This is a large paragraph that you want to convert to speech. 
+    # It contains multiple sentences and should be spoken in a natural manner. 
+    # The goal is to start speaking as soon as possible without waiting for the entire 
+    # text to be converted to audio. Let's break this down into smaller chunks 
+    # for better processing and playback."""
+
+def Main(inputVal):
+    # Your large paragraph
+
+    # Split the text into chunks (you can adjust the size of the chunks)
+    chunks = inputVal.split('. ')  # Split by sentences for this example
+
+    for chunk in chunks:
+        # Start the TTS conversion in a separate thread for each chunk
+        tts_thread = threading.Thread(target=text_to_speech, args=(chunk,))
+        tts_thread.start()
+        
+        # Wait for the TTS thread to finish before moving to the next chunk
+        tts_thread.join()
+
+
+import paramiko
+
+# SSH details
+# For ssblinux
+hostname = '192.168.157.130'
+port = 22  # default SSH port
+username = 'ssblinux'
+password = 'admin'  # Use a secure way to handle passwords (e.g., key-based auth)
+
+# For rpissb
+hostname = '192.168.157.108'
+port = 22  # default SSH port
+username = 'rpissb'
+password = 'admin'  # Use a secure way to handle passwords (e.g., key-based auth)
+
+# dirPath = "/home/ssblinux/ProjectLinux/Python/DockerSpeechToText/Data/"
+dirPath = "/home/rpissb/Project/Rpi/PersonalAssistant/TextToSpeech/Data/"
+# Command to execute
+rawCommand = f"ffplay -nodisp -autoexit {dirPath}"
+
+# Create SSH client instance
+client = paramiko.SSHClient()
+
+# Automatically add the server's host key if missing (for first-time connections)
+client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+def SSHAudioPlay(fileName):
+    try:
+        # Connect to the remote server via SSH
+        client.connect(hostname, port, username, password)
+
+        print(f"exec_command: {rawCommand + fileName}")
+
+        # Execute the command
+        stdin, stdout, stderr = client.exec_command(rawCommand + fileName)
+
+        # Fetch and print the output
+        print(stdout.read().decode())
+        #print(stderr.read().decode())
+        #print("stdout.read().decode()")
+
+    finally:
+        # Close the SSH connection
+        client.close()
+
+
 # The text that you want to convert to audio
 # ~ mytext = 'Welcome to geeksforgeeks Joe!'
-mytext = '........Hey SSB, This is your Personal Assistant. Ask me anything to do!'
+# mytext = '........Hey SSB, This is your Personal Assistant. Ask me anything to do!'
+# mytext = '........Hey SSB, This is your Personal Assistant. Ask me anything to do!'
 
-# ~ mytext = 
-""" The Raspberry Pi 5 is a significant upgrade and a really exciting development for the single-board computer world.  Here's my take, breaking it down into pros and cons:
+
+mytext = """ The Raspberry Pi 5 is a significant upgrade and a really exciting development for the single-board computer world.  Here's my take, breaking it down into pros and cons:
 
 **Pros:**
 
@@ -37,58 +150,13 @@ The Raspberry Pi 5 represents a major step forward and is a worthy successor to 
 What are you thinking of using a Raspberry Pi 5 for?  Knowing your use case might help me give you more specific advice.
 
 """
+# print("Initialized")
+# Main(mytext)
+#subprocess.run(["ffplay", "-autoexit", "temp.mp3"])
+# Test()
+# Main(mytext)
+# print("Done")
 
-# Language in which you want to convert
-language = 'en'
-
-def Main02(inputVal):
-	# Passing the text and language to the engine, 
-	# here we have marked slow=False. Which tells 
-	# the module that the converted audio should 
-	# have a high speed
-	print(inputVal)
-	
-	myobj = gTTS(text=inputVal, lang=language, slow=False)
-	
-	# Saving the converted audio in a mp3 file named
-	# welcome 
-	myobj.save("welcome.mp3")
-	
-	# Playing the converted file
-	# ~ os.system("cvlc welcome.mp3")
-	
-	# Use the --play-and-exit flag to make VLC close automatically after playback
-	subprocess.run(["cvlc", "--play-and-exit", "welcome.mp3"])
-
-def text_to_speech(chunk):
-    # Create a gTTS object for the chunk
-    tts = gTTS(text=chunk, lang='en')
-    # Save the audio to a temporary file
-    tts.save("temp.mp3")
-    # Play the audio file
-    subprocess.run(["cvlc", "--play-and-exit", "temp.mp3"])
-    # Optionally, remove the file after playing
-    os.remove("temp.mp3")
-
-
-def Main(inputVal):
-    # Your large paragraph
-    text = """This is a large paragraph that you want to convert to speech. 
-    It contains multiple sentences and should be spoken in a natural manner. 
-    The goal is to start speaking as soon as possible without waiting for the entire 
-    text to be converted to audio. Let's break this down into smaller chunks 
-    for better processing and playback."""
-
-    # Split the text into chunks (you can adjust the size of the chunks)
-    chunks = inputVal.split('. ')  # Split by sentences for this example
-
-    for chunk in chunks:
-        # Start the TTS conversion in a separate thread for each chunk
-        tts_thread = threading.Thread(target=text_to_speech, args=(chunk,))
-        tts_thread.start()
-        
-        # Wait for the TTS thread to finish before moving to the next chunk
-        tts_thread.join()
 
 # ~ Main(mytext)
 # ~ main()
