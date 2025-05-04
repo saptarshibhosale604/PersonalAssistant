@@ -21,6 +21,8 @@ docker run -it --rm -v /home/ssblinux/ProjectLinux:/root/Project/ personal_assis
 
 docker run -it --rm -v /home/ssblinux/ProjectLinux:/root/Project/ personal_assistant
 
+docker run -it --rm -v /home/rpissb/Project:/root/Project/ -p 5001:5001 personal_assistant python /App/UI/WebApp/app.py
+
 // Final
 
 docker build -t personal_assistant .

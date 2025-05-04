@@ -8,3 +8,6 @@ langchain-experimental
 #TextToSpeech
 gtts
 paramiko
+
+#UI/WebApp
+flask
