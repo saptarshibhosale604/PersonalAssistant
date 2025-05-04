@@ -15,7 +15,7 @@ print("Initialized assistant.py")
 conversationMode = "wakeUp" 	# sleep: Go to Hibernate
 						                  # wakeUp: Goint to answer the user input
 inputMode = "text" # text / speech
-outputMode = "speech" # text / speech
+outputMode = "text" # text / speech
 
 listWakeUpCalls = ["hey there", "hi there", "hey rpi"]
 listSleepCalls = ["sleep now", "go to sleep", "we are done", "got it"]
