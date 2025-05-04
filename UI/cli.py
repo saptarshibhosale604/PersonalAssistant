@@ -98,6 +98,20 @@ def BasicCmds(userInput):
 	global outputMode
 	global modeContext
 	
+	if (userInput.lower() == "help"):
+		print("1. input mode text")
+		print("2. input mode speech")
+		print("3. output mode text")
+		print("4. output mode speech")
+		print("5. wake up")
+		print("6. sleep")
+		print("7. mode context yes")
+		print("8. mode context no")
+		print("9. help")
+		# logger.debug("## inputMode:", inputMode, ":outputMode:" , outputMode, ":conversationMode:" , conversationMode, "##")
+		print("## inputMode:", inputMode, ":outputMode:" , outputMode, ":conversationMode:" , conversationMode, ":modeContext:", modeContext, ":##")
+		return True
+
 	# Checking for input mode
 	if (userInput.lower() == "input mode text"):
 		inputMode = "text"
@@ -135,10 +149,7 @@ def BasicCmds(userInput):
 		modeContext = "no"
 		return True
 
-	
 	else:
-		logger.debug("## inputMode:", inputMode, ":outputMode:" , outputMode, ":conversationMode:" , conversationMode, "##")
-		print("## inputMode:", inputMode, ":outputMode:" , outputMode, ":conversationMode:" , conversationMode, ":modeContext:", modeContext, ":##")
 		return False
 
 def Input():	
@@ -246,7 +257,7 @@ def Main():
 	
 	if (userInput is not None):
 
-		if(debug01): print("input Not null")
+		# if(debug01): print("input Not null")
 		assistantOutput = Processing(userInput)
 
 		if (assistantOutput is not None):

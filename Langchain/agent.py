@@ -161,7 +161,7 @@ toolWebSearch = TavilySearchResults(max_results=1)
 #toolsAdvance =  [toolShell] + toolGmail               	# Need for human in loop
 # toolsAdvance =  [toolShell] + toolSQL_DB                	# Need for human in loop
 toolsAdvance =  [toolShell]             	# Need for human in loop
-# toolsIntermediate = [toolSetCronRemainder]
+toolsIntermediate = [toolSetCronRemainder]
 toolsBasic = [toolYoutube, toolWebSearch]                  # No need for human in loop
 
 tools = toolsAdvance + toolsIntermediate + toolsBasic
