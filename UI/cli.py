@@ -13,10 +13,13 @@ debug01 = True
 print("Initialized assistant.py")
 
 conversationMode = "wakeUp" 	# sleep: Go to Hibernate
-						                  # wakeUp: Goint to answer the user input
+	                  	# wakeUp: Goint to answer the user input
 inputMode = "text" # text / speech
 outputMode = "text" # text / speech
 
+modeContext = "no" # no: no context in conversation
+			# yes: the conversation understand the context
+	
 listWakeUpCalls = ["hey there", "hi there", "hey rpi"]
 listSleepCalls = ["sleep now", "go to sleep", "we are done", "got it"]
 
@@ -93,6 +96,7 @@ def BasicCmds(userInput):
 	global conversationMode
 	global inputMode
 	global outputMode
+	global modeContext
 	
 	# Checking for input mode
 	if (userInput.lower() == "input mode text"):
@@ -122,10 +126,19 @@ def BasicCmds(userInput):
 		conversationMode = "sleep"
 		return True
 
+	# checking for mode context 
+	elif (userInput.lower() == "mode context yes"):
+		modeContext = "yes"
+		return True
+
+	elif (userInput.lower() == "mode context no"):
+		modeContext = "no"
+		return True
+
+	
 	else:
 		logger.debug("## inputMode:", inputMode, ":outputMode:" , outputMode, ":conversationMode:" , conversationMode, "##")
-		print("## inputMode:", inputMode, ":outputMode:" , outputMode, ":conversationMode:" , conversationMode, "##")
-		
+		print("## inputMode:", inputMode, ":outputMode:" , outputMode, ":conversationMode:" , conversationMode, ":modeContext:", modeContext, ":##")
 		return False
 
 def Input():	
@@ -186,7 +199,10 @@ def Processing(userInput):
 		
 		#print("agentResponce:")
 		global threadId
-		threadId += 1 # Always changing memory variable
+		
+		if(modeContext == "no"):
+			threadId += 1 # Always changing memory variable
+		
 		#agentResponce = "Na"	
 		agentResponce = Agent.Main(userInput, threadId)
 		#userInput = "who is the PM of India?"
