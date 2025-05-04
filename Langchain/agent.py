@@ -19,7 +19,7 @@ from langchain_google_community.gmail.utils import (
 
 #from flask import Flask, request
 import os
-
+import time
 
 ## ## API KEYS ## ## 
 
@@ -217,8 +217,43 @@ def print_stream(graph, inputs, config):
 			agentOutput = message.content
 
 
-## ## FLASK APP INITIALIZATION ## ##
-#app = Flask(__name__)
+pathManInTheLoopResponse = "/root/Project/Rpi/PersonalAssistant/Langchain/manInTheLoopResponce.txt"
+pathToolsRequired = "/root/Project/Rpi/PersonalAssistant/Langchain/toolsRequired.txt"
+# Refresh the content in the manInTheLoopResponse.txt file
+def ResetManInTheLoopResponse():
+	# Open the file in write mode
+	with open(pathManInTheLoopResponse, "w") as file:
+		# Write the new content to the file
+		file.write("na")
+
+# Update the content in the toolsRequired.txt file
+def UpdateToolsRequired(toolsRequired):
+	with open(pathToolsRequired, "w") as file:
+		# Write the new content to the file
+		file.write(toolsRequired)
+
+# Check manInTheLoopResponse.txt file
+def ManInTheLoopResponse(toolsRequired):
+	UpdateToolsRequired(toolsRequired)
+	while True:
+		# Read from the file
+		with open(pathManInTheLoopResponse, "r") as file:
+			content = file.read()
+			print(f"content manInTheLoopResponse file: {content}")
+			# Check if the content is "y" or "n"
+			if content.lower() == "y":
+				print("## Allowed")
+				ResetManInTheLoopResponse()
+				return "y"
+			elif content.lower() == "n":
+				print("## Denied")
+				ResetManInTheLoopResponse()
+				return "n"
+			else:
+				print("## No response")
+			
+		# Wait for a while before checking again
+		time.sleep(0.5)  # Check every second (adjust as needed)
 
 # Main loop to process the graph
 
@@ -238,7 +273,8 @@ def Main(userInput, threadId):
 	while True:
 		global loopCounter
 		global agentOutput
-		
+
+		ResetManInTheLoopResponse()
 		# Variable to hold the desired thread ID
 		new_thread_id ="thread-" + str(threadId)
 		#print("Memory: new_thread_id:", new_thread_id)
@@ -266,11 +302,12 @@ def Main(userInput, threadId):
 
 		# Get the list of called tools
 		existing_message = snapshot.values["messages"][-1]
-		all_tools = existing_message.tool_calls
+		toolsRequired = existing_message.tool_calls
 
-		print("####### Tools to be called ::: ", all_tools)
+		print("####### Tools to be called ::: ", toolsRequired)
 		
-		manInTheLoop = input("Do you want to proceed (y/n): ")
+		manInTheLoop = ManInTheLoopResponse(str(toolsRequired))
+		# manInTheLoop = input("Do you want to proceed (y/n): ")
 		
 		if manInTheLoop.lower() == "y":
 			print("## Allowed")

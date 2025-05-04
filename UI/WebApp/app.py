@@ -8,9 +8,9 @@ debug01 = True
 
 print("Initialized assistant.py")
 
-conversationMode = "wakeUp" 	# sleep: Go to Hibernate
-	                  	# wakeUp: Goint to answer the user input
-inputMode = "text" # text / speech
+modeConversation = "awake" 	# sleep: Go to Hibernate
+	                  	# awake: Goint to answer the user input
+modeInput = "text" # text / speech
 outputMode = "text" # text / speech
 
 modeContext = "no" # no: no context in conversation
@@ -33,34 +33,91 @@ User Input = """
 threadId = 0	# Memory Id for agent graph
 mainLoopCnt = 0 # counting looping of Main()
 
+pathManInTheLoopResponse = "/root/Project/Rpi/PersonalAssistant/Langchain/manInTheLoopResponce.txt"
+pathToolsRequired = "/root/Project/Rpi/PersonalAssistant/Langchain/toolsRequired.txt"
+# Refresh the content in the manInTheLoopResponse.txt file
+# def RefreshManInTheLoopResponse():
+# 	# Open the file in write mode
+# 	with open(pathManInTheLoopResponse, "w") as file:
+# 		# Write the new content to the file
+# 		file.write("na")
+
+# Reset the content in the toolsRequired.txt file
+def ResetToolsRequired():
+	with open(pathToolsRequired, "w") as file:
+		# Write the new content to the file
+		file.write("na")
+
+counter01 = 0
+
+@app.route('/checkToolsRequiredFile', methods=['POST'])
+def CheckToolsRequiredFile():
+	global counter01
+
+	while counter01 <= 5:
+		counter01 += 1
+		# Read from the file
+		with open(pathToolsRequired, "r") as file:
+			content = file.read()
+			print(f"content pathToolsRequired file: {content}")
+			# Check if the content is "y" or "n"
+			if content.lower() != "na":
+				# Append bot message
+				# //work on this
+				ResetToolsRequired()
+				# return content
+				# return jsonify({"human": "na", "bot": content})		
+				return jsonify({"bot": f"{content}\nDo you want to proceed (y/n):"})		
+			
+		# Wait for a while before checking again
+		time.sleep(0.5)  # Check every second (adjust as needed)
+
+	# return "na"
+	return jsonify({"bot": "na"})		
+
+
+# Update the content in the manInTheLoopResponse.txt file
+def UpdateManInTheLoopResponse(inputData):
+	# Open the file in write mode
+	with open(pathManInTheLoopResponse, "w") as file:
+		file.write(inputData)
+
 def BasicCmds(userInput):
 	# global logger
-	global conversationMode
-	global inputMode
+	global modeConversation
+	global modeInput
 	global outputMode
 	global modeContext
 	
 	if (userInput.lower() == "help"):
-		print("1. input mode text")
-		print("2. input mode speech")
-		print("3. output mode text")
-		print("4. output mode speech")
-		print("5. wake up")
-		print("6. sleep")
-		print("7. mode context yes")
-		print("8. mode context no")
-		print("9. help")
-		# logger.debug("## inputMode:", inputMode, ":outputMode:" , outputMode, ":conversationMode:" , conversationMode, "##")
-		print("## inputMode:", inputMode, ":outputMode:" , outputMode, ":conversationMode:" , conversationMode, ":modeContext:", modeContext, ":##")
-		return True
+		# data = "1. input mode text\n"
+		# data += "2. input mode speech\n"
+		# data += "3. output mode text\n"
+		# data += "4. output mode speech\n"
+		# data += "5. wake up\n"
+		# data += "6. sleep\n"
+		# data += "7. mode context yes\n"
+		# data += "8. mode context no\n"
+		# data += "9. help\n\n"
+		
+		# printData = "help\n" 
+		printData = "mode [options]: current mode\n"
+		printData += f"mode input [text/speech]: {modeInput}\n"
+		printData += f"mode output [text/speech]: {outputMode}\n"
+		printData += f"mode conversation [awake/sleep]: {modeConversation}\n"
+		printData += f"mode context [yes/no]: {modeContext}\n"
+		# logger.debug("## modeInput:", modeInput, ":outputMode:" , outputMode, ":modeConversation:" , modeConversation, "##")
+		# printData += "CurrentStatus:: modeInput:", modeInput, ":outputMode:" , outputMode, ":modeConversation:" , modeConversation, ":modeContext:", modeContext, ":##"
+		print(printData)
+		return printData
 
 	# Checking for input mode
 	if (userInput.lower() == "input mode text"):
-		inputMode = "text"
+		modeInput = "text"
 		return True
 	
 	elif (userInput.lower() == "input mode speech"):
-		inputMode = "speech"
+		modeInput = "speech"
 		return True
 
 	# Checking for output mode
@@ -74,12 +131,12 @@ def BasicCmds(userInput):
 
 	# Checking for wake up call
 	elif any(call in userInput.lower() for call in listWakeUpCalls):
-		conversationMode = "wakeUp"
+		modeConversation = "awake"
 		return True
 	
 	# Checking for sleep call
 	elif any(call in userInput.lower() for call in listSleepCalls):
-		conversationMode = "sleep"
+		modeConversation = "sleep"
 		return True
 
 	# checking for mode context 
@@ -96,24 +153,33 @@ def BasicCmds(userInput):
 
 def Processing(userInput):
 	# global logger
-	global conversationMode
+	global modeConversation
 	
 	
-	if(BasicCmds(userInput)):
-		return
+	# if(BasicCmds(userInput)):
+	# 	return
 		
 	
+	basicCmdsReturn = BasicCmds(userInput)
+
+	print(f"basicCmdsReturn: {basicCmdsReturn}")
+
+	if(basicCmdsReturn == True):
+		return
+	elif(basicCmdsReturn != False):
+		return basicCmdsReturn
+	
 	# for debug only conversation mode only wake up
-	# ~ conversationMode = "wakeUp"
+	# ~ modeConversation = "wakeUp"
 	
 		
 	# ~ # Checking for sleep call
 	# ~ if any(call in userInput.lower() for call in listSleepCalls):
-		# ~ conversationMode = "sleep"
+		# ~ modeConversation = "sleep"
 		
-	# if(debug01): print("conversationMode:",conversationMode)
+	# if(debug01): print("modeConversation:",modeConversation)
 	
-	if (conversationMode == "wakeUp"):
+	if (modeConversation == "awake"):
 		# userInputToScriptInvocation
 		
 		# ~ terminalOutput = UITSI.Main(userInput)
@@ -138,6 +204,8 @@ def Processing(userInput):
 		if(modeContext == "no"):
 			threadId += 1 # Always changing memory variable
 		
+		# CheckToolsRequiredFile() // make this asyncronic
+
 		#agentResponce = "Na"	
 		agentResponce = Agent.Main(userInput, threadId)
 		#userInput = "who is the PM of India?"
@@ -151,6 +219,7 @@ def index():
 
 @app.route('/userInputMessage', methods=['POST'])
 def get_user_input_message():
+    ResetToolsRequired()
     user_message = request.json.get("message", "")
     print(f"user_message: {user_message}")
     
@@ -169,7 +238,8 @@ def get_user_input_message():
 def get_user_input_extra():
     user_message = request.json.get("message", "")
     print(f"user_message: {user_message}")
-    time.sleep(3)
+    UpdateManInTheLoopResponse(user_message)
+    # time.sleep(3)
     return "None"
 
 ##  not in use
@@ -199,15 +269,15 @@ def Main():
 
 def Input():	
 	global logger
-	global inputMode
+	global modeInput
 		
 	# userInput = "Hey there how its going on?" # sample 
-	if(inputMode == "text"):
+	if(modeInput == "text"):
 		userInput = input("userInput: ")	# Text 
-	elif(inputMode == "speech"):
+	elif(modeInput == "speech"):
 		userInput = STT.Main()			# Speech To Text
 	else:
-		print("Error: Invalid inputMode:", inputMode)
+		print("Error: Invalid modeInput:", modeInput)
 	
 	# ~ print("userInput:",userInput)	
 	logger.info(f"userInput: {userInput}")
