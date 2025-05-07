@@ -1,1 +1,1 @@
-na
+[{'name': 'terminal', 'args': {'commands': ["echo 'Apple'", "echo 'Banana'", "echo 'Orange'", "echo 'Grapes'", "echo 'Strawberry'", "echo 'Watermelon'", "echo 'Pineapple'", "echo 'Mango'", "echo 'Kiwi'", "echo 'Peach'"]}, 'id': 'call_AIZzx1h0Sote2mNFxFBHef5L', 'type': 'tool_call'}]

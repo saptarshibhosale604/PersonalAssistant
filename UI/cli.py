@@ -250,6 +250,7 @@ def Main():
 	mainLoopCnt += 1
 	logger.info(f"mainLoopCnt: {mainLoopCnt}")
 	
+	# userInput = "Give me list of 3 fruits"
 	userInput = Input()
 	#userInput = request.args.get('userInput', 'how are you?')
 	

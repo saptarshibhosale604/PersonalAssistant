@@ -1,0 +1,980 @@
+class ChatOpenAI(BaseChatOpenAI):  # type: ignore[override]
+    """OpenAI chat model integration.
+
+    .. dropdown:: Setup
+        :open:
+
+        Install ``langchain-openai`` and set environment variable ``OPENAI_API_KEY``.
+
+        .. code-block:: bash
+
+            pip install -U langchain-openai
+            export OPENAI_API_KEY="your-api-key"
+
+    .. dropdown:: Key init args — completion params
+
+        model: str
+            Name of OpenAI model to use.
+        temperature: float
+            Sampling temperature.
+        max_tokens: Optional[int]
+            Max number of tokens to generate.
+        logprobs: Optional[bool]
+            Whether to return logprobs.
+        stream_options: Dict
+            Configure streaming outputs, like whether to return token usage when
+            streaming (``{"include_usage": True}``).
+        use_responses_api: Optional[bool]
+            Whether to use the responses API.
+
+        See full list of supported init args and their descriptions in the params section.
+
+    .. dropdown:: Key init args — client params
+
+        timeout: Union[float, Tuple[float, float], Any, None]
+            Timeout for requests.
+        max_retries: Optional[int]
+            Max number of retries.
+        api_key: Optional[str]
+            OpenAI API key. If not passed in will be read from env var OPENAI_API_KEY.
+        base_url: Optional[str]
+            Base URL for API requests. Only specify if using a proxy or service
+            emulator.
+        organization: Optional[str]
+            OpenAI organization ID. If not passed in will be read from env
+            var OPENAI_ORG_ID.
+
+        See full list of supported init args and their descriptions in the params section.
+
+    .. dropdown:: Instantiate
+
+        .. code-block:: python
+
+            from langchain_openai import ChatOpenAI
+
+            llm = ChatOpenAI(
+                model="gpt-4o",
+                temperature=0,
+                max_tokens=None,
+                timeout=None,
+                max_retries=2,
+                # api_key="...",
+                # base_url="...",
+                # organization="...",
+                # other params...
+            )
+
+        **NOTE**: Any param which is not explicitly supported will be passed directly to the
+        ``openai.OpenAI.chat.completions.create(...)`` API every time to the model is
+        invoked. For example:
+
+        .. code-block:: python
+
+            from langchain_openai import ChatOpenAI
+            import openai
+
+            ChatOpenAI(..., frequency_penalty=0.2).invoke(...)
+
+            # results in underlying API call of:
+
+            openai.OpenAI(..).chat.completions.create(..., frequency_penalty=0.2)
+
+            # which is also equivalent to:
+
+            ChatOpenAI(...).invoke(..., frequency_penalty=0.2)
+
+    .. dropdown:: Invoke
+
+        .. code-block:: python
+
+            messages = [
+                (
+                    "system",
+                    "You are a helpful translator. Translate the user sentence to French.",
+                ),
+                ("human", "I love programming."),
+            ]
+            llm.invoke(messages)
+
+        .. code-block:: pycon
+
+            AIMessage(
+                content="J'adore la programmation.",
+                response_metadata={
+                    "token_usage": {
+                        "completion_tokens": 5,
+                        "prompt_tokens": 31,
+                        "total_tokens": 36,
+                    },
+                    "model_name": "gpt-4o",
+                    "system_fingerprint": "fp_43dfabdef1",
+                    "finish_reason": "stop",
+                    "logprobs": None,
+                },
+                id="run-012cffe2-5d3d-424d-83b5-51c6d4a593d1-0",
+                usage_metadata={"input_tokens": 31, "output_tokens": 5, "total_tokens": 36},
+            )
+
+    .. dropdown:: Stream
+
+        .. code-block:: python
+
+            for chunk in llm.stream(messages):
+                print(chunk.text(), end="")
+
+        .. code-block:: python
+
+            AIMessageChunk(content="", id="run-9e1517e3-12bf-48f2-bb1b-2e824f7cd7b0")
+            AIMessageChunk(content="J", id="run-9e1517e3-12bf-48f2-bb1b-2e824f7cd7b0")
+            AIMessageChunk(content="'adore", id="run-9e1517e3-12bf-48f2-bb1b-2e824f7cd7b0")
+            AIMessageChunk(content=" la", id="run-9e1517e3-12bf-48f2-bb1b-2e824f7cd7b0")
+            AIMessageChunk(
+                content=" programmation", id="run-9e1517e3-12bf-48f2-bb1b-2e824f7cd7b0"
+            )
+            AIMessageChunk(content=".", id="run-9e1517e3-12bf-48f2-bb1b-2e824f7cd7b0")
+            AIMessageChunk(
+                content="",
+                response_metadata={"finish_reason": "stop"},
+                id="run-9e1517e3-12bf-48f2-bb1b-2e824f7cd7b0",
+            )
+
+        .. code-block:: python
+
+            stream = llm.stream(messages)
+            full = next(stream)
+            for chunk in stream:
+                full += chunk
+            full
+
+        .. code-block:: python
+
+            AIMessageChunk(
+                content="J'adore la programmation.",
+                response_metadata={"finish_reason": "stop"},
+                id="run-bf917526-7f58-4683-84f7-36a6b671d140",
+            )
+
+    .. dropdown:: Async
+
+        .. code-block:: python
+
+            await llm.ainvoke(messages)
+
+            # stream:
+            # async for chunk in (await llm.astream(messages))
+
+            # batch:
+            # await llm.abatch([messages])
+
+        .. code-block:: python
+
+            AIMessage(
+                content="J'adore la programmation.",
+                response_metadata={
+                    "token_usage": {
+                        "completion_tokens": 5,
+                        "prompt_tokens": 31,
+                        "total_tokens": 36,
+                    },
+                    "model_name": "gpt-4o",
+                    "system_fingerprint": "fp_43dfabdef1",
+                    "finish_reason": "stop",
+                    "logprobs": None,
+                },
+                id="run-012cffe2-5d3d-424d-83b5-51c6d4a593d1-0",
+                usage_metadata={"input_tokens": 31, "output_tokens": 5, "total_tokens": 36},
+            )
+
+    .. dropdown:: Tool calling
+
+        .. code-block:: python
+
+            from pydantic import BaseModel, Field
+
+
+            class GetWeather(BaseModel):
+                '''Get the current weather in a given location'''
+
+                location: str = Field(
+                    ..., description="The city and state, e.g. San Francisco, CA"
+                )
+
+
+            class GetPopulation(BaseModel):
+                '''Get the current population in a given location'''
+
+                location: str = Field(
+                    ..., description="The city and state, e.g. San Francisco, CA"
+                )
+
+
+            llm_with_tools = llm.bind_tools(
+                [GetWeather, GetPopulation]
+                # strict = True  # enforce tool args schema is respected
+            )
+            ai_msg = llm_with_tools.invoke(
+                "Which city is hotter today and which is bigger: LA or NY?"
+            )
+            ai_msg.tool_calls
+
+        .. code-block:: python
+
+            [
+                {
+                    "name": "GetWeather",
+                    "args": {"location": "Los Angeles, CA"},
+                    "id": "call_6XswGD5Pqk8Tt5atYr7tfenU",
+                },
+                {
+                    "name": "GetWeather",
+                    "args": {"location": "New York, NY"},
+                    "id": "call_ZVL15vA8Y7kXqOy3dtmQgeCi",
+                },
+                {
+                    "name": "GetPopulation",
+                    "args": {"location": "Los Angeles, CA"},
+                    "id": "call_49CFW8zqC9W7mh7hbMLSIrXw",
+                },
+                {
+                    "name": "GetPopulation",
+                    "args": {"location": "New York, NY"},
+                    "id": "call_6ghfKxV264jEfe1mRIkS3PE7",
+                },
+            ]
+
+        Note that ``openai >= 1.32`` supports a ``parallel_tool_calls`` parameter
+        that defaults to ``True``. This parameter can be set to ``False`` to
+        disable parallel tool calls:
+
+        .. code-block:: python
+
+            ai_msg = llm_with_tools.invoke(
+                "What is the weather in LA and NY?", parallel_tool_calls=False
+            )
+            ai_msg.tool_calls
+
+        .. code-block:: python
+
+            [
+                {
+                    "name": "GetWeather",
+                    "args": {"location": "Los Angeles, CA"},
+                    "id": "call_4OoY0ZR99iEvC7fevsH8Uhtz",
+                }
+            ]
+
+        Like other runtime parameters, ``parallel_tool_calls`` can be bound to a model
+        using ``llm.bind(parallel_tool_calls=False)`` or during instantiation by
+        setting ``model_kwargs``.
+
+        See ``ChatOpenAI.bind_tools()`` method for more.
+
+    .. dropdown:: Built-in tools
+
+        .. versionadded:: 0.3.9
+
+        You can access `built-in tools <https://platform.openai.com/docs/guides/tools?api-mode=responses>`_
+        supported by the OpenAI Responses API. See LangChain
+        `docs <https://python.langchain.com/docs/integrations/chat/openai/>`_ for more
+        detail.
+
+        .. code-block:: python
+
+            from langchain_openai import ChatOpenAI
+
+            llm = ChatOpenAI(model="gpt-4o-mini")
+
+            tool = {"type": "web_search_preview"}
+            llm_with_tools = llm.bind_tools([tool])
+
+            response = llm_with_tools.invoke("What was a positive news story from today?")
+            response.content
+
+        .. code-block:: python
+
+            [
+                {
+                    "type": "text",
+                    "text": "Today, a heartwarming story emerged from ...",
+                    "annotations": [
+                        {
+                            "end_index": 778,
+                            "start_index": 682,
+                            "title": "Title of story",
+                            "type": "url_citation",
+                            "url": "<url of story>",
+                        }
+                    ],
+                }
+            ]
+
+    .. dropdown:: Managing conversation state
+
+        .. versionadded:: 0.3.9
+
+        OpenAI's Responses API supports management of
+        `conversation state <https://platform.openai.com/docs/guides/conversation-state?api-mode=responses>`_.
+        Passing in response IDs from previous messages will continue a conversational
+        thread. See LangChain
+        `docs <https://python.langchain.com/docs/integrations/chat/openai/>`_ for more
+        detail.
+
+        .. code-block:: python
+
+            from langchain_openai import ChatOpenAI
+
+            llm = ChatOpenAI(model="gpt-4o-mini", use_responses_api=True)
+            response = llm.invoke("Hi, I'm Bob.")
+            response.text()
+
+        .. code-block:: python
+
+            "Hi Bob! How can I assist you today?"
+
+        .. code-block:: python
+
+            second_response = llm.invoke(
+                "What is my name?", previous_response_id=response.response_metadata["id"]
+            )
+            second_response.text()
+
+        .. code-block:: python
+
+            "Your name is Bob. How can I help you today, Bob?"
+
+    .. dropdown:: Reasoning output
+
+        OpenAI's Responses API supports `reasoning models <https://platform.openai.com/docs/guides/reasoning?api-mode=responses>`_
+        that expose a summary of internal reasoning processes.
+
+        .. code-block:: python
+
+            from langchain_openai import ChatOpenAI
+
+            reasoning = {
+                "effort": "medium",  # 'low', 'medium', or 'high'
+                "summary": "auto",  # 'detailed', 'auto', or None
+            }
+
+            llm = ChatOpenAI(
+                model="o4-mini", use_responses_api=True, model_kwargs={"reasoning": reasoning}
+            )
+            response = llm.invoke("What is 3^3?")
+
+            print(f"Output: {response.text()}")
+            print(f"Reasoning: {response.additional_kwargs['reasoning']}")
+
+        .. code-block:: none
+
+            Output: 3^3 = 27.
+
+            Reasoning: {
+                'id': 'rs_67fffc44b1c08191b6ca9bead6d832590433145b1786f809',
+                'summary': [
+                    {'text': 'The user wants to know...', 'type': 'summary_text'}
+                ],
+                'type': 'reasoning'
+            }
+
+    .. dropdown:: Structured output
+
+        .. code-block:: python
+
+            from typing import Optional
+
+            from pydantic import BaseModel, Field
+
+
+            class Joke(BaseModel):
+                '''Joke to tell user.'''
+
+                setup: str = Field(description="The setup of the joke")
+                punchline: str = Field(description="The punchline to the joke")
+                rating: Optional[int] = Field(description="How funny the joke is, from 1 to 10")
+
+
+            structured_llm = llm.with_structured_output(Joke)
+            structured_llm.invoke("Tell me a joke about cats")
+
+        .. code-block:: python
+
+            Joke(
+                setup="Why was the cat sitting on the computer?",
+                punchline="To keep an eye on the mouse!",
+                rating=None,
+            )
+
+        See ``ChatOpenAI.with_structured_output()`` for more.
+
+    .. dropdown:: JSON mode
+
+        .. code-block:: python
+
+            json_llm = llm.bind(response_format={"type": "json_object"})
+            ai_msg = json_llm.invoke(
+                "Return a JSON object with key 'random_ints' and a value of 10 random ints in [0-99]"
+            )
+            ai_msg.content
+
+        .. code-block:: python
+
+            '\\n{\\n  "random_ints": [23, 87, 45, 12, 78, 34, 56, 90, 11, 67]\\n}'
+
+    .. dropdown:: Image input
+
+        .. code-block:: python
+
+            import base64
+            import httpx
+            from langchain_core.messages import HumanMessage
+
+            image_url = "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"
+            image_data = base64.b64encode(httpx.get(image_url).content).decode("utf-8")
+            message = HumanMessage(
+                content=[
+                    {"type": "text", "text": "describe the weather in this image"},
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": f"data:image/jpeg;base64,{image_data}"},
+                    },
+                ]
+            )
+            ai_msg = llm.invoke([message])
+            ai_msg.content
+
+        .. code-block:: python
+
+            "The weather in the image appears to be clear and pleasant. The sky is mostly blue with scattered, light clouds, suggesting a sunny day with minimal cloud cover. There is no indication of rain or strong winds, and the overall scene looks bright and calm. The lush green grass and clear visibility further indicate good weather conditions."
+
+    .. dropdown:: Token usage
+
+        .. code-block:: python
+
+            ai_msg = llm.invoke(messages)
+            ai_msg.usage_metadata
+
+        .. code-block:: python
+
+            {"input_tokens": 28, "output_tokens": 5, "total_tokens": 33}
+
+        When streaming, set the ``stream_usage`` kwarg:
+
+        .. code-block:: python
+
+            stream = llm.stream(messages, stream_usage=True)
+            full = next(stream)
+            for chunk in stream:
+                full += chunk
+            full.usage_metadata
+
+        .. code-block:: python
+
+            {"input_tokens": 28, "output_tokens": 5, "total_tokens": 33}
+
+        Alternatively, setting ``stream_usage`` when instantiating the model can be
+        useful when incorporating ``ChatOpenAI`` into LCEL chains-- or when using
+        methods like ``.with_structured_output``, which generate chains under the
+        hood.
+
+        .. code-block:: python
+
+            llm = ChatOpenAI(model="gpt-4o", stream_usage=True)
+            structured_llm = llm.with_structured_output(...)
+
+    .. dropdown:: Logprobs
+
+        .. code-block:: python
+
+            logprobs_llm = llm.bind(logprobs=True)
+            ai_msg = logprobs_llm.invoke(messages)
+            ai_msg.response_metadata["logprobs"]
+
+        .. code-block:: python
+
+            {
+                "content": [
+                    {
+                        "token": "J",
+                        "bytes": [74],
+                        "logprob": -4.9617593e-06,
+                        "top_logprobs": [],
+                    },
+                    {
+                        "token": "'adore",
+                        "bytes": [39, 97, 100, 111, 114, 101],
+                        "logprob": -0.25202933,
+                        "top_logprobs": [],
+                    },
+                    {
+                        "token": " la",
+                        "bytes": [32, 108, 97],
+                        "logprob": -0.20141791,
+                        "top_logprobs": [],
+                    },
+                    {
+                        "token": " programmation",
+                        "bytes": [
+                            32,
+                            112,
+                            114,
+                            111,
+                            103,
+                            114,
+                            97,
+                            109,
+                            109,
+                            97,
+                            116,
+                            105,
+                            111,
+                            110,
+                        ],
+                        "logprob": -1.9361265e-07,
+                        "top_logprobs": [],
+                    },
+                    {
+                        "token": ".",
+                        "bytes": [46],
+                        "logprob": -1.2233183e-05,
+                        "top_logprobs": [],
+                    },
+                ]
+            }
+
+    .. dropdown:: Response metadata
+
+        .. code-block:: python
+
+            ai_msg = llm.invoke(messages)
+            ai_msg.response_metadata
+
+        .. code-block:: python
+
+            {
+                "token_usage": {
+                    "completion_tokens": 5,
+                    "prompt_tokens": 28,
+                    "total_tokens": 33,
+                },
+                "model_name": "gpt-4o",
+                "system_fingerprint": "fp_319be4768e",
+                "finish_reason": "stop",
+                "logprobs": None,
+            }
+
+    .. dropdown:: Flex processing
+
+        OpenAI offers a variety of
+        `service tiers <https://platform.openai.com/docs/guides/flex-processing>`_.
+        The "flex" tier offers cheaper pricing for requests, with the trade-off that
+        responses may take longer and resources might not always be available.
+        This approach is best suited for non-critical tasks, including model testing,
+        data enhancement, or jobs that can be run asynchronously.
+
+        To use it, initialize the model with ``service_tier="flex"``:
+
+        .. code-block:: python
+
+            from langchain_openai import ChatOpenAI
+
+            llm = ChatOpenAI(model="o4-mini", service_tier="flex")
+
+        Note that this is a beta feature that is only available for a subset of models.
+        See OpenAI `docs <https://platform.openai.com/docs/guides/flex-processing>`_
+        for more detail.
+
+    """  # noqa: E501
+
+    max_tokens: Optional[int] = Field(default=None, alias="max_completion_tokens")
+    """Maximum number of tokens to generate."""
+
+    @property
+    def lc_secrets(self) -> dict[str, str]:
+        return {"openai_api_key": "OPENAI_API_KEY"}
+
+    @classmethod
+    def get_lc_namespace(cls) -> list[str]:
+        """Get the namespace of the langchain object."""
+        return ["langchain", "chat_models", "openai"]
+
+    @property
+    def lc_attributes(self) -> dict[str, Any]:
+        attributes: dict[str, Any] = {}
+
+        if self.openai_organization:
+            attributes["openai_organization"] = self.openai_organization
+
+        if self.openai_api_base:
+            attributes["openai_api_base"] = self.openai_api_base
+
+        if self.openai_proxy:
+            attributes["openai_proxy"] = self.openai_proxy
+
+        return attributes
+
+    @classmethod
+    def is_lc_serializable(cls) -> bool:
+        """Return whether this model can be serialized by Langchain."""
+        return True
+
+    @property
+    def _default_params(self) -> dict[str, Any]:
+        """Get the default parameters for calling OpenAI API."""
+        params = super()._default_params
+        if "max_tokens" in params:
+            params["max_completion_tokens"] = params.pop("max_tokens")
+
+        return params
+
+    def _get_request_payload(
+        self,
+        input_: LanguageModelInput,
+        *,
+        stop: Optional[list[str]] = None,
+        **kwargs: Any,
+    ) -> dict:
+        payload = super()._get_request_payload(input_, stop=stop, **kwargs)
+        # max_tokens was deprecated in favor of max_completion_tokens
+        # in September 2024 release
+        if "max_tokens" in payload:
+            payload["max_completion_tokens"] = payload.pop("max_tokens")
+
+        # Mutate system message role to "developer" for o-series models
+        if self.model_name and re.match(r"^o\d", self.model_name):
+            for message in payload.get("messages", []):
+                if message["role"] == "system":
+                    message["role"] = "developer"
+        return payload
+
+    def _stream(self, *args: Any, **kwargs: Any) -> Iterator[ChatGenerationChunk]:
+        """Route to Chat Completions or Responses API."""
+        if self._use_responses_api({**kwargs, **self.model_kwargs}):
+            return super()._stream_responses(*args, **kwargs)
+        else:
+            return super()._stream(*args, **kwargs)
+
+    async def _astream(
+        self, *args: Any, **kwargs: Any
+    ) -> AsyncIterator[ChatGenerationChunk]:
+        """Route to Chat Completions or Responses API."""
+        if self._use_responses_api({**kwargs, **self.model_kwargs}):
+            async for chunk in super()._astream_responses(*args, **kwargs):
+                yield chunk
+        else:
+            async for chunk in super()._astream(*args, **kwargs):
+                yield chunk
+
+    def with_structured_output(
+        self,
+        schema: Optional[_DictOrPydanticClass] = None,
+        *,
+        method: Literal["function_calling", "json_mode", "json_schema"] = "json_schema",
+        include_raw: bool = False,
+        strict: Optional[bool] = None,
+        **kwargs: Any,
+    ) -> Runnable[LanguageModelInput, _DictOrPydantic]:
+        """Model wrapper that returns outputs formatted to match the given schema.
+
+        Args:
+            schema:
+                The output schema. Can be passed in as:
+
+                - a JSON Schema,
+                - a TypedDict class,
+                - or a Pydantic class,
+                - an OpenAI function/tool schema.
+
+                If ``schema`` is a Pydantic class then the model output will be a
+                Pydantic instance of that class, and the model-generated fields will be
+                validated by the Pydantic class. Otherwise the model output will be a
+                dict and will not be validated. See :meth:`langchain_core.utils.function_calling.convert_to_openai_tool`
+                for more on how to properly specify types and descriptions of
+                schema fields when specifying a Pydantic or TypedDict class.
+
+            method: The method for steering model generation, one of:
+
+                - "json_schema":
+                    Uses OpenAI's Structured Output API:
+                    https://platform.openai.com/docs/guides/structured-outputs
+                    Supported for "gpt-4o-mini", "gpt-4o-2024-08-06", "o1", and later
+                    models.
+                - "function_calling":
+                    Uses OpenAI's tool-calling (formerly called function calling)
+                    API: https://platform.openai.com/docs/guides/function-calling
+                - "json_mode":
+                    Uses OpenAI's JSON mode. Note that if using JSON mode then you
+                    must include instructions for formatting the output into the
+                    desired schema into the model call:
+                    https://platform.openai.com/docs/guides/structured-outputs/json-mode
+
+                Learn more about the differences between the methods and which models
+                support which methods here:
+
+                - https://platform.openai.com/docs/guides/structured-outputs/structured-outputs-vs-json-mode
+                - https://platform.openai.com/docs/guides/structured-outputs/function-calling-vs-response-format
+
+            include_raw:
+                If False then only the parsed structured output is returned. If
+                an error occurs during model output parsing it will be raised. If True
+                then both the raw model response (a BaseMessage) and the parsed model
+                response will be returned. If an error occurs during output parsing it
+                will be caught and returned as well. The final output is always a dict
+                with keys "raw", "parsed", and "parsing_error".
+            strict:
+
+                - True:
+                    Model output is guaranteed to exactly match the schema.
+                    The input schema will also be validated according to
+                    https://platform.openai.com/docs/guides/structured-outputs/supported-schemas
+                - False:
+                    Input schema will not be validated and model output will not be
+                    validated.
+                - None:
+                    ``strict`` argument will not be passed to the model.
+
+                If schema is specified via TypedDict or JSON schema, ``strict`` is not
+                enabled by default. Pass ``strict=True`` to enable it.
+
+                Note: ``strict`` can only be non-null if ``method`` is
+                ``"json_schema"`` or ``"function_calling"``.
+
+            kwargs: Additional keyword args aren't supported.
+
+        Returns:
+            A Runnable that takes same inputs as a :class:`langchain_core.language_models.chat.BaseChatModel`.
+
+            | If ``include_raw`` is False and ``schema`` is a Pydantic class, Runnable outputs an instance of ``schema`` (i.e., a Pydantic object). Otherwise, if ``include_raw`` is False then Runnable outputs a dict.
+
+            | If ``include_raw`` is True, then Runnable outputs a dict with keys:
+
+            - "raw": BaseMessage
+            - "parsed": None if there was a parsing error, otherwise the type depends on the ``schema`` as described above.
+            - "parsing_error": Optional[BaseException]
+
+        .. versionchanged:: 0.1.20
+
+            Added support for TypedDict class ``schema``.
+
+        .. versionchanged:: 0.1.21
+
+            Support for ``strict`` argument added.
+            Support for ``method="json_schema"`` added.
+
+        .. versionchanged:: 0.3.0
+
+            ``method`` default changed from "function_calling" to "json_schema".
+
+        .. dropdown:: Example: schema=Pydantic class, method="json_schema", include_raw=False, strict=True
+
+            Note, OpenAI has a number of restrictions on what types of schemas can be
+            provided if ``strict`` = True. When using Pydantic, our model cannot
+            specify any Field metadata (like min/max constraints) and fields cannot
+            have default values.
+
+            See all constraints here: https://platform.openai.com/docs/guides/structured-outputs/supported-schemas
+
+            .. code-block:: python
+
+                from typing import Optional
+
+                from langchain_openai import ChatOpenAI
+                from pydantic import BaseModel, Field
+
+
+                class AnswerWithJustification(BaseModel):
+                    '''An answer to the user question along with justification for the answer.'''
+
+                    answer: str
+                    justification: Optional[str] = Field(
+                        default=..., description="A justification for the answer."
+                    )
+
+
+                llm = ChatOpenAI(model="gpt-4o", temperature=0)
+                structured_llm = llm.with_structured_output(AnswerWithJustification)
+
+                structured_llm.invoke(
+                    "What weighs more a pound of bricks or a pound of feathers"
+                )
+
+                # -> AnswerWithJustification(
+                #     answer='They weigh the same',
+                #     justification='Both a pound of bricks and a pound of feathers weigh one pound. The weight is the same, but the volume or density of the objects may differ.'
+                # )
+
+        .. dropdown:: Example: schema=Pydantic class, method="function_calling", include_raw=False, strict=False
+
+            .. code-block:: python
+
+                from typing import Optional
+
+                from langchain_openai import ChatOpenAI
+                from pydantic import BaseModel, Field
+
+
+                class AnswerWithJustification(BaseModel):
+                    '''An answer to the user question along with justification for the answer.'''
+
+                    answer: str
+                    justification: Optional[str] = Field(
+                        default=..., description="A justification for the answer."
+                    )
+
+
+                llm = ChatOpenAI(model="gpt-4o", temperature=0)
+                structured_llm = llm.with_structured_output(
+                    AnswerWithJustification, method="function_calling"
+                )
+
+                structured_llm.invoke(
+                    "What weighs more a pound of bricks or a pound of feathers"
+                )
+
+                # -> AnswerWithJustification(
+                #     answer='They weigh the same',
+                #     justification='Both a pound of bricks and a pound of feathers weigh one pound. The weight is the same, but the volume or density of the objects may differ.'
+                # )
+
+        .. dropdown:: Example: schema=Pydantic class, method="json_schema", include_raw=True
+
+            .. code-block:: python
+
+                from langchain_openai import ChatOpenAI
+                from pydantic import BaseModel
+
+
+                class AnswerWithJustification(BaseModel):
+                    '''An answer to the user question along with justification for the answer.'''
+
+                    answer: str
+                    justification: str
+
+
+                llm = ChatOpenAI(model="gpt-4o", temperature=0)
+                structured_llm = llm.with_structured_output(
+                    AnswerWithJustification, include_raw=True
+                )
+
+                structured_llm.invoke(
+                    "What weighs more a pound of bricks or a pound of feathers"
+                )
+                # -> {
+                #     'raw': AIMessage(content='', additional_kwargs={'tool_calls': [{'id': 'call_Ao02pnFYXD6GN1yzc0uXPsvF', 'function': {'arguments': '{"answer":"They weigh the same.","justification":"Both a pound of bricks and a pound of feathers weigh one pound. The weight is the same, but the volume or density of the objects may differ."}', 'name': 'AnswerWithJustification'}, 'type': 'function'}]}),
+                #     'parsed': AnswerWithJustification(answer='They weigh the same.', justification='Both a pound of bricks and a pound of feathers weigh one pound. The weight is the same, but the volume or density of the objects may differ.'),
+                #     'parsing_error': None
+                # }
+
+        .. dropdown:: Example: schema=TypedDict class, method="json_schema", include_raw=False, strict=False
+
+            .. code-block:: python
+
+                # IMPORTANT: If you are using Python <=3.8, you need to import Annotated
+                # from typing_extensions, not from typing.
+                from typing_extensions import Annotated, TypedDict
+
+                from langchain_openai import ChatOpenAI
+
+
+                class AnswerWithJustification(TypedDict):
+                    '''An answer to the user question along with justification for the answer.'''
+
+                    answer: str
+                    justification: Annotated[
+                        Optional[str], None, "A justification for the answer."
+                    ]
+
+
+                llm = ChatOpenAI(model="gpt-4o", temperature=0)
+                structured_llm = llm.with_structured_output(AnswerWithJustification)
+
+                structured_llm.invoke(
+                    "What weighs more a pound of bricks or a pound of feathers"
+                )
+                # -> {
+                #     'answer': 'They weigh the same',
+                #     'justification': 'Both a pound of bricks and a pound of feathers weigh one pound. The weight is the same, but the volume and density of the two substances differ.'
+                # }
+
+        .. dropdown:: Example: schema=OpenAI function schema, method="json_schema", include_raw=False
+
+            .. code-block:: python
+
+                from langchain_openai import ChatOpenAI
+
+                oai_schema = {
+                    'name': 'AnswerWithJustification',
+                    'description': 'An answer to the user question along with justification for the answer.',
+                    'parameters': {
+                        'type': 'object',
+                        'properties': {
+                            'answer': {'type': 'string'},
+                            'justification': {'description': 'A justification for the answer.', 'type': 'string'}
+                        },
+                       'required': ['answer']
+                   }
+               }
+
+                llm = ChatOpenAI(model="gpt-4o", temperature=0)
+                structured_llm = llm.with_structured_output(oai_schema)
+
+                structured_llm.invoke(
+                    "What weighs more a pound of bricks or a pound of feathers"
+                )
+                # -> {
+                #     'answer': 'They weigh the same',
+                #     'justification': 'Both a pound of bricks and a pound of feathers weigh one pound. The weight is the same, but the volume and density of the two substances differ.'
+                # }
+
+        .. dropdown:: Example: schema=Pydantic class, method="json_mode", include_raw=True
+
+            .. code-block::
+
+                from langchain_openai import ChatOpenAI
+                from pydantic import BaseModel
+
+                class AnswerWithJustification(BaseModel):
+                    answer: str
+                    justification: str
+
+                llm = ChatOpenAI(model="gpt-4o", temperature=0)
+                structured_llm = llm.with_structured_output(
+                    AnswerWithJustification,
+                    method="json_mode",
+                    include_raw=True
+                )
+
+                structured_llm.invoke(
+                    "Answer the following question. "
+                    "Make sure to return a JSON blob with keys 'answer' and 'justification'.\\n\\n"
+                    "What's heavier a pound of bricks or a pound of feathers?"
+                )
+                # -> {
+                #     'raw': AIMessage(content='{\\n    "answer": "They are both the same weight.",\\n    "justification": "Both a pound of bricks and a pound of feathers weigh one pound. The difference lies in the volume and density of the materials, not the weight." \\n}'),
+                #     'parsed': AnswerWithJustification(answer='They are both the same weight.', justification='Both a pound of bricks and a pound of feathers weigh one pound. The difference lies in the volume and density of the materials, not the weight.'),
+                #     'parsing_error': None
+                # }
+
+        .. dropdown:: Example: schema=None, method="json_mode", include_raw=True
+
+            .. code-block::
+
+                structured_llm = llm.with_structured_output(method="json_mode", include_raw=True)
+
+                structured_llm.invoke(
+                    "Answer the following question. "
+                    "Make sure to return a JSON blob with keys 'answer' and 'justification'.\\n\\n"
+                    "What's heavier a pound of bricks or a pound of feathers?"
+                )
+                # -> {
+                #     'raw': AIMessage(content='{\\n    "answer": "They are both the same weight.",\\n    "justification": "Both a pound of bricks and a pound of feathers weigh one pound. The difference lies in the volume and density of the materials, not the weight." \\n}'),
+                #     'parsed': {
+                #         'answer': 'They are both the same weight.',
+                #         'justification': 'Both a pound of bricks and a pound of feathers weigh one pound. The difference lies in the volume and density of the materials, not the weight.'
+                #     },
+                #     'parsing_error': None
+                # }
+        """  # noqa: E501
+        return super().with_structured_output(
+            schema, method=method, include_raw=include_raw, strict=strict, **kwargs
+        )
+

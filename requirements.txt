@@ -1,3 +1,4 @@
+#Langchain/agent
 langchain_openai
 langgraph
 langgraph.prebuilt
@@ -11,3 +12,6 @@ paramiko
 
 #UI/WebApp
 flask
+
+#UI
+ollama

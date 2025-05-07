@@ -21,6 +21,12 @@ from langchain_google_community.gmail.utils import (
 import os
 import time
 
+modeUserInterface = "cli" # "web_app" / "cli"
+
+def UpdateModeUserInterface(mode):
+	global modeUserInterface
+	modeUserInterface = mode
+	
 ## ## API KEYS ## ## 
 
 def RemoveSpaces(input_string):
@@ -34,9 +40,6 @@ os.environ["OPENAI_API_KEY"] = RemoveSpaces(openai_key)
 os.environ["TAVILY_API_KEY"] = RemoveSpaces(tavily_key)
 
 ## ## INITIALIZATION ## ## 
-
-## Initializing llm models
-llm = ChatOpenAI(model="gpt-3.5-turbo", max_tokens=500, temperature=0, max_retries=1)
 
 ## Initializing tools
 
@@ -164,12 +167,398 @@ toolsAdvance =  [toolShell]             	# Need for human in loop
 toolsIntermediate = [toolSetCronRemainder]
 toolsBasic = [toolYoutube, toolWebSearch]                  # No need for human in loop
 
-tools = toolsAdvance + toolsIntermediate + toolsBasic
+# tools = toolsAdvance + toolsIntermediate + toolsBasic
+# globalTools = tools
 
+
+# tools 
 
 # ~ tools = toolGmail
 # ~ print("## ## tools:", tools)
 # ~ humanBreak = input("humanBreak:")
+
+
+## Initializing llm models
+## Custom LLM
+
+# from typing import Any, Dict, Iterator, List, Mapping, Optional
+
+# from langchain_core.callbacks.manager import CallbackManagerForLLMRun
+# from langchain_core.language_models.llms import LLM
+# from langchain_core.outputs import GenerationChunk
+
+from ollama import chat
+from ollama import ChatResponse
+
+
+# print("initialized")
+def CustomOllama(userInput):
+
+	# simple one question answer
+	response: ChatResponse = chat(model='llama3.2:1b', messages=[
+	{
+		'role': 'user',
+		'content': userInput,
+	},
+	])
+	# print(response['message']['content'])
+	# or access fields directly from the response object
+	print(f"CustomOllama: {response.message.content}")
+	humanBreak = input("humanBreak03:")
+	return response.message.content
+
+# from typing import Any, List, Optional, Dict, Union, Iterator
+# # from langchain_core.chat_models import BaseChatModel
+# from langchain_core.language_models import BaseChatModel
+# from langchain_core.messages import BaseMessage, AIMessage, HumanMessage
+# from langchain_core.messages import AIMessage, ToolCall
+# from langchain_core.outputs import ChatResult, ChatGeneration, GenerationChunk
+# # from langchain_core.runnables import CallbackManagerForLLMRun
+
+# # Assume CustomOllama(user_input: str) -> str is defined elsewhere
+
+# class CustomLLM(BaseChatModel):
+# 	global globalTools
+
+# 	model_name: str = "CustomChatModel"
+
+# 	tools: Optional[List[Any]] = globalTools  # <-- Add this line
+
+# 	def bind_tools(self, tools: List[Any]) -> "CustomLLM":
+# 	# You can store the tools if needed or just ignore them
+# 		self.tools = tools
+# 		return self
+
+# 	def _generate(
+# 		self,
+# 		messages: List[BaseMessage],
+# 		stop: Optional[List[str]] = None,
+# 		run_manager: Optional[Any] = None,
+# 		**kwargs: Any
+# 	) -> ChatResult:
+# 		# Extract the last Human message
+# 		user_input = next(
+# 			(m.content for m in reversed(messages) if isinstance(m, HumanMessage)), ""
+# 		)
+
+# 		print(f"self.tools: {self.tools}")
+# 		humanBreak = input("humanBreak01:")
+		
+# 		# Try to find a matching tool by name in user input
+# 		if self.tools:
+# 			for tool in self.tools:
+# 				if tool.name.lower() in user_input.lower():
+# 					args = {}  # You can improve this with actual arg parsing
+# 					return ChatResult(
+# 						generations=[
+# 							ChatGeneration(
+# 								message=AIMessage(
+# 									content=None,
+# 									tool_calls=[ToolCall(name=tool.name, args=args)]
+# 								)
+# 							)
+# 						]
+# 					)
+
+# 		# If no tool match, respond normally
+# 		response = CustomOllama(user_input)
+# 		return ChatResult(
+# 			generations=[
+# 				ChatGeneration(message=AIMessage(content=response))
+# 			]
+# 		)
+
+# 	def invoke(
+# 		self,
+# 		messages: List[BaseMessage],
+# 		stop: Optional[List[str]] = None,
+# 		run_manager: Optional[CallbackManagerForLLMRun] = None,
+# 		**kwargs: Any
+# 	) -> ChatResult:
+# 		# Get the last human message from the list
+# 		last_message = ""
+# 		for msg in reversed(messages):
+# 			if isinstance(msg, HumanMessage):
+# 				last_message = msg.content
+# 				break
+
+# 		response_text = CustomOllama(last_message)
+
+# 		return ChatResult(
+# 			generations=[
+# 				ChatGeneration(message=AIMessage(content=response_text))
+# 			]
+# 		)
+
+# 	def _llm_type(self) -> str:
+# 		return "custom_chat"
+
+# 	@property
+# 	def _identifying_params(self) -> Dict[str, Any]:
+# 		return {"model_name": self.model_name}
+
+from typing import Any, Dict, Iterator, List, Optional, Literal
+
+from langchain_core.callbacks import (
+    CallbackManagerForLLMRun,
+)
+from langchain_core.language_models import BaseChatModel
+from langchain_core.messages import (
+    AIMessage,
+    AIMessageChunk,
+    BaseMessage,
+)
+from langchain_core.messages.ai import UsageMetadata
+from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResult
+from pydantic import Field
+
+from typing import Sequence, Union, Callable, Type
+from langchain_core.tools import BaseTool
+from langchain_core.utils.function_calling import convert_to_openai_tool
+
+class ChatParrotLink(BaseChatModel):
+	"""A custom chat model that echoes the first `parrot_buffer_length` characters
+	of the input.
+
+	When contributing an implementation to LangChain, carefully document
+	the model including the initialization parameters, include
+	an example of how to initialize the model and include any relevant
+	links to the underlying models documentation or API.
+
+	Example:
+
+		.. code-block:: python
+
+			model = ChatParrotLink(parrot_buffer_length=2, model="bird-brain-001")
+			result = model.invoke([HumanMessage(content="hello")])
+			result = model.batch([[HumanMessage(content="hello")],
+									[HumanMessage(content="world")]])
+	"""
+	# global globalTools
+
+	# tools: Optional[List[Any]] = globalTools  # <-- Add this line
+	# tools: Optional[List[Any]] = None  # <-- Add this line
+
+	def bind_tools(self, tools: List[Any]) -> "CustomLLM":
+	# You can store the tools if needed or just ignore them
+		# self.tools = tools
+		return self
+	# def bind_tools(
+	# 	self,
+	# 	tools: Sequence[Union[dict, Type, Callable, BaseTool]],
+	# 	*,
+	# 	tool_choice: Union[dict, str, bool, None] = None,
+	# 	strict: bool = False,
+	# 	**kwargs: Any,
+	# ) -> "ChatParrotLink":
+	# 	"""
+	# 	Bind tool-like objects to this chat model.
+
+	# 	Parameters:
+	# 		tools: A list of tool definitions to bind to this chat model.
+	# 		tool_choice: Which tool to require the model to call.
+	# 		strict: Whether to enforce strict schema validation.
+	# 		**kwargs: Additional parameters.
+
+	# 	Returns:
+	# 		An instance of ChatParrotLink with tools bound.
+	# 	"""
+	# 	# Convert tools to OpenAI-compatible tool schemas
+	# 	self._tools = [
+	# 	    convert_to_openai_tool(tool, strict=strict) for tool in tools
+	# 	]
+	# 	self._tool_choice = tool_choice
+	# 	return self
+
+	model_name: str = Field(alias="model")
+	"""The name of the model"""
+	parrot_buffer_length: int
+	"""The number of characters from the last message of the prompt to be echoed."""
+	temperature: Optional[float] = None
+	max_tokens: Optional[int] = None
+	timeout: Optional[int] = None
+	stop: Optional[List[str]] = None
+	max_retries: int = 2
+
+	def _generate(
+		self,
+		messages: List[BaseMessage],
+		stop: Optional[List[str]] = None,
+		run_manager: Optional[CallbackManagerForLLMRun] = None,
+		**kwargs: Any,
+	) -> ChatResult:
+		"""Override the _generate method to implement the chat model logic.
+
+		This can be a call to an API, a call to a local model, or any other
+		implementation that generates a response to the input prompt.
+
+		Args:
+			messages: the prompt composed of a list of messages.
+			stop: a list of strings on which the model should stop generating.
+					If generation stops due to a stop token, the stop token itself
+					SHOULD BE INCLUDED as part of the output. This is not enforced
+					across models right now, but it's a good practice to follow since
+					it makes it much easier to parse the output of the model
+					downstream and understand why generation stopped.
+			run_manager: A run manager with callbacks for the LLM.
+		"""
+		# Replace this with actual logic to generate a response from a list
+		# of messages.
+		last_message = messages[-1]
+		print(f"inside custom llm: messages: {messages}")
+		# last_message = messages[0]
+		# tokens = last_message.content[: self.parrot_buffer_length]
+		tokens = CustomOllama(last_message.content) 
+		ct_input_tokens = sum(len(message.content) for message in messages)
+		ct_output_tokens = len(tokens)
+		message = AIMessage(
+			content=tokens,
+			additional_kwargs={},  # Used to add additional payload to the message
+			response_metadata={  # Use for response metadata
+				"time_in_seconds": 3,
+				"model_name": self.model_name,
+			},
+			usage_metadata={
+				"input_tokens": ct_input_tokens,
+				"output_tokens": ct_output_tokens,
+				"total_tokens": ct_input_tokens + ct_output_tokens,
+			},
+		)
+		##
+		# If tools are bound, include them in the message
+		if hasattr(self, "_tools") and self._tools:
+			message.tool_calls = self._tools
+
+		generation = ChatGeneration(message=message)
+		return ChatResult(generations=[generation])
+
+	def _stream(
+		self,
+		messages: List[BaseMessage],
+		stop: Optional[List[str]] = None,
+		run_manager: Optional[CallbackManagerForLLMRun] = None,
+		**kwargs: Any,
+	) -> Iterator[ChatGenerationChunk]:
+		"""Stream the output of the model.
+
+		This method should be implemented if the model can generate output
+		in a streaming fashion. If the model does not support streaming,
+		do not implement it. In that case streaming requests will be automatically
+		handled by the _generate method.
+
+		Args:
+			messages: the prompt composed of a list of messages.
+			stop: a list of strings on which the model should stop generating.
+					If generation stops due to a stop token, the stop token itself
+					SHOULD BE INCLUDED as part of the output. This is not enforced
+					across models right now, but it's a good practice to follow since
+					it makes it much easier to parse the output of the model
+					downstream and understand why generation stopped.
+			run_manager: A run manager with callbacks for the LLM.
+		"""
+		last_message = messages[-1]
+		tokens = str(last_message.content[: self.parrot_buffer_length])
+		ct_input_tokens = sum(len(message.content) for message in messages)
+
+		for token in tokens:
+			usage_metadata = UsageMetadata(
+				{
+					"input_tokens": ct_input_tokens,
+					"output_tokens": 1,
+					"total_tokens": ct_input_tokens + 1,
+				}
+			)
+			ct_input_tokens = 0
+			chunk = ChatGenerationChunk(
+				message=AIMessageChunk(content=token, usage_metadata=usage_metadata)
+			)
+
+			if run_manager:
+				# This is optional in newer versions of LangChain
+				# The on_llm_new_token will be called automatically
+				run_manager.on_llm_new_token(token, chunk=chunk)
+
+			yield chunk
+
+		# Let's add some other information (e.g., response metadata)
+		chunk = ChatGenerationChunk(
+			message=AIMessageChunk(
+				content="",
+				response_metadata={"time_in_sec": 3, "model_name": self.model_name},
+			)
+		)
+		if run_manager:
+			# This is optional in newer versions of LangChain
+			# The on_llm_new_token will be called automatically
+			run_manager.on_llm_new_token(token, chunk=chunk)
+		yield chunk
+
+	@property
+	def _llm_type(self) -> str:
+		"""Get the type of language model used by this chat model."""
+		return "echoing-chat-model-advanced"
+
+	@property
+	def _identifying_params(self) -> Dict[str, Any]:
+		"""Return a dictionary of identifying parameters.
+
+		This information is used by the LangChain callback system, which
+		is used for tracing purposes make it possible to monitor LLMs.
+		"""
+		return {
+			# The model name allows users to specify custom token counting
+			# rules in LLM monitoring applications (e.g., in LangSmith users
+			# can provide per token pricing for their model and monitor
+			# costs for the given LLM.)
+			"model_name": self.model_name,
+		}
+
+# llm = CustomLLM(n=5)
+# llm = CustomLLM(givenTools=tools)
+llm = ChatParrotLink(parrot_buffer_length=3, model="my_custom_model_02")
+# llmRaw = ChatParrotLink(parrot_buffer_length=3, model="my_custom_model_02")
+# llm = llmRaw.bind_tools(tools) # not working as expected
+
+## Open AI LLM model
+# llm = ChatOpenAI(model="gpt-3.5-turbo", max_tokens=500, temperature=0, max_retries=1)
+
+print(f"CustomLLM llm: {llm}::")
+
+
+
+from pydantic import BaseModel, Field
+
+
+class GetWeather(BaseModel):
+    '''Get the current weather in a given location'''
+
+    location: str = Field(
+        ..., description="The city and state, e.g. San Francisco, CA"
+    )
+
+
+class GetPopulation(BaseModel):
+    '''Get the current population in a given location'''
+
+    location: str = Field(
+        ..., description="The city and state, e.g. San Francisco, CA"
+    )
+
+
+llm_with_tools = llm.bind_tools(
+    [GetWeather, GetPopulation]
+    # strict = True  # enforce tool args schema is respected
+)
+
+ai_msg = llm_with_tools.invoke(
+    "Which city is hotter today and which is bigger: LA or NY?"
+)
+ai_msg.tool_calls
+
+print(f"ai_msg: {ai_msg}")
+print("#########################")
+print(f"ai_msg.tool_calls: {ai_msg.tool_calls}")
+humanBreak = input("humanBreak05:")
 
 ## memory
 # ~ config = {"configurable": {"thread_id": "thread-1"}}
@@ -196,17 +585,22 @@ loopCounter = 0
 agentOutput = ""
 
 
+
+# humanBreak = input("humanBreakLast:")
 ## graph and agent
 graph = create_react_agent(
 	llm, 
 	tools, 
 	interrupt_before=["tools"], 
-	checkpointer=MemorySaver()
+	checkpointer=MemorySaver(),
+	debug=True
+	# verbose=True
 ) 
 
 ## ## SCRIPTS ## ##
 def print_stream(graph, inputs, config):
 	global agentOutput
+	humanBreak = input("humanBreak02:")
 	for s in graph.stream(inputs, config, stream_mode="values"):
 		message = s["messages"][-1]
 		if isinstance(message, tuple):
@@ -261,7 +655,7 @@ def Main(userInput, threadId):
 #@app.route('/')
 #def Main():
 	#return "hey there, this is me"
-
+	print(f"## ## Main: userInput: {userInput} threadId: {threadId}")
 	#userInput = request.args.get('userInput', 'how are you?')
 	#threadId = request.args.get('threadId', '1')	
 	
@@ -306,8 +700,12 @@ def Main(userInput, threadId):
 
 		print("####### Tools to be called ::: ", toolsRequired)
 		
-		manInTheLoop = ManInTheLoopResponse(str(toolsRequired))
-		# manInTheLoop = input("Do you want to proceed (y/n): ")
+		global modeUserInterface
+		
+		if(modeUserInterface == "web_app"):
+			manInTheLoop = ManInTheLoopResponse(str(toolsRequired))
+		elif(modeUserInterface == "cli"):
+			manInTheLoop = input("Do you want to proceed (y/n): ")
 		
 		if manInTheLoop.lower() == "y":
 			print("## Allowed")
