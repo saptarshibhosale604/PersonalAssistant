@@ -4,7 +4,6 @@
 
 ## ## IMPORTING ## ## 
 
-from langchain_openai import ChatOpenAI
 
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import create_react_agent
@@ -316,6 +315,15 @@ from typing import Sequence, Union, Callable, Type
 from langchain_core.tools import BaseTool
 from langchain_core.utils.function_calling import convert_to_openai_tool
 
+#for custom llm class
+from langchain_core.runnables import (
+    Runnable,
+    RunnableLambda,
+    RunnableMap,
+    RunnablePassthrough,
+)
+from langchain_core.language_models import LanguageModelInput
+
 class ChatParrotLink(BaseChatModel):
 	"""A custom chat model that echoes the first `parrot_buffer_length` characters
 	of the input.
@@ -339,10 +347,10 @@ class ChatParrotLink(BaseChatModel):
 	# tools: Optional[List[Any]] = globalTools  # <-- Add this line
 	# tools: Optional[List[Any]] = None  # <-- Add this line
 
-	def bind_tools(self, tools: List[Any]) -> "CustomLLM":
-	# You can store the tools if needed or just ignore them
-		# self.tools = tools
-		return self
+	# def bind_tools(self, tools: List[Any]) -> "CustomLLM":
+	# # You can store the tools if needed or just ignore them
+	# 	# self.tools = tools
+	# 	return self
 	# def bind_tools(
 	# 	self,
 	# 	tools: Sequence[Union[dict, Type, Callable, BaseTool]],
@@ -379,6 +387,97 @@ class ChatParrotLink(BaseChatModel):
 	timeout: Optional[int] = None
 	stop: Optional[List[str]] = None
 	max_retries: int = 2
+
+	def bind_tools(
+		self,
+		tools: Sequence[Union[dict[str, Any], type, Callable, BaseTool]],
+		*,
+		tool_choice: Optional[
+			Union[dict, str, Literal["auto", "none", "required", "any"], bool]
+		] = None,
+		strict: Optional[bool] = None,
+		parallel_tool_calls: Optional[bool] = None,
+		**kwargs: Any,
+	) -> Runnable[LanguageModelInput, BaseMessage]:
+		"""Bind tool-like objects to this chat model.
+
+		Assumes model is compatible with OpenAI tool-calling API.
+
+		Args:
+			tools: A list of tool definitions to bind to this chat model.
+				Supports any tool definition handled by
+				:meth:`langchain_core.utils.function_calling.convert_to_openai_tool`.
+			tool_choice: Which tool to require the model to call. Options are:
+
+				- str of the form ``"<<tool_name>>"``: calls <<tool_name>> tool.
+				- ``"auto"``: automatically selects a tool (including no tool).
+				- ``"none"``: does not call a tool.
+				- ``"any"`` or ``"required"`` or ``True``: force at least one tool to be called.
+				- dict of the form ``{"type": "function", "function": {"name": <<tool_name>>}}``: calls <<tool_name>> tool.
+				- ``False`` or ``None``: no effect, default OpenAI behavior.
+			strict: If True, model output is guaranteed to exactly match the JSON Schema
+				provided in the tool definition. If True, the input schema will be
+				validated according to
+				https://platform.openai.com/docs/guides/structured-outputs/supported-schemas.
+				If False, input schema will not be validated and model output will not
+				be validated.
+				If None, ``strict`` argument will not be passed to the model.
+			parallel_tool_calls: Set to ``False`` to disable parallel tool use.
+				Defaults to ``None`` (no specification, which allows parallel tool use).
+			kwargs: Any additional parameters are passed directly to
+				:meth:`~langchain_openai.chat_models.base.ChatOpenAI.bind`.
+
+		.. versionchanged:: 0.1.21
+
+			Support for ``strict`` argument added.
+
+		"""  # noqa: E501
+
+		if parallel_tool_calls is not None:
+			kwargs["parallel_tool_calls"] = parallel_tool_calls
+		formatted_tools = [
+			convert_to_openai_tool(tool, strict=strict) for tool in tools
+		]
+		tool_names = []
+		for tool in formatted_tools:
+			if "function" in tool:
+				tool_names.append(tool["function"]["name"])
+			elif "name" in tool:
+				tool_names.append(tool["name"])
+			else:
+				pass
+		if tool_choice:
+			if isinstance(tool_choice, str):
+				# tool_choice is a tool/function name
+				if tool_choice in tool_names:
+					tool_choice = {
+						"type": "function",
+						"function": {"name": tool_choice},
+					}
+				elif tool_choice in (
+					"file_search",
+					"web_search_preview",
+					"computer_use_preview",
+				):
+					tool_choice = {"type": tool_choice}
+				# 'any' is not natively supported by OpenAI API.
+				# We support 'any' since other models use this instead of 'required'.
+				elif tool_choice == "any":
+					tool_choice = "required"
+				else:
+					pass
+			elif isinstance(tool_choice, bool):
+				tool_choice = "required"
+			elif isinstance(tool_choice, dict):
+				pass
+			else:
+				raise ValueError(
+					f"Unrecognized tool_choice type. Expected str, bool or dict. "
+					f"Received: {tool_choice}"
+				)
+			kwargs["tool_choice"] = tool_choice
+		return super().bind(tools=formatted_tools, **kwargs)
+
 
 	def _generate(
 		self,
@@ -515,14 +614,16 @@ class ChatParrotLink(BaseChatModel):
 
 # llm = CustomLLM(n=5)
 # llm = CustomLLM(givenTools=tools)
-llm = ChatParrotLink(parrot_buffer_length=3, model="my_custom_model_02")
 # llmRaw = ChatParrotLink(parrot_buffer_length=3, model="my_custom_model_02")
 # llm = llmRaw.bind_tools(tools) # not working as expected
+llm = ChatParrotLink(parrot_buffer_length=3, model="my_custom_model_02")
 
 ## Open AI LLM model
+from langchain_openai import ChatOpenAI
+
 # llm = ChatOpenAI(model="gpt-3.5-turbo", max_tokens=500, temperature=0, max_retries=1)
 
-print(f"CustomLLM llm: {llm}::")
+# print(f"CustomLLM llm: {llm}::")
 
 
 
@@ -555,9 +656,10 @@ ai_msg = llm_with_tools.invoke(
 )
 ai_msg.tool_calls
 
-print(f"ai_msg: {ai_msg}")
+# print(f"ai_msg: {ai_msg}")
 print("#########################")
 print(f"ai_msg.tool_calls: {ai_msg.tool_calls}")
+print("#########################")
 humanBreak = input("humanBreak05:")
 
 ## memory
