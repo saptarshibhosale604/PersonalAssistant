@@ -40,7 +40,7 @@ docker build -t personal_assistant .
 docker run -it --rm -v /home/rpissb/Project:/root/Project/ --entrypoint python personal_assistant /App/UI/cli.py
 
 //
-ls
+ls cli
 docker build -t personal_assistant .
 docker rm ollama07 -f
 docker run -d --rm -v ollama:/root/.ollama -v /home/rpissb/Project:/root/Project/ -p 11434:11434 --name ollama07 personal_assistant
@@ -66,9 +66,21 @@ docker exec -it ollama07 python /App/Langchain/agent.py
  //
 
 
+ls index.html
+docker build -t personal_assistant .
+docker rm ollama07 -f
+docker run -d --rm -v ollama:/root/.ollama -v /home/rpissb/Project:/root/Project/ -p 11434:11434 --name ollama07 personal_assistant
+docker exec -it ollama07 python /App/UI/WebApp/app.py
+ 
+ //
 ls custom
 docker build -t personal_assistant .
 docker rm ollama07 -f
 docker run -d --rm -v ollama:/root/.ollama -v /home/rpissb/Project:/root/Project/ -p 11434:11434 --name ollama07 personal_assistant
 docker exec -it ollama07 python /App/getFunctionsList.py
 
+TODO
+Done // work on context of local llm
+// work on streaming input from global llm
+// work on streaming input form local llm
+// work on mode context no for local llm

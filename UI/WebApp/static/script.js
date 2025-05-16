@@ -122,5 +122,33 @@ $(document).ready(function () {
         });
     });
     
+    $('#btn-global').click(function () {
+        const userMessage = "global";
+        
+        // Typing indicator
+        $('#chat-body').append(`
+            <div class="typing-indicator" id="typing">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        `);
+
+        // Scroll to bottom
+        $('#chat-body').scrollTop($('#chat-body')[0].scrollHeight);
+
+        // Send to server
+        $.ajax({
+            url: '/userInputExtra',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ message: userMessage }),
+            success: function (data) {
+                $('#typing').remove();
+                $('#chat-body').scrollTop($('#chat-body')[0].scrollHeight);
+            }
+        });
+    });
+    
 });
 

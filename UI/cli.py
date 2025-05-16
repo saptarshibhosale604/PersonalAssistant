@@ -12,12 +12,15 @@ debug01 = True
 
 print("Initialized assistant.py")
 
+modeLLM = "local" # local: Model running locally 
+			# global: Model running on cloud / chatgpt
+
 conversationMode = "wakeUp" 	# sleep: Go to Hibernate
 	                  	# wakeUp: Goint to answer the user input
 inputMode = "text" # text / speech
 outputMode = "text" # text / speech
 
-modeContext = "no" # no: no context in conversation
+modeContext = "yes" # no: no context in conversation
 			# yes: the conversation understand the context
 	
 listWakeUpCalls = ["hey there", "hi there", "hey rpi"]
@@ -97,6 +100,7 @@ def BasicCmds(userInput):
 	global inputMode
 	global outputMode
 	global modeContext
+	global modeLLM
 	
 	if (userInput.lower() == "help"):
 		print("1. input mode text")
@@ -107,9 +111,12 @@ def BasicCmds(userInput):
 		print("6. sleep")
 		print("7. mode context yes")
 		print("8. mode context no")
-		print("9. help")
+		print("9. mode llm local")
+		print("10. mode llm global")
+		print("99. help")
 		# logger.debug("## inputMode:", inputMode, ":outputMode:" , outputMode, ":conversationMode:" , conversationMode, "##")
-		print("## inputMode:", inputMode, ":outputMode:" , outputMode, ":conversationMode:" , conversationMode, ":modeContext:", modeContext, ":##")
+		# print("## inputMode:", inputMode, ":outputMode:" , outputMode, ":conversationMode:" , conversationMode, ":modeContext:", modeContext, ":##")
+		print("## inputMode:", inputMode, ":outputMode:" , outputMode, ":conversationMode:" , conversationMode, ":modeContext:", modeContext, ":modeLLM:", modeLLM, ":##")
 		return True
 
 	# Checking for input mode
@@ -147,6 +154,15 @@ def BasicCmds(userInput):
 
 	elif (userInput.lower() == "mode context no"):
 		modeContext = "no"
+		return True
+
+	# checking for mode LLM
+	elif (userInput.lower() == "mode llm local"):
+		modeLLM = "local"
+		return True
+
+	elif (userInput.lower() == "mode llm global"):
+		modeLLM = "global"
 		return True
 
 	else:
@@ -210,12 +226,14 @@ def Processing(userInput):
 		
 		#print("agentResponce:")
 		global threadId
-		
+		global modeLLM
+		global modeContext
+
 		if(modeContext == "no"):
 			threadId += 1 # Always changing memory variable
 		
 		#agentResponce = "Na"	
-		agentResponce = Agent.Main(userInput, threadId)
+		agentResponce = Agent.Main(userInput, threadId, modeLLM)
 		#userInput = "who is the PM of India?"
 		#agentResponse = requests.get(f"http://agent_langchain:5011/?userInput={userInput}&threadId={threadId}")
 		#print(":agentResp:", agentResponce)

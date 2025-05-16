@@ -8,6 +8,8 @@ debug01 = True
 
 print("Initialized assistant.py")
 
+modeLLM = "local" # local: Model running locally 
+			# global: Model running on cloud / chatgpt
 modeConversation = "awake" 	# sleep: Go to Hibernate
 	                  	# awake: Goint to answer the user input
 modeInput = "text" # text / speech
@@ -18,6 +20,18 @@ modeContext = "no" # no: no context in conversation
 	
 listWakeUpCalls = ["hey there", "hi there", "hey rpi"]
 listSleepCalls = ["sleep now", "go to sleep", "we are done", "got it"]
+
+def UpdateModeLLM(inputData):
+	global modeLLM
+	if(inputData == "global"):
+		modeLLM = "global"
+	elif(inputData == "local"):
+		modeLLM = "local"
+	else:
+		print("Error: Invalid inputData:", inputData)
+	
+	# print(f"modeLLM: {modeLLM}")
+
 
 roleDefining = f"""For the 'User Input' given below
 answer as you are a 'JARVIS' from the 'Iron Man' movie
@@ -106,6 +120,7 @@ def BasicCmds(userInput):
 		printData += f"mode output [text/speech]: {outputMode}\n"
 		printData += f"mode conversation [awake/sleep]: {modeConversation}\n"
 		printData += f"mode context [yes/no]: {modeContext}\n"
+		printData += f"mode LLM [local/global // add this]: {modeLLM}\n"
 		# logger.debug("## modeInput:", modeInput, ":outputMode:" , outputMode, ":modeConversation:" , modeConversation, "##")
 		# printData += "CurrentStatus:: modeInput:", modeInput, ":outputMode:" , outputMode, ":modeConversation:" , modeConversation, ":modeContext:", modeContext, ":##"
 		print(printData)
@@ -200,14 +215,15 @@ def Processing(userInput):
 		
 		#print("agentResponce:")
 		global threadId
-		
+		global modeLLM
+
 		if(modeContext == "no"):
 			threadId += 1 # Always changing memory variable
 		
 		# CheckToolsRequiredFile() // make this asyncronic
 
 		#agentResponce = "Na"	
-		agentResponce = Agent.Main(userInput, threadId)
+		agentResponce = Agent.Main(userInput, threadId, modeLLM)
 		#userInput = "who is the PM of India?"
 		#agentResponse = requests.get(f"http://agent_langchain:5011/?userInput={userInput}&threadId={threadId}")
 		#print(":agentResp:", agentResponce)
@@ -236,11 +252,14 @@ def get_user_input_message():
 
 @app.route('/userInputExtra', methods=['POST'])
 def get_user_input_extra():
-    user_message = request.json.get("message", "")
-    print(f"user_message: {user_message}")
-    UpdateManInTheLoopResponse(user_message)
-    # time.sleep(3)
-    return "None"
+	user_message = request.json.get("message", "")
+	print(f"user_message: {user_message}")
+	if(user_message == "y" or user_message == "n"):
+		UpdateManInTheLoopResponse(user_message)
+	elif(user_message == "global" or user_message == "local"):	
+		UpdateModeLLM(user_message)
+	# time.sleep(3)
+	return "None"
 
 ##  not in use
 def Main():

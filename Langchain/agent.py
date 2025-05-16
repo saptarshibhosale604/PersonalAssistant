@@ -166,7 +166,7 @@ toolsAdvance =  [toolShell]             	# Need for human in loop
 toolsIntermediate = [toolSetCronRemainder]
 toolsBasic = [toolYoutube, toolWebSearch]                  # No need for human in loop
 
-# tools = toolsAdvance + toolsIntermediate + toolsBasic
+tools = toolsAdvance + toolsIntermediate + toolsBasic
 # globalTools = tools
 
 
@@ -191,7 +191,7 @@ from ollama import ChatResponse
 
 
 # print("initialized")
-def CustomOllama(userInput):
+def CustomOllamaOld(userInput):
 
 	# simple one question answer
 	response: ChatResponse = chat(model='llama3.2:1b', messages=[
@@ -202,9 +202,52 @@ def CustomOllama(userInput):
 	])
 	# print(response['message']['content'])
 	# or access fields directly from the response object
-	print(f"CustomOllama: {response.message.content}")
-	humanBreak = input("humanBreak03:")
+	# print(f"CustomOllama: {response.message.content}")
+	# humanBreak = input("humanBreak03:")
 	return response.message.content
+
+
+
+
+# Initialize message history
+messages = []
+
+# print("Welcome to ChatBot! Type 'exit' to quit.\n")
+
+def CustomOllama(user_input):
+    # while True:
+	# user_input = input("You: ")
+
+	# if user_input.lower() in ['exit', 'quit']:
+	#     print("Goodbye!")
+	#     break
+
+	# Add user message to history
+	messages.append({'role': 'user', 'content': user_input})
+
+	# Get response from the model
+	stream = chat(
+		model='llama3.2:1b',
+		messages=messages,
+		stream=True,
+	)
+
+	# Collect response and print it
+	response = ""
+	print("Bot: ", end='', flush=True)
+	for chunk in stream:
+		content = chunk['message']['content']
+		print(content, end='', flush=True)
+		response += content
+		
+	print()
+
+	# Add assistant response to history
+	messages.append({'role': 'assistant', 'content': response})
+
+	return response
+# Main()
+
 
 # from typing import Any, List, Optional, Dict, Union, Iterator
 # # from langchain_core.chat_models import BaseChatModel
@@ -504,7 +547,7 @@ class ChatParrotLink(BaseChatModel):
 		# Replace this with actual logic to generate a response from a list
 		# of messages.
 		last_message = messages[-1]
-		print(f"inside custom llm: messages: {messages}")
+		# print(f"inside custom llm: messages: {messages}")
 		# last_message = messages[0]
 		# tokens = last_message.content[: self.parrot_buffer_length]
 		tokens = CustomOllama(last_message.content) 
@@ -616,6 +659,8 @@ class ChatParrotLink(BaseChatModel):
 # llm = CustomLLM(givenTools=tools)
 # llmRaw = ChatParrotLink(parrot_buffer_length=3, model="my_custom_model_02")
 # llm = llmRaw.bind_tools(tools) # not working as expected
+
+
 llm = ChatParrotLink(parrot_buffer_length=3, model="my_custom_model_02")
 
 ## Open AI LLM model
@@ -624,7 +669,31 @@ from langchain_openai import ChatOpenAI
 # llm = ChatOpenAI(model="gpt-3.5-turbo", max_tokens=500, temperature=0, max_retries=1)
 
 # print(f"CustomLLM llm: {llm}::")
+modeCurrentLLM = "na"
 
+def UpdateLLM(modeLLM):
+	global llm
+	global modeCurrentLLM
+	# llm = model
+	print(f"UpdateLLM: modeLLM: {modeLLM}")
+	if(modeLLM != modeCurrentLLM):
+		modeCurrentLLM = modeLLM
+
+		if(modeLLM == "local"):
+			llm = ChatParrotLink(parrot_buffer_length=3, model="my_custom_model_02")
+		elif(modeLLM == "global"):
+			llm = ChatOpenAI(model="gpt-3.5-turbo", max_tokens=500, temperature=0, max_retries=1)
+		
+		global graph
+		
+		graph = create_react_agent(
+			llm, 
+			tools, 
+			interrupt_before=["tools"], 
+			checkpointer=MemorySaver()
+			# debug=True
+		) 
+		# print(f"UpdateLLM llm: {llm}")
 
 
 from pydantic import BaseModel, Field
@@ -651,16 +720,16 @@ llm_with_tools = llm.bind_tools(
     # strict = True  # enforce tool args schema is respected
 )
 
-ai_msg = llm_with_tools.invoke(
-    "Which city is hotter today and which is bigger: LA or NY?"
-)
-ai_msg.tool_calls
+# ai_msg = llm_with_tools.invoke(
+#     "Which city is hotter today and which is bigger: LA or NY?"
+# )
+# ai_msg.tool_calls
 
-# print(f"ai_msg: {ai_msg}")
-print("#########################")
-print(f"ai_msg.tool_calls: {ai_msg.tool_calls}")
-print("#########################")
-humanBreak = input("humanBreak05:")
+# # print(f"ai_msg: {ai_msg}")
+# print("#########################")
+# print(f"ai_msg.tool_calls: {ai_msg.tool_calls}")
+# print("#########################")
+# humanBreak = input("humanBreak05:")
 
 ## memory
 # ~ config = {"configurable": {"thread_id": "thread-1"}}
@@ -694,15 +763,14 @@ graph = create_react_agent(
 	llm, 
 	tools, 
 	interrupt_before=["tools"], 
-	checkpointer=MemorySaver(),
-	debug=True
-	# verbose=True
+	checkpointer=MemorySaver()
+	# debug=True
 ) 
 
 ## ## SCRIPTS ## ##
 def print_stream(graph, inputs, config):
 	global agentOutput
-	humanBreak = input("humanBreak02:")
+	# humanBreak = input("humanBreak02:")
 	for s in graph.stream(inputs, config, stream_mode="values"):
 		message = s["messages"][-1]
 		if isinstance(message, tuple):
@@ -753,11 +821,14 @@ def ManInTheLoopResponse(toolsRequired):
 
 # Main loop to process the graph
 
-def Main(userInput, threadId):
+def Main(userInput, threadId, modeLLM):
 #@app.route('/')
 #def Main():
 	#return "hey there, this is me"
-	print(f"## ## Main: userInput: {userInput} threadId: {threadId}")
+	print(f"## ## Main: userInput: {userInput} ::threadId: {threadId} :: modeLLM: {modeLLM}")
+
+	UpdateLLM(modeLLM)
+
 	#userInput = request.args.get('userInput', 'how are you?')
 	#threadId = request.args.get('threadId', '1')	
 	
@@ -779,7 +850,7 @@ def Main(userInput, threadId):
 		config["configurable"]["thread_id"] = new_thread_id
 
 		print("## ## config new:", config)
-
+		# print(f"before graph stream llm:{llm}")
 		if(loopCounter == 0):
 			print_stream(graph, inputs, config)
 		else:
