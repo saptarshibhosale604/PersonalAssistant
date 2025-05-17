@@ -191,44 +191,47 @@ from ollama import ChatResponse
 
 
 # print("initialized")
-def CustomOllamaOld(userInput):
+# def CustomOllamaOld(userInput):
 
-	# simple one question answer
-	response: ChatResponse = chat(model='llama3.2:1b', messages=[
-	{
-		'role': 'user',
-		'content': userInput,
-	},
-	])
-	# print(response['message']['content'])
-	# or access fields directly from the response object
-	# print(f"CustomOllama: {response.message.content}")
-	# humanBreak = input("humanBreak03:")
-	return response.message.content
+# 	# simple one question answer
+# 	response: ChatResponse = chat(model='llama3.2:1b', messages=[
+# 	{
+# 		'role': 'user',
+# 		'content': userInput,
+# 	},
+# 	])
+# 	# print(response['message']['content'])
+# 	# or access fields directly from the response object
+# 	# print(f"CustomOllama: {response.message.content}")
+# 	# humanBreak = input("humanBreak03:")
+# 	return response.message.content
 
 
 
 
 # Initialize message history
-messages = []
+localLLMMessages = []
 
 # print("Welcome to ChatBot! Type 'exit' to quit.\n")
+modeContext = 'no'
 
 def CustomOllama(user_input):
+	global localLLMMessages
+	global modeContext
     # while True:
 	# user_input = input("You: ")
 
 	# if user_input.lower() in ['exit', 'quit']:
 	#     print("Goodbye!")
 	#     break
-
+	# print("here03")
 	# Add user message to history
-	messages.append({'role': 'user', 'content': user_input})
+	localLLMMessages.append({'role': 'user', 'content': user_input})
 
 	# Get response from the model
 	stream = chat(
 		model='llama3.2:1b',
-		messages=messages,
+		messages=localLLMMessages,
 		stream=True,
 	)
 
@@ -243,101 +246,14 @@ def CustomOllama(user_input):
 	print()
 
 	# Add assistant response to history
-	messages.append({'role': 'assistant', 'content': response})
+	if modeContext == 'yes':
+		localLLMMessages.append({'role': 'assistant', 'content': response})
+	elif modeContext == 'no':
+		localLLMMessages = []
 
 	return response
 # Main()
 
-
-# from typing import Any, List, Optional, Dict, Union, Iterator
-# # from langchain_core.chat_models import BaseChatModel
-# from langchain_core.language_models import BaseChatModel
-# from langchain_core.messages import BaseMessage, AIMessage, HumanMessage
-# from langchain_core.messages import AIMessage, ToolCall
-# from langchain_core.outputs import ChatResult, ChatGeneration, GenerationChunk
-# # from langchain_core.runnables import CallbackManagerForLLMRun
-
-# # Assume CustomOllama(user_input: str) -> str is defined elsewhere
-
-# class CustomLLM(BaseChatModel):
-# 	global globalTools
-
-# 	model_name: str = "CustomChatModel"
-
-# 	tools: Optional[List[Any]] = globalTools  # <-- Add this line
-
-# 	def bind_tools(self, tools: List[Any]) -> "CustomLLM":
-# 	# You can store the tools if needed or just ignore them
-# 		self.tools = tools
-# 		return self
-
-# 	def _generate(
-# 		self,
-# 		messages: List[BaseMessage],
-# 		stop: Optional[List[str]] = None,
-# 		run_manager: Optional[Any] = None,
-# 		**kwargs: Any
-# 	) -> ChatResult:
-# 		# Extract the last Human message
-# 		user_input = next(
-# 			(m.content for m in reversed(messages) if isinstance(m, HumanMessage)), ""
-# 		)
-
-# 		print(f"self.tools: {self.tools}")
-# 		humanBreak = input("humanBreak01:")
-		
-# 		# Try to find a matching tool by name in user input
-# 		if self.tools:
-# 			for tool in self.tools:
-# 				if tool.name.lower() in user_input.lower():
-# 					args = {}  # You can improve this with actual arg parsing
-# 					return ChatResult(
-# 						generations=[
-# 							ChatGeneration(
-# 								message=AIMessage(
-# 									content=None,
-# 									tool_calls=[ToolCall(name=tool.name, args=args)]
-# 								)
-# 							)
-# 						]
-# 					)
-
-# 		# If no tool match, respond normally
-# 		response = CustomOllama(user_input)
-# 		return ChatResult(
-# 			generations=[
-# 				ChatGeneration(message=AIMessage(content=response))
-# 			]
-# 		)
-
-# 	def invoke(
-# 		self,
-# 		messages: List[BaseMessage],
-# 		stop: Optional[List[str]] = None,
-# 		run_manager: Optional[CallbackManagerForLLMRun] = None,
-# 		**kwargs: Any
-# 	) -> ChatResult:
-# 		# Get the last human message from the list
-# 		last_message = ""
-# 		for msg in reversed(messages):
-# 			if isinstance(msg, HumanMessage):
-# 				last_message = msg.content
-# 				break
-
-# 		response_text = CustomOllama(last_message)
-
-# 		return ChatResult(
-# 			generations=[
-# 				ChatGeneration(message=AIMessage(content=response_text))
-# 			]
-# 		)
-
-# 	def _llm_type(self) -> str:
-# 		return "custom_chat"
-
-# 	@property
-# 	def _identifying_params(self) -> Dict[str, Any]:
-# 		return {"model_name": self.model_name}
 
 from typing import Any, Dict, Iterator, List, Optional, Literal
 
@@ -669,7 +585,7 @@ from langchain_openai import ChatOpenAI
 # llm = ChatOpenAI(model="gpt-3.5-turbo", max_tokens=500, temperature=0, max_retries=1)
 
 # print(f"CustomLLM llm: {llm}::")
-modeCurrentLLM = "na"
+modeCurrentLLM = "na" # save mode current llm, for detecting changes in the mode
 
 def UpdateLLM(modeLLM):
 	global llm
@@ -682,7 +598,8 @@ def UpdateLLM(modeLLM):
 		if(modeLLM == "local"):
 			llm = ChatParrotLink(parrot_buffer_length=3, model="my_custom_model_02")
 		elif(modeLLM == "global"):
-			llm = ChatOpenAI(model="gpt-3.5-turbo", max_tokens=500, temperature=0, max_retries=1)
+			# llm = ChatOpenAI(model="gpt-3.5-turbo", max_tokens=500, temperature=0, max_retries=1)
+			llm = ChatOpenAI(model="gpt-3.5-turbo", streaming=True, max_tokens=500, temperature=0, max_retries=1)
 		
 		global graph
 		
@@ -696,29 +613,29 @@ def UpdateLLM(modeLLM):
 		# print(f"UpdateLLM llm: {llm}")
 
 
-from pydantic import BaseModel, Field
+# from pydantic import BaseModel, Field
 
 
-class GetWeather(BaseModel):
-    '''Get the current weather in a given location'''
+# class GetWeather(BaseModel):
+#     '''Get the current weather in a given location'''
 
-    location: str = Field(
-        ..., description="The city and state, e.g. San Francisco, CA"
-    )
-
-
-class GetPopulation(BaseModel):
-    '''Get the current population in a given location'''
-
-    location: str = Field(
-        ..., description="The city and state, e.g. San Francisco, CA"
-    )
+#     location: str = Field(
+#         ..., description="The city and state, e.g. San Francisco, CA"
+#     )
 
 
-llm_with_tools = llm.bind_tools(
-    [GetWeather, GetPopulation]
-    # strict = True  # enforce tool args schema is respected
-)
+# class GetPopulation(BaseModel):
+#     '''Get the current population in a given location'''
+
+#     location: str = Field(
+#         ..., description="The city and state, e.g. San Francisco, CA"
+#     )
+
+
+# llm_with_tools = llm.bind_tools(
+#     [GetWeather, GetPopulation]
+#     # strict = True  # enforce tool args schema is respected
+# )
 
 # ai_msg = llm_with_tools.invoke(
 #     "Which city is hotter today and which is bigger: LA or NY?"
@@ -768,7 +685,8 @@ graph = create_react_agent(
 ) 
 
 ## ## SCRIPTS ## ##
-def print_stream(graph, inputs, config):
+# working
+def print_stream_normal(graph, inputs, config):
 	global agentOutput
 	# humanBreak = input("humanBreak02:")
 	for s in graph.stream(inputs, config, stream_mode="values"):
@@ -780,6 +698,35 @@ def print_stream(graph, inputs, config):
 			message.pretty_print()
 			agentOutput = message.content
 
+#testing
+import asyncio
+
+# def print_stream(graph, inputs, config):
+async def print_stream_coroutine(graph, inputs, config):
+# def print_stream(graph, inputs, config):
+	global agentOutput
+	async for event in graph.astream_events(inputs, config, version="v1"):
+	# for event in graph.astream_events(inputs, config, version="v1"):
+		if event["event"] == "on_chat_model_stream":
+			chunk = event["data"]["chunk"]
+			if chunk.content:
+				# print(chunk.content, end="|", flush=True)
+				print(chunk.content, end="", flush=True)
+				agentOutput += chunk.content
+				
+	# print()  # final newline
+	print("\n============================================")  # final newline
+	print("============================================\n")  # final newline
+	# message = "done"
+	# message.pretty_print()
+	# humanBreak = input("humanBreak02:")
+		# message = s["messages"][stream_events-1]
+		# if isinstance(message, tuple):
+		# 	print(message)
+		
+		# else:
+		# 	message.pretty_print()
+		# 	agentOutput = message.content
 
 pathManInTheLoopResponse = "/root/Project/Rpi/PersonalAssistant/Langchain/manInTheLoopResponce.txt"
 pathToolsRequired = "/root/Project/Rpi/PersonalAssistant/Langchain/toolsRequired.txt"
@@ -821,12 +768,13 @@ def ManInTheLoopResponse(toolsRequired):
 
 # Main loop to process the graph
 
-def Main(userInput, threadId, modeLLM):
+def Main(userInput, threadId, modeLLM, modeContextValue):
 #@app.route('/')
 #def Main():
 	#return "hey there, this is me"
-	print(f"## ## Main: userInput: {userInput} ::threadId: {threadId} :: modeLLM: {modeLLM}")
-
+	print(f"## ## Main: userInput: {userInput} ::threadId: {threadId} :: modeLLM: {modeLLM} :: modeContextValue: {modeContextValue}")
+	global modeContext
+	modeContext = modeContextValue
 	UpdateLLM(modeLLM)
 
 	#userInput = request.args.get('userInput', 'how are you?')
@@ -852,9 +800,15 @@ def Main(userInput, threadId, modeLLM):
 		print("## ## config new:", config)
 		# print(f"before graph stream llm:{llm}")
 		if(loopCounter == 0):
-			print_stream(graph, inputs, config)
+			if(modeLLM == 'local'):
+			 	print_stream_normal(graph, inputs, config)
+			elif(modeLLM == 'gobal'):
+				asyncio.run(print_stream_coroutine(graph, inputs, config))
 		else:
-			print_stream(graph, None, config)
+			if(modeLLM == 'local'):
+				print_stream_normal(graph, None, config)
+			elif(modeLLM == 'global'):
+				asyncio.run(print_stream_coroutine(graph, None, config))
 			
 		loopCounter += 1
 		snapshot = graph.get_state(config)

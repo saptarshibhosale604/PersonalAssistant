@@ -116,57 +116,60 @@ def BasicCmds(userInput):
 		print("99. help")
 		# logger.debug("## inputMode:", inputMode, ":outputMode:" , outputMode, ":conversationMode:" , conversationMode, "##")
 		# print("## inputMode:", inputMode, ":outputMode:" , outputMode, ":conversationMode:" , conversationMode, ":modeContext:", modeContext, ":##")
-		print("## inputMode:", inputMode, ":outputMode:" , outputMode, ":conversationMode:" , conversationMode, ":modeContext:", modeContext, ":modeLLM:", modeLLM, ":##")
-		return True
+		# print("## inputMode:", inputMode, ":outputMode:" , outputMode, ":conversationMode:" , conversationMode, ":modeContext:", modeContext, ":modeLLM:", modeLLM, ":##")
+		
 
 	# Checking for input mode
-	if (userInput.lower() == "input mode text"):
+	elif (userInput.lower() == "input mode text"):
 		inputMode = "text"
-		return True
+		
 	
 	elif (userInput.lower() == "input mode speech"):
 		inputMode = "speech"
-		return True
+		
 
 	# Checking for output mode
 	elif (userInput.lower() == "output mode text"):
 		outputMode = "text"
-		return True
+		
 	
 	elif (userInput.lower() == "output mode speech"):
 		outputMode = "speech"
-		return True
+		
 
 	# Checking for wake up call
 	elif any(call in userInput.lower() for call in listWakeUpCalls):
 		conversationMode = "wakeUp"
-		return True
+		
 	
 	# Checking for sleep call
 	elif any(call in userInput.lower() for call in listSleepCalls):
 		conversationMode = "sleep"
-		return True
+		
 
 	# checking for mode context 
 	elif (userInput.lower() == "mode context yes"):
 		modeContext = "yes"
-		return True
+		
 
 	elif (userInput.lower() == "mode context no"):
 		modeContext = "no"
-		return True
+		
 
 	# checking for mode LLM
 	elif (userInput.lower() == "mode llm local"):
 		modeLLM = "local"
-		return True
+		
 
 	elif (userInput.lower() == "mode llm global"):
 		modeLLM = "global"
-		return True
+		
 
 	else:
 		return False
+
+	print("## inputMode:", inputMode, ":outputMode:" , outputMode, ":conversationMode:" , conversationMode, ":modeContext:", modeContext, ":modeLLM:", modeLLM, ":##")
+	return True
 
 def Input():	
 	global logger
@@ -233,7 +236,7 @@ def Processing(userInput):
 			threadId += 1 # Always changing memory variable
 		
 		#agentResponce = "Na"	
-		agentResponce = Agent.Main(userInput, threadId, modeLLM)
+		agentResponce = Agent.Main(userInput, threadId, modeLLM, modeContext)
 		#userInput = "who is the PM of India?"
 		#agentResponse = requests.get(f"http://agent_langchain:5011/?userInput={userInput}&threadId={threadId}")
 		#print(":agentResp:", agentResponce)

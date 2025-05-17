@@ -11,6 +11,14 @@
 	docker run -it -v /home/ec2-user/Test:/Data --rm personal_assistant /bin/sh
 	docker run -it -v /home/ec2-user/Project:/root/Project/ --rm personal_assistant /bin/sh
 
+//
+working
+ls cli
+docker build -t personal_assistant .
+docker rm ollamaLocal -f
+docker run -d --rm -v ollama:/root/.ollama -v /home/rpissb/Project:/root/Project/ -p 11434:11434 --name ollamaLocal personal_assistant
+docker exec -it ollamaLocal python /App/UI/cli.py
+
 // SSH 
 eval "$(ssh-agent -s)"
 ssh-add GitSSHAuthentication/key05
