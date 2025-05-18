@@ -77,9 +77,10 @@ docker exec -it ollama07 python /App/Langchain/agent.py
 ls index.html
 docker build -t personal_assistant .
 docker rm ollama07 -f
-docker run -d --rm -v ollama:/root/.ollama -v /home/rpissb/Project:/root/Project/ -p 11434:11434 --name ollama07 personal_assistant
+docker run -d --rm -v ollama:/root/.ollama -v /home/rpissb/Project:/root/Project/ -p 11434:11434 -p 5001:5001 --name ollama07 personal_assistant
 docker exec -it ollama07 python /App/UI/WebApp/app.py
  
+docker exec -it ollama07 python /App/UI/WebApp/app.py
  //
 ls custom
 docker build -t personal_assistant .

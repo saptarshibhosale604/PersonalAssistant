@@ -8,14 +8,14 @@ debug01 = True
 
 print("Initialized assistant.py")
 
-modeLLM = "local" # local: Model running locally 
+modeLLM = "global" # local: Model running locally 
 			# global: Model running on cloud / chatgpt
 modeConversation = "awake" 	# sleep: Go to Hibernate
 	                  	# awake: Goint to answer the user input
 modeInput = "text" # text / speech
-outputMode = "text" # text / speech
-
+modeOutput = "text" # text / speech
 modeContext = "no" # no: no context in conversation
+
 			# yes: the conversation understand the context
 	
 listWakeUpCalls = ["hey there", "hi there", "hey rpi"]
@@ -100,9 +100,11 @@ def BasicCmds(userInput):
 	# global logger
 	global modeConversation
 	global modeInput
-	global outputMode
+	global modeOutput
 	global modeContext
+	global modeLLM
 	
+	printData = ""
 	if (userInput.lower() == "help"):
 		# data = "1. input mode text\n"
 		# data += "2. input mode speech\n"
@@ -117,12 +119,12 @@ def BasicCmds(userInput):
 		# printData = "help\n" 
 		printData = "mode [options]: current mode\n"
 		printData += f"mode input [text/speech]: {modeInput}\n"
-		printData += f"mode output [text/speech]: {outputMode}\n"
+		printData += f"mode output [text/speech]: {modeOutput}\n"
 		printData += f"mode conversation [awake/sleep]: {modeConversation}\n"
 		printData += f"mode context [yes/no]: {modeContext}\n"
-		printData += f"mode LLM [local/global // add this]: {modeLLM}\n"
-		# logger.debug("## modeInput:", modeInput, ":outputMode:" , outputMode, ":modeConversation:" , modeConversation, "##")
-		# printData += "CurrentStatus:: modeInput:", modeInput, ":outputMode:" , outputMode, ":modeConversation:" , modeConversation, ":modeContext:", modeContext, ":##"
+		printData += f"mode LLM [local/global]: {modeLLM}\n"
+		# logger.debug("## modeInput:", modeInput, ":modeOutput:" , modeOutput, ":modeConversation:" , modeConversation, "##")
+		# printData += "CurrentStatus:: modeInput:", modeInput, ":modeOutput:" , modeOutput, ":modeConversation:" , modeConversation, ":modeContext:", modeContext, ":##"
 		print(printData)
 		return printData
 
@@ -137,11 +139,11 @@ def BasicCmds(userInput):
 
 	# Checking for output mode
 	elif (userInput.lower() == "output mode text"):
-		outputMode = "text"
+		modeOutput = "text"
 		return True
 	
 	elif (userInput.lower() == "output mode speech"):
-		outputMode = "speech"
+		modeOutput = "speech"
 		return True
 
 	# Checking for wake up call
@@ -163,8 +165,19 @@ def BasicCmds(userInput):
 		modeContext = "no"
 		return True
 
+	# checking for mode LLM
+	elif (userInput.lower() == "mode llm local"):
+		modeLLM = "local"
+		return True
+
+	elif (userInput.lower() == "mode llm global"):
+		modeLLM = "global"
+		return True
+	
 	else:
 		return False
+
+	# return printData
 
 def Processing(userInput):
 	# global logger
@@ -179,11 +192,12 @@ def Processing(userInput):
 
 	print(f"basicCmdsReturn: {basicCmdsReturn}")
 
-	if(basicCmdsReturn == True):
+	if(basicCmdsReturn == True): # Return True
 		return
-	elif(basicCmdsReturn != False):
+	elif(basicCmdsReturn != False): # Return the printData
 		return basicCmdsReturn
-	
+								# if False then continue
+
 	# for debug only conversation mode only wake up
 	# ~ modeConversation = "wakeUp"
 	
@@ -216,6 +230,7 @@ def Processing(userInput):
 		#print("agentResponce:")
 		global threadId
 		global modeLLM
+		global modeContext
 
 		if(modeContext == "no"):
 			threadId += 1 # Always changing memory variable
@@ -223,7 +238,9 @@ def Processing(userInput):
 		# CheckToolsRequiredFile() // make this asyncronic
 
 		#agentResponce = "Na"	
-		agentResponce = Agent.Main(userInput, threadId, modeLLM)
+		agentResponce = Agent.Main(userInput, threadId, modeLLM, modeContext)
+		
+		# agentResponce = Agent.Main(userInput, threadId, modeLLM)
 		#userInput = "who is the PM of India?"
 		#agentResponse = requests.get(f"http://agent_langchain:5011/?userInput={userInput}&threadId={threadId}")
 		#print(":agentResp:", agentResponce)
@@ -304,16 +321,16 @@ def Input():
 	
 def Output(assistantOutput):
 	global logger
-	global outputMode
+	global modeOutput
 
 	logger.info(f"assistantOutput: {assistantOutput}")	# Text 
 	
-	if(outputMode == "text"):
+	if(modeOutput == "text"):
 		return
-	elif(outputMode == "speech"):	
+	elif(modeOutput == "speech"):	
 		TTS.Main(assistantOutput) 			# Text to speech
 	else:
-		print("Error: Invalid outputMode:", outputMode)
+		print("Error: Invalid modeOutput:", modeOutput)
 
 ##	
 if __name__ == '__main__':

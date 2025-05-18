@@ -12,15 +12,15 @@ debug01 = True
 
 print("Initialized assistant.py")
 
+
 modeLLM = "local" # local: Model running locally 
 			# global: Model running on cloud / chatgpt
-
-conversationMode = "wakeUp" 	# sleep: Go to Hibernate
+modeConversation = "wakeUp" 	# sleep: Go to Hibernate
 	                  	# wakeUp: Goint to answer the user input
-inputMode = "text" # text / speech
-outputMode = "text" # text / speech
-
+modeInput = "text" # text / speech
+modeOutput = "text" # text / speech
 modeContext = "yes" # no: no context in conversation
+
 			# yes: the conversation understand the context
 	
 listWakeUpCalls = ["hey there", "hi there", "hey rpi"]
@@ -96,55 +96,65 @@ def InitializingLogging():
 
 def BasicCmds(userInput):
 	global logger
-	global conversationMode
-	global inputMode
-	global outputMode
+	global modeConversation
+	global modeInput
+	global modeOutput
 	global modeContext
 	global modeLLM
 	
+	printData = ""
+
 	if (userInput.lower() == "help"):
-		print("1. input mode text")
-		print("2. input mode speech")
-		print("3. output mode text")
-		print("4. output mode speech")
-		print("5. wake up")
-		print("6. sleep")
-		print("7. mode context yes")
-		print("8. mode context no")
-		print("9. mode llm local")
-		print("10. mode llm global")
-		print("99. help")
-		# logger.debug("## inputMode:", inputMode, ":outputMode:" , outputMode, ":conversationMode:" , conversationMode, "##")
-		# print("## inputMode:", inputMode, ":outputMode:" , outputMode, ":conversationMode:" , conversationMode, ":modeContext:", modeContext, ":##")
-		# print("## inputMode:", inputMode, ":outputMode:" , outputMode, ":conversationMode:" , conversationMode, ":modeContext:", modeContext, ":modeLLM:", modeLLM, ":##")
-		
+		# print("1. input mode text")
+		# print("2. input mode speech")
+		# print("3. output mode text")
+		# print("4. output mode speech")
+		# print("5. wake up")
+		# print("6. sleep")
+		# print("7. mode context yes")
+		# print("8. mode context no")
+		# print("9. mode llm local")
+		# print("10. mode llm global")
+		# print("99. help")
+		# logger.debug("## modeInput:", modeInput, ":modeOutput:" , modeOutput, ":modeConversation:" , modeConversation, "##")
+		# print("## modeInput:", modeInput, ":modeOutput:" , modeOutput, ":modeConversation:" , modeConversation, ":modeContext:", modeContext, ":##")
+		# print("## modeInput:", modeInput, ":modeOutput:" , modeOutput, ":modeConversation:" , modeConversation, ":modeContext:", modeContext, ":modeLLM:", modeLLM, ":##")
+		printData = "mode [options]: current mode\n"
+		printData += f"mode input [text/speech]: {modeInput}\n"
+		printData += f"mode output [text/speech]: {modeOutput}\n"
+		printData += f"mode conversation [awake/sleep]: {modeConversation}\n"
+		printData += f"mode context [yes/no]: {modeContext}\n"
+		printData += f"mode llm [local/global]: {modeLLM}\n"
+		# printData += "CurrentStatus:: modeInput:", modeInput, ":modeOutput:" , modeOutput, ":modeConversation:" , modeConversation, ":modeContext:", modeContext, ":##"
+		# print(printData)
+		# return printData
 
 	# Checking for input mode
 	elif (userInput.lower() == "input mode text"):
-		inputMode = "text"
+		modeInput = "text"
 		
 	
 	elif (userInput.lower() == "input mode speech"):
-		inputMode = "speech"
+		modeInput = "speech"
 		
 
 	# Checking for output mode
 	elif (userInput.lower() == "output mode text"):
-		outputMode = "text"
+		modeOutput = "text"
 		
 	
 	elif (userInput.lower() == "output mode speech"):
-		outputMode = "speech"
+		modeOutput = "speech"
 		
 
 	# Checking for wake up call
 	elif any(call in userInput.lower() for call in listWakeUpCalls):
-		conversationMode = "wakeUp"
+		modeConversation = "wakeUp"
 		
 	
 	# Checking for sleep call
 	elif any(call in userInput.lower() for call in listSleepCalls):
-		conversationMode = "sleep"
+		modeConversation = "sleep"
 		
 
 	# checking for mode context 
@@ -168,22 +178,23 @@ def BasicCmds(userInput):
 	else:
 		return False
 
-	print("## inputMode:", inputMode, ":outputMode:" , outputMode, ":conversationMode:" , conversationMode, ":modeContext:", modeContext, ":modeLLM:", modeLLM, ":##")
+	# print("## modeInput:", modeInput, ":modeOutput:" , modeOutput, ":modeConversation:" , modeConversation, ":modeContext:", modeContext, ":modeLLM:", modeLLM, ":##")
+	print(printData)
 	return True
 
 def Input():	
 	global logger
-	global inputMode
+	global modeInput
 		
 	## ## Input ## ##
 	# Getting user input
 	# userInput = "Hey there how its going on?" # sample 
-	if(inputMode == "text"):
+	if(modeInput == "text"):
 		userInput = input("userInput: ")	# Text 
-	elif(inputMode == "speech"):
+	elif(modeInput == "speech"):
 		userInput = STT.Main()			# Speech To Text
 	else:
-		print("Error: Invalid inputMode:", inputMode)
+		print("Error: Invalid modeInput:", modeInput)
 	
 	# ~ print("userInput:",userInput)	
 	logger.info(f"userInput: {userInput}")
@@ -191,7 +202,7 @@ def Input():
 	
 def Processing(userInput):
 	global logger
-	global conversationMode
+	global modeConversation
 	
 	
 	if(BasicCmds(userInput)):
@@ -199,16 +210,16 @@ def Processing(userInput):
 		
 	
 	# for debug only conversation mode only wake up
-	# ~ conversationMode = "wakeUp"
+	# ~ modeConversation = "wakeUp"
 	
 		
 	# ~ # Checking for sleep call
 	# ~ if any(call in userInput.lower() for call in listSleepCalls):
-		# ~ conversationMode = "sleep"
+		# ~ modeConversation = "sleep"
 		
-	# if(debug01): print("conversationMode:",conversationMode)
+	# if(debug01): print("modeConversation:",modeConversation)
 	
-	if (conversationMode == "wakeUp"):
+	if (modeConversation == "wakeUp"):
 		# userInputToScriptInvocation
 		
 		# ~ terminalOutput = UITSI.Main(userInput)
@@ -244,16 +255,16 @@ def Processing(userInput):
 
 def Output(assistantOutput):
 	global logger
-	global outputMode
+	global modeOutput
 
 	logger.info(f"assistantOutput: {assistantOutput}")	# Text 
 	
-	if(outputMode == "text"):
+	if(modeOutput == "text"):
 		return
-	elif(outputMode == "speech"):	
+	elif(modeOutput == "speech"):	
 		TTS.Main(assistantOutput) 			# Text to speech
 	else:
-		print("Error: Invalid outputMode:", outputMode)
+		print("Error: Invalid modeOutput:", modeOutput)
 			
 
 ## ## FLASK APP INITIALIZATION ## ##

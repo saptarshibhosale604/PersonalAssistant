@@ -237,7 +237,7 @@ def CustomOllama(user_input):
 
 	# Collect response and print it
 	response = ""
-	print("Bot: ", end='', flush=True)
+	print("Streaming responce: ", end='', flush=True)
 	for chunk in stream:
 		content = chunk['message']['content']
 		print(content, end='', flush=True)
@@ -772,7 +772,7 @@ def Main(userInput, threadId, modeLLM, modeContextValue):
 #@app.route('/')
 #def Main():
 	#return "hey there, this is me"
-	print(f"## ## Main: userInput: {userInput} ::threadId: {threadId} :: modeLLM: {modeLLM} :: modeContextValue: {modeContextValue}")
+	# print(f"## ## Main: userInput: {userInput} ::threadId: {threadId} :: modeLLM: {modeLLM} :: modeContextValue: {modeContextValue}")
 	global modeContext
 	modeContext = modeContextValue
 	UpdateLLM(modeLLM)
