@@ -89,7 +89,9 @@ docker run -d --rm -v ollama:/root/.ollama -v /home/rpissb/Project:/root/Project
 docker exec -it ollama07 python /App/getFunctionsList.py
 
 TODO
-Done // work on context of local llm
-// work on streaming input from global llm
-// work on streaming input form local llm
 // work on mode context no for local llm
+// global mode not working for webapp
+
+Done // work on context of local llm
+done // work on streaming input from global llm
+done // work on streaming input form local llm
