@@ -8,13 +8,13 @@ debug01 = True
 
 print("Initialized assistant.py")
 
-modeLLM = "global" # local: Model running locally 
+modeLLM = "local" # local: Model running locally 
 			# global: Model running on cloud / chatgpt
 modeConversation = "awake" 	# sleep: Go to Hibernate
 	                  	# awake: Goint to answer the user input
 modeInput = "text" # text / speech
 modeOutput = "text" # text / speech
-modeContext = "no" # no: no context in conversation
+modeContext = "yes" # no: no context in conversation
 
 			# yes: the conversation understand the context
 	
@@ -106,10 +106,10 @@ def BasicCmds(userInput):
 	
 	printData = ""
 	if (userInput.lower() == "help"):
-		# data = "1. input mode text\n"
-		# data += "2. input mode speech\n"
-		# data += "3. output mode text\n"
-		# data += "4. output mode speech\n"
+		# data = "1. mode input text\n"
+		# data += "2. mode input speech\n"
+		# data += "3. mode output text\n"
+		# data += "4. mode output speech\n"
 		# data += "5. wake up\n"
 		# data += "6. sleep\n"
 		# data += "7. mode context yes\n"
@@ -128,21 +128,21 @@ def BasicCmds(userInput):
 		print(printData)
 		return printData
 
-	# Checking for input mode
-	if (userInput.lower() == "input mode text"):
+	# Checking for mode input
+	if (userInput.lower() == "mode input text"):
 		modeInput = "text"
 		return True
 	
-	elif (userInput.lower() == "input mode speech"):
+	elif (userInput.lower() == "mode input speech"):
 		modeInput = "speech"
 		return True
 
-	# Checking for output mode
-	elif (userInput.lower() == "output mode text"):
+	# Checking for mode output
+	elif (userInput.lower() == "mode output text"):
 		modeOutput = "text"
 		return True
 	
-	elif (userInput.lower() == "output mode speech"):
+	elif (userInput.lower() == "mode output speech"):
 		modeOutput = "speech"
 		return True
 

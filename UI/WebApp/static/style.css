@@ -116,6 +116,7 @@ body {
 }
 
 .message {
+    font-size: 50px;
     max-width: 80%;
     margin-bottom: 1rem;
     padding: 0.75rem 1rem;
@@ -258,7 +259,7 @@ body {
     border-color: var(--text-secondary);
     color: var(--text-primary);
 }
-
+/* 
 @media (max-width: 500px) {
     .chatbot-footer {
         flex-wrap: wrap;
@@ -282,4 +283,4 @@ body {
     .no-btn {
         flex: 1;
     }
-}
+} */

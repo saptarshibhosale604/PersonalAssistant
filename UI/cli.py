@@ -105,45 +105,26 @@ def BasicCmds(userInput):
 	printData = ""
 
 	if (userInput.lower() == "help"):
-		# print("1. input mode text")
-		# print("2. input mode speech")
-		# print("3. output mode text")
-		# print("4. output mode speech")
-		# print("5. wake up")
-		# print("6. sleep")
-		# print("7. mode context yes")
-		# print("8. mode context no")
-		# print("9. mode llm local")
-		# print("10. mode llm global")
-		# print("99. help")
-		# logger.debug("## modeInput:", modeInput, ":modeOutput:" , modeOutput, ":modeConversation:" , modeConversation, "##")
-		# print("## modeInput:", modeInput, ":modeOutput:" , modeOutput, ":modeConversation:" , modeConversation, ":modeContext:", modeContext, ":##")
-		# print("## modeInput:", modeInput, ":modeOutput:" , modeOutput, ":modeConversation:" , modeConversation, ":modeContext:", modeContext, ":modeLLM:", modeLLM, ":##")
-		printData = "mode [options]: current mode\n"
-		printData += f"mode input [text/speech]: {modeInput}\n"
-		printData += f"mode output [text/speech]: {modeOutput}\n"
-		printData += f"mode conversation [awake/sleep]: {modeConversation}\n"
-		printData += f"mode context [yes/no]: {modeContext}\n"
-		printData += f"mode llm [local/global]: {modeLLM}\n"
+		print("Help:")
 		# printData += "CurrentStatus:: modeInput:", modeInput, ":modeOutput:" , modeOutput, ":modeConversation:" , modeConversation, ":modeContext:", modeContext, ":##"
 		# print(printData)
 		# return printData
 
 	# Checking for input mode
-	elif (userInput.lower() == "input mode text"):
+	elif (userInput.lower() == "mode input text"):
 		modeInput = "text"
 		
 	
-	elif (userInput.lower() == "input mode speech"):
+	elif (userInput.lower() == "mode input speech"):
 		modeInput = "speech"
 		
 
 	# Checking for output mode
-	elif (userInput.lower() == "output mode text"):
+	elif (userInput.lower() == "mode output text"):
 		modeOutput = "text"
 		
 	
-	elif (userInput.lower() == "output mode speech"):
+	elif (userInput.lower() == "mode output speech"):
 		modeOutput = "speech"
 		
 
@@ -179,6 +160,13 @@ def BasicCmds(userInput):
 		return False
 
 	# print("## modeInput:", modeInput, ":modeOutput:" , modeOutput, ":modeConversation:" , modeConversation, ":modeContext:", modeContext, ":modeLLM:", modeLLM, ":##")
+	printData = "mode [options]: current mode\n"
+	printData += f"mode input [text/speech]: {modeInput}\n"
+	printData += f"mode output [text/speech]: {modeOutput}\n"
+	printData += f"mode conversation [awake/sleep]: {modeConversation}\n"
+	printData += f"mode context [yes/no]: {modeContext}\n"
+	printData += f"mode llm [local/global]: {modeLLM}\n"
+	
 	print(printData)
 	return True
 
