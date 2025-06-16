@@ -2,6 +2,11 @@ from flask import Flask, render_template, request, jsonify
 import time
 import Langchain.agent as Agent
 
+# from flask import Response, stream_with_context, request
+from flask import Response, stream_with_context
+import Langchain.agent as Agent
+
+
 app = Flask(__name__)
 
 debug01 = True
@@ -20,6 +25,7 @@ modeContext = "yes" # no: no context in conversation
 	
 listWakeUpCalls = ["hey there", "hi there", "hey rpi"]
 listSleepCalls = ["sleep now", "go to sleep", "we are done", "got it"]
+
 
 def UpdateModeLLM(inputData):
 	global modeLLM
@@ -332,6 +338,40 @@ def Output(assistantOutput):
 	else:
 		print("Error: Invalid modeOutput:", modeOutput)
 
-##	
+##
+# from flask import Response, stream_with_context, request
+# import Langchain.agent as Agent
+
+#V01
+# @app.route('/streamUserInputMessage', methods=['POST'])
+# def stream_user_input_message():
+#     ResetToolsRequired()
+#     user_message = request.json.get("message", "")
+#     print(f"user_message: {user_message}")
+
+#     def generate():
+#         for chunk in Agent.StreamingResponse(user_message, threadId, modeLLM, modeContext):
+#             yield f"data: {chunk}\n\n"
+
+#     return Response(stream_with_context(generate()), mimetype='text/event-stream')
+
+#V02
+@app.route('/streamUserInputMessage', methods=['GET'])
+def stream_user_input_message():
+    ResetToolsRequired()
+    user_message = request.args.get("message", "")
+    thread_id = request.args.get("threadId", "1")
+    mode_llm = request.args.get("modeLLM", "local")
+    mode_context = request.args.get("modeContext", "yes")
+
+    print(f"user_message: {user_message}")
+
+    def generate():
+        for chunk in Agent.StreamingResponse(user_message, thread_id, mode_llm, mode_context):
+            yield f"data: {chunk}\n\n"
+
+    return Response(stream_with_context(generate()), mimetype='text/event-stream')
+
+
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True, port=5001)

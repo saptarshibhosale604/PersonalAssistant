@@ -3,10 +3,10 @@
 ls index.html
 docker build -t personal_assistant .
 docker rm ollamaLocal -f
-docker run -d --rm -v ollama:/root/.ollama -v /home/rpissb/Project:/root/Project/ -p 11434:11434 -p 5001:5001 --name ollamaLocal personal_assistant
+docker run -d --rm -v ollama:/root/.ollama -v /home/ssbrpi/Project:/root/Project/ -p 11434:11434 -p 5001:5001 --name ollamaLocal personal_assistant
 docker exec -it ollamaLocal python /App/UI/WebApp/app.py
  
-docker exec -it ollamaLocal python /App/UI/WebApp/app.py
+docker exec -it ollamaLocal /bin/sh
 
 //
 
@@ -28,7 +28,7 @@ working
 ls cli
 docker build -t personal_assistant .
 docker rm ollamaLocal -f
-docker run -d --rm -v ollama:/root/.ollama -v /home/rpissb/Project:/root/Project/ -p 11434:11434 --name ollamaLocal personal_assistant
+docker run -d --rm -v ollama:/root/.ollama -v /home/ssbrpi/Project:/root/Project/ -p 11434:11434 --name ollamaLocal personal_assistant
 docker exec -it ollamaLocal python /App/UI/cli.py
 
 // SSH 
@@ -98,3 +98,5 @@ TODO
 Done // work on context of local llm
 done // work on streaming input from global llm
 done // work on streaming input form local llm
+
+// currnet branch: modeOutputSpeech
