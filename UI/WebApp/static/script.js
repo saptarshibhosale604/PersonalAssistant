@@ -146,8 +146,8 @@ $(document).ready(function () {
             // $('#chat-body')
             $('#typing').remove();
             // $('#chat-body').append(`<div class="message bot-message">${content}</div>`);
-            $('#chat-body').scrollTop($('#chat-body')[0].scrollHeight);
         };
+        $('#chat-body').scrollTop($('#chat-body')[0].scrollHeight);
     
         eventSource.onerror = function () {
             eventSource.close();

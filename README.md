@@ -92,6 +92,8 @@ docker run -d --rm -v ollama:/root/.ollama -v /home/rpissb/Project:/root/Project
 docker exec -it ollama07 python /App/getFunctionsList.py
 
 TODO
+// help function is not working here
+
 // work on mode context no for local llm
 // global mode not working for webapp
 
