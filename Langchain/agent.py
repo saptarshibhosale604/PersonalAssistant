@@ -3,8 +3,6 @@
 # memory: for each new chat from assistant.py, new memory allocated, no context
 
 ## ## IMPORTING ## ## 
-
-
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import create_react_agent
 
@@ -19,6 +17,11 @@ from langchain_google_community.gmail.utils import (
 #from flask import Flask, request
 import os
 import time
+
+#Vars
+pathManInTheLoopResponse = "/root/Project/Rpi/PersonalAssistant/Langchain/manInTheLoopResponce.txt"
+pathToolsRequired = "/root/Project/Rpi/PersonalAssistant/Langchain/toolsRequired.txt"
+
 
 modeUserInterface = "cli" # "web_app" / "cli"
 
@@ -215,44 +218,108 @@ localLLMMessages = []
 # print("Welcome to ChatBot! Type 'exit' to quit.\n")
 modeContext = 'no'
 
-def CustomOllama(user_input):
+# V00
+# def CustomOllama(user_input):
+# 	global localLLMMessages
+# 	global modeContext
+#     # while True:
+# 	# user_input = input("You: ")
+
+# 	# if user_input.lower() in ['exit', 'quit']:
+# 	#     print("Goodbye!")
+# 	#     break
+# 	# print("here03")
+# 	# Add user message to history
+# 	localLLMMessages.append({'role': 'user', 'content': user_input})
+
+# 	# Get response from the model
+# 	stream = chat(
+# 		model='llama3.2:1b',
+# 		messages=localLLMMessages,
+# 		stream=True,
+# 	)
+
+# 	# Collect response and print it
+# 	response = ""
+# 	print("Streaming responce: ", end='', flush=True)
+# 	for chunk in stream:
+# 		content = chunk['message']['content']
+# 		print(content, end='', flush=True)
+# 		response += content
+		
+# 	print()
+
+# 	# Add assistant response to history
+# 	if modeContext == 'yes':
+# 		localLLMMessages.append({'role': 'assistant', 'content': response})
+# 	elif modeContext == 'no':
+# 		localLLMMessages = []
+
+# 	return response
+
+#V01 // working, but not ending
+# # def CustomOllamaStream(user_input):
+#     global localLLMMessages
+#     global modeContext
+
+#     localLLMMessages.append({'role': 'user', 'content': user_input})
+
+#     stream = chat(
+#         model='llama3.2:1b',
+#         messages=localLLMMessages,
+#         stream=True,
+#     )
+
+#     full_response = ""
+#     print("Streaming response: ", end='', flush=True)
+
+#     for chunk in stream:
+#         content = chunk['message']['content']
+#         print(content, end='', flush=True)
+#         full_response += content
+#         yield content  # <-- streaming each chunk
+
+#     print()
+
+#     if modeContext == 'yes':
+#         localLLMMessages.append({'role': 'assistant', 'content': full_response})
+#     elif modeContext == 'no':
+#         localLLMMessages = []
+
+#     # Optionally yield a final marker
+#     # yield "[[END]]"
+
+# V02
+def CustomOllamaStream(user_input):
 	global localLLMMessages
 	global modeContext
-    # while True:
-	# user_input = input("You: ")
 
-	# if user_input.lower() in ['exit', 'quit']:
-	#     print("Goodbye!")
-	#     break
-	# print("here03")
-	# Add user message to history
 	localLLMMessages.append({'role': 'user', 'content': user_input})
 
-	# Get response from the model
 	stream = chat(
 		model='llama3.2:1b',
 		messages=localLLMMessages,
 		stream=True,
 	)
 
-	# Collect response and print it
-	response = ""
-	print("Streaming responce: ", end='', flush=True)
+	full_response = ""
+	print("Streaming response: ", end='', flush=True)
+
 	for chunk in stream:
 		content = chunk['message']['content']
 		print(content, end='', flush=True)
-		response += content
-		
+		full_response += content
+		yield content  # <-- streaming each chunk
+
 	print()
 
-	# Add assistant response to history
 	if modeContext == 'yes':
-		localLLMMessages.append({'role': 'assistant', 'content': response})
+		localLLMMessages.append({'role': 'assistant', 'content': full_response})
 	elif modeContext == 'no':
 		localLLMMessages = []
 
-	return response
-# Main()
+	# Optionally yield a final marker
+	yield "[[END]]"
 
 
 from typing import Any, Dict, Iterator, List, Optional, Literal
@@ -728,8 +795,6 @@ async def print_stream_coroutine(graph, inputs, config):
 		# 	message.pretty_print()
 		# 	agentOutput = message.content
 
-pathManInTheLoopResponse = "/root/Project/Rpi/PersonalAssistant/Langchain/manInTheLoopResponce.txt"
-pathToolsRequired = "/root/Project/Rpi/PersonalAssistant/Langchain/toolsRequired.txt"
 # Refresh the content in the manInTheLoopResponse.txt file
 def ResetManInTheLoopResponse():
 	# Open the file in write mode
@@ -842,6 +907,69 @@ def Main(userInput, threadId, modeLLM, modeContextValue):
 			print("## Denied")	
 			return agentOutput
 			# break
+
+#V01
+# def StreamingResponse(user_input, threadId, modeLLM, modeContextValue):
+#     global modeContext
+#     modeContext = modeContextValue
+#     UpdateLLM(modeLLM)
+
+#     inputs = {"messages": [("user", user_input)]}
+#     global loopCounter
+#     global agentOutput
+
+#     ResetManInTheLoopResponse()
+#     new_thread_id = "thread-" + str(threadId)
+#     config["configurable"]["thread_id"] = new_thread_id
+
+#     if modeLLM == 'local':
+#         stream = graph.stream(inputs, config, stream_mode="values")
+#     else:
+#         stream = asyncio.run(graph.astream(inputs, config, stream_mode="values"))
+
+#     for s in stream:
+#         message = s["messages"][-1]
+#         if isinstance(message, tuple):
+#             yield str(message)
+#         else:
+#             content = message.content
+#             agentOutput = content
+#             yield content  # <-- This sends each chunk
+
+#         snapshot = graph.get_state(config)
+#         if not snapshot.next:
+#             loopCounter = 0
+#             break
+
+# V02
+def StreamingResponse(user_input, threadId, modeLLM, modeContextValue):
+    global modeContext
+    modeContext = modeContextValue
+    UpdateLLM(modeLLM)
+
+    global loopCounter
+    global agentOutput
+
+    ResetManInTheLoopResponse()
+    new_thread_id = "thread-" + str(threadId)
+    config["configurable"]["thread_id"] = new_thread_id
+
+    # If you're using your own custom Ollama stream:
+    if modeLLM == "local":
+        for chunk in CustomOllamaStream(user_input):
+            agentOutput = chunk
+            yield chunk
+
+    else:
+        # fallback: stream from langgraph graph
+        inputs = {"messages": [("user", user_input)]}
+        stream = graph.stream(inputs, config, stream_mode="values")
+        for s in stream:
+            message = s["messages"][-1]
+            if not isinstance(message, tuple):
+                agentOutput = message.content
+                yield message.content
+
 
 #if __name__ == '__main__':
 #	app.run(host='0.0.0.0', port=5011)

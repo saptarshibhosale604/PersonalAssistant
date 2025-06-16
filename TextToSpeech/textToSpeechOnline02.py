@@ -84,7 +84,7 @@ username = 'ssblinux'
 password = 'admin'  # Use a secure way to handle passwords (e.g., key-based auth)
 
 # For rpissb
-hostname = '192.168.157.108'
+hostname = '192.168.131.108'
 port = 22  # default SSH port
 username = 'rpissb'
 password = 'admin'  # Use a secure way to handle passwords (e.g., key-based auth)

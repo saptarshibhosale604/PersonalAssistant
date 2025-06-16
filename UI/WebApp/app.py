@@ -2,24 +2,30 @@ from flask import Flask, render_template, request, jsonify
 import time
 import Langchain.agent as Agent
 
+# from flask import Response, stream_with_context, request
+from flask import Response, stream_with_context
+import Langchain.agent as Agent
+
+
 app = Flask(__name__)
 
 debug01 = True
 
 print("Initialized assistant.py")
 
-modeLLM = "global" # local: Model running locally 
+modeLLM = "local" # local: Model running locally 
 			# global: Model running on cloud / chatgpt
 modeConversation = "awake" 	# sleep: Go to Hibernate
 	                  	# awake: Goint to answer the user input
 modeInput = "text" # text / speech
 modeOutput = "text" # text / speech
-modeContext = "no" # no: no context in conversation
+modeContext = "yes" # no: no context in conversation
 
 			# yes: the conversation understand the context
 	
 listWakeUpCalls = ["hey there", "hi there", "hey rpi"]
 listSleepCalls = ["sleep now", "go to sleep", "we are done", "got it"]
+
 
 def UpdateModeLLM(inputData):
 	global modeLLM
@@ -106,10 +112,10 @@ def BasicCmds(userInput):
 	
 	printData = ""
 	if (userInput.lower() == "help"):
-		# data = "1. input mode text\n"
-		# data += "2. input mode speech\n"
-		# data += "3. output mode text\n"
-		# data += "4. output mode speech\n"
+		# data = "1. mode input text\n"
+		# data += "2. mode input speech\n"
+		# data += "3. mode output text\n"
+		# data += "4. mode output speech\n"
 		# data += "5. wake up\n"
 		# data += "6. sleep\n"
 		# data += "7. mode context yes\n"
@@ -128,21 +134,21 @@ def BasicCmds(userInput):
 		print(printData)
 		return printData
 
-	# Checking for input mode
-	if (userInput.lower() == "input mode text"):
+	# Checking for mode input
+	if (userInput.lower() == "mode input text"):
 		modeInput = "text"
 		return True
 	
-	elif (userInput.lower() == "input mode speech"):
+	elif (userInput.lower() == "mode input speech"):
 		modeInput = "speech"
 		return True
 
-	# Checking for output mode
-	elif (userInput.lower() == "output mode text"):
+	# Checking for mode output
+	elif (userInput.lower() == "mode output text"):
 		modeOutput = "text"
 		return True
 	
-	elif (userInput.lower() == "output mode speech"):
+	elif (userInput.lower() == "mode output speech"):
 		modeOutput = "speech"
 		return True
 
@@ -332,6 +338,40 @@ def Output(assistantOutput):
 	else:
 		print("Error: Invalid modeOutput:", modeOutput)
 
-##	
+##
+# from flask import Response, stream_with_context, request
+# import Langchain.agent as Agent
+
+#V01
+# @app.route('/streamUserInputMessage', methods=['POST'])
+# def stream_user_input_message():
+#     ResetToolsRequired()
+#     user_message = request.json.get("message", "")
+#     print(f"user_message: {user_message}")
+
+#     def generate():
+#         for chunk in Agent.StreamingResponse(user_message, threadId, modeLLM, modeContext):
+#             yield f"data: {chunk}\n\n"
+
+#     return Response(stream_with_context(generate()), mimetype='text/event-stream')
+
+#V02
+@app.route('/streamUserInputMessage', methods=['GET'])
+def stream_user_input_message():
+    ResetToolsRequired()
+    user_message = request.args.get("message", "")
+    thread_id = request.args.get("threadId", "1")
+    mode_llm = request.args.get("modeLLM", "local")
+    mode_context = request.args.get("modeContext", "yes")
+
+    print(f"user_message: {user_message}")
+
+    def generate():
+        for chunk in Agent.StreamingResponse(user_message, thread_id, mode_llm, mode_context):
+            yield f"data: {chunk}\n\n"
+
+    return Response(stream_with_context(generate()), mimetype='text/event-stream')
+
+
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True, port=5001)
