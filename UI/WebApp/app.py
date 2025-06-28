@@ -330,11 +330,11 @@ def stream_user_input_message():
 	# bot_reply = Processing(user_message)
 	responseBasicCmdsChecking = BasicCmdsChecking(user_message)
 
-	responseBasicCmdsChecking = responseBasicCmdsChecking.replace('\n', '<br>')
 
-	# print(f"responseBasicCmdsChecking: {responseBasicCmdsChecking}")
+	print(f"responseBasicCmdsChecking: {responseBasicCmdsChecking}")
 
-	if (responseBasicCmdsChecking != False):
+	if (responseBasicCmdsChecking != False and responseBasicCmdsChecking != None):
+		responseBasicCmdsChecking = responseBasicCmdsChecking.replace('\n', '<br>')
 		return Response(f"data: {responseBasicCmdsChecking}\n\n", mimetype='text/event-stream')
 		
 	# if user_message == "test01":

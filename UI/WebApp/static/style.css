@@ -33,8 +33,9 @@ body {
     align-items: center;
     justify-content: space-between;
     background-color: var(--bg-secondary);
-    width: 100%;
-    max-width: 700px;
+    width: 90%;
+    /* max-width: 700px; */
+    /* max-width: 80vh; */
     /* max-width: 70%; */
     height: 85vh;
     border-radius: 1rem;
@@ -53,6 +54,7 @@ body {
     justify-content: space-between;
     height: 10vh;
     /* width: 100px; */
+    font-size: 16px;
 }
 
 .chatbot-title {
@@ -112,16 +114,17 @@ body {
     min-height: px;
     display: flex;
     flex-direction: column;
-    height: 50vh;   
+    height: 60vh;   
 }
 
 .message {
-    font-size: 50px;
+    /* font-size: 50px; */
     max-width: 80%;
     margin-bottom: 1rem;
     padding: 0.75rem 1rem;
     border-radius: 1rem;
     animation: fadeIn 0.3s ease-out;
+    font-size: 25px;
 }
 
 @keyframes fadeIn {
@@ -203,9 +206,10 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.1);
     background-color: rgba(0, 0, 0, 0.2);
     color: var(--text-primary);
-    font-size: 0.95rem;
+    /* font-size: 0.95rem; */
     outline: none;
     transition: border-color 0.2s;
+    font-size: 20px;
 }
 
 .chatbot-input:focus {
