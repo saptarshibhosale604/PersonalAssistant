@@ -185,72 +185,33 @@ def BasicCmds(userInput):
 
 	# return printData
 
-def Processing(userInput):
+# def Processing(userInput):
+def BasicCmdsChecking(userInput):
 	# global logger
-	global modeConversation
-	
-	
+	global modeConversation		
 	# if(BasicCmds(userInput)):
-	# 	return
-		
-	
+	# 	return			
 	basicCmdsReturn = BasicCmds(userInput)
-
-	print(f"basicCmdsReturn: {basicCmdsReturn}")
-
+	# print(f"basicCmdsReturn: {basicCmdsReturn}")
 	if(basicCmdsReturn == True): # Return True
 		return
 	elif(basicCmdsReturn != False): # Return the printData
 		return basicCmdsReturn
 								# if False then continue
 
-	# for debug only conversation mode only wake up
-	# ~ modeConversation = "wakeUp"
-	
-		
-	# ~ # Checking for sleep call
-	# ~ if any(call in userInput.lower() for call in listSleepCalls):
-		# ~ modeConversation = "sleep"
-		
-	# if(debug01): print("modeConversation:",modeConversation)
-	
 	if (modeConversation == "awake"):
-		# userInputToScriptInvocation
-		
-		# ~ terminalOutput = UITSI.Main(userInput)
-		# ~ print(f"TerminalOutput: {terminalOutput}")
-		
-		# ~ if(terminalOutput is not None):
-			# ~ # LLM User Responce generation
-		# ~ else:
-			# ~ # LLM General Question
-		
-		
-		# define role to userInput
-		# userInput = roleDefining + userInput			
-		# logger.debug(f"userInputWithDefinedRole: {userInput}")
-		
-		# Getting responce from LLM model
-		# llmResponce = LLM.Main(userInput)
-		
-		#print("agentResponce:")
-		global threadId
-		global modeLLM
-		global modeContext
+		return False # continue with the agent processing
+		# #print("agentResponce:")
+		# global threadId
+		# global modeLLM
+		# global modeContext
 
-		if(modeContext == "no"):
-			threadId += 1 # Always changing memory variable
+		# if(modeContext == "no"):
+		# 	threadId += 1 # Always changing memory variable
 		
-		# CheckToolsRequiredFile() // make this asyncronic
-
-		#agentResponce = "Na"	
-		agentResponce = Agent.Main(userInput, threadId, modeLLM, modeContext)
+		# agentResponce = Agent.Main(userInput, threadId, modeLLM, modeContext)
 		
-		# agentResponce = Agent.Main(userInput, threadId, modeLLM)
-		#userInput = "who is the PM of India?"
-		#agentResponse = requests.get(f"http://agent_langchain:5011/?userInput={userInput}&threadId={threadId}")
-		#print(":agentResp:", agentResponce)
-		return agentResponce
+		# return agentResponce
 
 @app.route('/')
 def index():
@@ -358,19 +319,33 @@ def Output(assistantOutput):
 #V02
 @app.route('/streamUserInputMessage', methods=['GET'])
 def stream_user_input_message():
-    ResetToolsRequired()
-    user_message = request.args.get("message", "")
-    thread_id = request.args.get("threadId", "1")
-    mode_llm = request.args.get("modeLLM", "local")
-    mode_context = request.args.get("modeContext", "yes")
+	ResetToolsRequired()
+	user_message = request.args.get("message", "")
+	thread_id = request.args.get("threadId", "1")
+	mode_llm = request.args.get("modeLLM", "local")
+	mode_context = request.args.get("modeContext", "yes")
 
-    print(f"user_message: {user_message}")
+	print(f"user_message: {user_message}")
 
-    def generate():
-        for chunk in Agent.StreamingResponse(user_message, thread_id, mode_llm, mode_context):
-            yield f"data: {chunk}\n\n"
+	# bot_reply = Processing(user_message)
+	responseBasicCmdsChecking = BasicCmdsChecking(user_message)
 
-    return Response(stream_with_context(generate()), mimetype='text/event-stream')
+	responseBasicCmdsChecking = responseBasicCmdsChecking.replace('\n', '<br>')
+
+	# print(f"responseBasicCmdsChecking: {responseBasicCmdsChecking}")
+
+	if (responseBasicCmdsChecking != False):
+		return Response(f"data: {responseBasicCmdsChecking}\n\n", mimetype='text/event-stream')
+		
+	# if user_message == "test01":
+	# else:
+		# outputResponse = "This is a fixed response for test01"
+
+	def generate():	
+		for chunk in Agent.StreamingResponse(user_message, thread_id, mode_llm, mode_context):
+			yield f"data: {chunk}\n\n"
+
+	return Response(stream_with_context(generate()), mimetype='text/event-stream')
 
 
 if __name__ == '__main__':

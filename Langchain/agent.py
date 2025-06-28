@@ -219,43 +219,43 @@ localLLMMessages = []
 modeContext = 'no'
 
 # V00
-# def CustomOllama(user_input):
-# 	global localLLMMessages
-# 	global modeContext
-#     # while True:
-# 	# user_input = input("You: ")
+def CustomOllama(user_input):
+	global localLLMMessages
+	global modeContext
+    # while True:
+	# user_input = input("You: ")
 
-# 	# if user_input.lower() in ['exit', 'quit']:
-# 	#     print("Goodbye!")
-# 	#     break
-# 	# print("here03")
-# 	# Add user message to history
-# 	localLLMMessages.append({'role': 'user', 'content': user_input})
+	# if user_input.lower() in ['exit', 'quit']:
+	#     print("Goodbye!")
+	#     break
+	# print("here03")
+	# Add user message to history
+	localLLMMessages.append({'role': 'user', 'content': user_input})
 
-# 	# Get response from the model
-# 	stream = chat(
-# 		model='llama3.2:1b',
-# 		messages=localLLMMessages,
-# 		stream=True,
-# 	)
+	# Get response from the model
+	stream = chat(
+		model='llama3.2:1b',
+		messages=localLLMMessages,
+		stream=True,
+	)
 
-# 	# Collect response and print it
-# 	response = ""
-# 	print("Streaming responce: ", end='', flush=True)
-# 	for chunk in stream:
-# 		content = chunk['message']['content']
-# 		print(content, end='', flush=True)
-# 		response += content
+	# Collect response and print it
+	response = ""
+	print("Streaming responce: ", end='', flush=True)
+	for chunk in stream:
+		content = chunk['message']['content']
+		print(content, end='', flush=True)
+		response += content  
 		
-# 	print()
+	print()
 
-# 	# Add assistant response to history
-# 	if modeContext == 'yes':
-# 		localLLMMessages.append({'role': 'assistant', 'content': response})
-# 	elif modeContext == 'no':
-# 		localLLMMessages = []
+	# Add assistant response to history
+	if modeContext == 'yes':
+		localLLMMessages.append({'role': 'assistant', 'content': response})
+	elif modeContext == 'no':
+		localLLMMessages = []
 
-# 	return response
+	return response
 
 #V01 // working, but not ending
 # # def CustomOllamaStream(user_input):
@@ -658,7 +658,9 @@ def UpdateLLM(modeLLM):
 	global llm
 	global modeCurrentLLM
 	# llm = model
-	print(f"UpdateLLM: modeLLM: {modeLLM}")
+	#print(f"UpdateLLM: modeLLM: {modeLLM}")
+	print(f"UpdateLLM: modeLLM: {modeLLM} :: modeCurrentLLM: {modeCurrentLLM}")
+
 	if(modeLLM != modeCurrentLLM):
 		modeCurrentLLM = modeLLM
 
@@ -772,6 +774,9 @@ import asyncio
 async def print_stream_coroutine(graph, inputs, config):
 # def print_stream(graph, inputs, config):
 	global agentOutput
+	#print("inside print_stream_coroutine")
+	print("\n============================================")  # final newline
+	print("============================================\n")  # final newline
 	async for event in graph.astream_events(inputs, config, version="v1"):
 	# for event in graph.astream_events(inputs, config, version="v1"):
 		if event["event"] == "on_chat_model_stream":
@@ -863,11 +868,13 @@ def Main(userInput, threadId, modeLLM, modeContextValue):
 		config["configurable"]["thread_id"] = new_thread_id
 
 		print("## ## config new:", config)
+		#print(f"## ## config new: {config} :: loopCounter: {loopCounter} :: modeLLM: {modeLLM} :: modeContextValue: {modeContextValue}")
 		# print(f"before graph stream llm:{llm}")
 		if(loopCounter == 0):
 			if(modeLLM == 'local'):
 			 	print_stream_normal(graph, inputs, config)
-			elif(modeLLM == 'gobal'):
+			elif(modeLLM == 'global'):
+				#print("here01")
 				asyncio.run(print_stream_coroutine(graph, inputs, config))
 		else:
 			if(modeLLM == 'local'):
