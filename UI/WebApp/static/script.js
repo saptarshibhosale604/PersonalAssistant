@@ -136,6 +136,35 @@ $(document).ready(function () {
             // V03
             // console.log("Received chunk: ", content); 
 
+            if (content.startsWith("[[CONFIRM:")) {
+                const tools = content.match(/\[\[CONFIRM:(.*)\]\]/)[1];
+                $('#chat-body').append(`
+                    <div class="bot-message confirm-box">
+                        Tools requested: ${tools}<br>
+                        Proceed? 
+                        <button id="confirm-yes">Yes</button>
+                        <button id="confirm-no">No</button>
+                    </div>
+                `);
+
+                $('#confirm-yes').click(function () {
+                    fetch('/manInTheLoopDecision', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({decision: "y"})
+                    });
+                });
+
+                $('#confirm-no').click(function () {
+                    fetch('/manInTheLoopDecision', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({decision: "n"})
+                    });
+                });
+
+                // return;
+            }
             // div01.innerHTML += content;
             document.getElementById(botMessageId).innerHTML += content;
 

@@ -181,7 +181,7 @@ def BasicCmds(userInput):
 		return True
 	
 	else:
-		return False
+		return False # continue with the agent processing
 
 	# return printData
 
@@ -194,7 +194,7 @@ def BasicCmdsChecking(userInput):
 	basicCmdsReturn = BasicCmds(userInput)
 	# print(f"basicCmdsReturn: {basicCmdsReturn}")
 	if(basicCmdsReturn == True): # Return True
-		return
+		return True
 	elif(basicCmdsReturn != False): # Return the printData
 		return basicCmdsReturn
 								# if False then continue
@@ -303,6 +303,20 @@ def Output(assistantOutput):
 # from flask import Response, stream_with_context, request
 # import Langchain.agent as Agent
 
+# Global dictionary to hold the response
+globalState = {
+    "manInTheLoopResponse": None
+}
+
+@app.route('/manInTheLoopDecision', methods=['POST'])
+def man_in_the_loop_decision():
+	decision = request.json.get("decision", "").strip().lower()
+	# globalState["manInTheLoopResponse"] = decision
+	# print(f"app manInTheLoopDecision: decision: {decision}")
+	UpdateManInTheLoopResponse(decision)
+	return jsonify({"status": "received", "decision": decision})
+
+
 #V01
 # @app.route('/streamUserInputMessage', methods=['POST'])
 # def stream_user_input_message():
@@ -325,24 +339,35 @@ def stream_user_input_message():
 	mode_llm = request.args.get("modeLLM", "local")
 	mode_context = request.args.get("modeContext", "yes")
 
-	print(f"user_message: {user_message}")
-
+	#print(f"user_message: {user_message}")
+	# print(f"app streamUserInputMessage: user_message: {user_message} :: thread_id: {thread_id} :: mode_llm: {mode_llm} :: mode_context: {mode_context}")
 	# bot_reply = Processing(user_message)
 	responseBasicCmdsChecking = BasicCmdsChecking(user_message)
 
 
-	print(f"responseBasicCmdsChecking: {responseBasicCmdsChecking}")
+	# print(f"app responseBasicCmdsChecking: {responseBasicCmdsChecking}")
 
-	if (responseBasicCmdsChecking != False and responseBasicCmdsChecking != None):
+	global threadId
+	global modeLLM
+	global modeContext
+	
+	# print(f"app streamUserInputMessage: threadId: {threadId} :: modeLLM: {modeLLM} :: modeContext: {modeContext}")
+	#if (responseBasicCmdsChecking != False or responseBasicCmdsChecking != None):
+	if (type(responseBasicCmdsChecking) == str):
 		responseBasicCmdsChecking = responseBasicCmdsChecking.replace('\n', '<br>')
 		return Response(f"data: {responseBasicCmdsChecking}\n\n", mimetype='text/event-stream')
 		
+	elif (responseBasicCmdsChecking == True):
+		return Response(f"data: Mode Changed\n\n", mimetype='text/event-stream')
 	# if user_message == "test01":
 	# else:
 		# outputResponse = "This is a fixed response for test01"
 
 	def generate():	
-		for chunk in Agent.StreamingResponse(user_message, thread_id, mode_llm, mode_context):
+		for chunk in Agent.StreamingResponse(user_message, threadId, modeLLM, modeContext):
+			# if(chunk == "the"):
+			# 	chunk = "the <br>"
+			chunk = chunk.replace('\n', '<br>')
 			yield f"data: {chunk}\n\n"
 
 	return Response(stream_with_context(generate()), mimetype='text/event-stream')

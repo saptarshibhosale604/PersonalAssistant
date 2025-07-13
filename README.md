@@ -16,6 +16,9 @@ docker exec -it ollamaLocal /bin/sh
 	+Langchain framework
 	+Python
 	+SQL lite
+	+ The agent is using local llm and calls the tools
+		- But the model llama3.2:1b is not smart enough to use the tools
+	- The agent is working with google gemini llm with tools
 -Cmd list:
 	alias dockerBuild='docker build -t personal_assistant .'
 	alias dockerRun='docker run -it personal_assistant'
@@ -91,14 +94,15 @@ docker rm ollama07 -f
 docker run -d --rm -v ollama:/root/.ollama -v /home/rpissb/Project:/root/Project/ -p 11434:11434 --name ollama07 personal_assistant
 docker exec -it ollama07 python /App/getFunctionsList.py
 
-TODO
-// help function is not working here
+// // // // TODO // // // // 
 
-// work on mode context no for local llm
-// global mode not working for webapp
+// remove tool calling for local llm
+// tool calling man in the loop not working, global mode, web app
 
+done // work on mode context no for local llm
+done // global mode not working for webapp
+done // help function is not working here
 Done // work on context of local llm
 done // work on streaming input from global llm
 done // work on streaming input form local llm
 
-// currnet branch: modeOutputSpeech

@@ -5,6 +5,8 @@ langgraph.prebuilt
 langchain_community
 langchain_google_community
 langchain-experimental
+langchain_ollama
+langchain_google_genai 
 
 #TextToSpeech
 gtts

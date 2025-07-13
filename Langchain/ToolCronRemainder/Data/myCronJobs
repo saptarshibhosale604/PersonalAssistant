@@ -2,3 +2,4 @@
 * * * * * echo "set remainder about car washing after 1 min" >> /var/log/notify.log 2>&1
 * * * * * echo "set remainder about car washing after 1 min" >> /var/log/notify.log 2>&1
 2 * * * * echo "set remainder about car washing after" >> /var/log/notify.log 2>&1
+07 23 * * * echo "PM of India - India Today" >> /var/log/notify.log 2>&1

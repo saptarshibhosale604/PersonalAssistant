@@ -154,7 +154,11 @@ def BasicCmds(userInput):
 
 	elif (userInput.lower() == "mode llm global"):
 		modeLLM = "global"
+		modeContext = "no"
 		
+	elif (userInput.lower() == "mode llm globalgemini"):
+		modeLLM = "globalGemini"
+		modeContext = "no"
 
 	else:
 		return False
@@ -165,7 +169,7 @@ def BasicCmds(userInput):
 	printData += f"mode output [text/speech]: {modeOutput}\n"
 	printData += f"mode conversation [awake/sleep]: {modeConversation}\n"
 	printData += f"mode context [yes/no]: {modeContext}\n"
-	printData += f"mode llm [local/global]: {modeLLM}\n"
+	printData += f"mode llm [local/global/globalGemini]: {modeLLM}\n"
 	
 	print(printData)
 	return True
@@ -286,10 +290,25 @@ def Main():
 			# return
 			Output(assistantOutput)
 
+def WelcomeUser():
+	global logger
+	logger.info("WelcomeUser()")
+	
+	print("Welcome to Personal Assistant CLI")
+	print("Type 'help' for list of commands")
+	
+	assistantOutput = Processing("help")
+
+	if (assistantOutput is not None):
+		#print("final:", assistantOutput)
+		# return
+		Output(assistantOutput)
 
 #if __name__ == '__main__':
 #	app.run(host='0.0.0.0', port=5010)
-		
+# Welcome User script
+WelcomeUser()
+
 while(True):
 	Main()
 

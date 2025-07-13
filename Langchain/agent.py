@@ -127,6 +127,14 @@ def UpdateCronFile(data, filename):
 		file.write(str(data) + '\n')  # Write the data followed by a newline
 
 @tool
+def toolMyName(userInput :str) -> str:
+	'''Returns My Name.'''
+	userInput = f"user input = '{userInput}'"
+
+	return {"SSB"}
+
+
+@tool
 def toolSetCronRemainder(userInput :str) -> str:
 	'''Expects an input including phrase 'set remainder', 'start remainder'.'''
 	userInput = f"user input = '{userInput}'"
@@ -167,7 +175,7 @@ toolWebSearch = TavilySearchResults(max_results=1)
 # toolsAdvance =  [toolShell] + toolSQL_DB                	# Need for human in loop
 toolsAdvance =  [toolShell]             	# Need for human in loop
 toolsIntermediate = [toolSetCronRemainder]
-toolsBasic = [toolYoutube, toolWebSearch]                  # No need for human in loop
+toolsBasic = [toolYoutube, toolWebSearch, toolMyName]                  # No need for human in loop
 
 tools = toolsAdvance + toolsIntermediate + toolsBasic
 # globalTools = tools
@@ -342,313 +350,21 @@ from langchain_core.tools import BaseTool
 from langchain_core.utils.function_calling import convert_to_openai_tool
 
 #for custom llm class
-from langchain_core.runnables import (
-    Runnable,
-    RunnableLambda,
-    RunnableMap,
-    RunnablePassthrough,
-)
-from langchain_core.language_models import LanguageModelInput
-
-class ChatParrotLink(BaseChatModel):
-	"""A custom chat model that echoes the first `parrot_buffer_length` characters
-	of the input.
-
-	When contributing an implementation to LangChain, carefully document
-	the model including the initialization parameters, include
-	an example of how to initialize the model and include any relevant
-	links to the underlying models documentation or API.
-
-	Example:
-
-		.. code-block:: python
-
-			model = ChatParrotLink(parrot_buffer_length=2, model="bird-brain-001")
-			result = model.invoke([HumanMessage(content="hello")])
-			result = model.batch([[HumanMessage(content="hello")],
-									[HumanMessage(content="world")]])
-	"""
-	# global globalTools
-
-	# tools: Optional[List[Any]] = globalTools  # <-- Add this line
-	# tools: Optional[List[Any]] = None  # <-- Add this line
-
-	# def bind_tools(self, tools: List[Any]) -> "CustomLLM":
-	# # You can store the tools if needed or just ignore them
-	# 	# self.tools = tools
-	# 	return self
-	# def bind_tools(
-	# 	self,
-	# 	tools: Sequence[Union[dict, Type, Callable, BaseTool]],
-	# 	*,
-	# 	tool_choice: Union[dict, str, bool, None] = None,
-	# 	strict: bool = False,
-	# 	**kwargs: Any,
-	# ) -> "ChatParrotLink":
-	# 	"""
-	# 	Bind tool-like objects to this chat model.
-
-	# 	Parameters:
-	# 		tools: A list of tool definitions to bind to this chat model.
-	# 		tool_choice: Which tool to require the model to call.
-	# 		strict: Whether to enforce strict schema validation.
-	# 		**kwargs: Additional parameters.
-
-	# 	Returns:
-	# 		An instance of ChatParrotLink with tools bound.
-	# 	"""
-	# 	# Convert tools to OpenAI-compatible tool schemas
-	# 	self._tools = [
-	# 	    convert_to_openai_tool(tool, strict=strict) for tool in tools
-	# 	]
-	# 	self._tool_choice = tool_choice
-	# 	return self
-
-	model_name: str = Field(alias="model")
-	"""The name of the model"""
-	parrot_buffer_length: int
-	"""The number of characters from the last message of the prompt to be echoed."""
-	temperature: Optional[float] = None
-	max_tokens: Optional[int] = None
-	timeout: Optional[int] = None
-	stop: Optional[List[str]] = None
-	max_retries: int = 2
-
-	def bind_tools(
-		self,
-		tools: Sequence[Union[dict[str, Any], type, Callable, BaseTool]],
-		*,
-		tool_choice: Optional[
-			Union[dict, str, Literal["auto", "none", "required", "any"], bool]
-		] = None,
-		strict: Optional[bool] = None,
-		parallel_tool_calls: Optional[bool] = None,
-		**kwargs: Any,
-	) -> Runnable[LanguageModelInput, BaseMessage]:
-		"""Bind tool-like objects to this chat model.
-
-		Assumes model is compatible with OpenAI tool-calling API.
-
-		Args:
-			tools: A list of tool definitions to bind to this chat model.
-				Supports any tool definition handled by
-				:meth:`langchain_core.utils.function_calling.convert_to_openai_tool`.
-			tool_choice: Which tool to require the model to call. Options are:
-
-				- str of the form ``"<<tool_name>>"``: calls <<tool_name>> tool.
-				- ``"auto"``: automatically selects a tool (including no tool).
-				- ``"none"``: does not call a tool.
-				- ``"any"`` or ``"required"`` or ``True``: force at least one tool to be called.
-				- dict of the form ``{"type": "function", "function": {"name": <<tool_name>>}}``: calls <<tool_name>> tool.
-				- ``False`` or ``None``: no effect, default OpenAI behavior.
-			strict: If True, model output is guaranteed to exactly match the JSON Schema
-				provided in the tool definition. If True, the input schema will be
-				validated according to
-				https://platform.openai.com/docs/guides/structured-outputs/supported-schemas.
-				If False, input schema will not be validated and model output will not
-				be validated.
-				If None, ``strict`` argument will not be passed to the model.
-			parallel_tool_calls: Set to ``False`` to disable parallel tool use.
-				Defaults to ``None`` (no specification, which allows parallel tool use).
-			kwargs: Any additional parameters are passed directly to
-				:meth:`~langchain_openai.chat_models.base.ChatOpenAI.bind`.
-
-		.. versionchanged:: 0.1.21
-
-			Support for ``strict`` argument added.
-
-		"""  # noqa: E501
-
-		if parallel_tool_calls is not None:
-			kwargs["parallel_tool_calls"] = parallel_tool_calls
-		formatted_tools = [
-			convert_to_openai_tool(tool, strict=strict) for tool in tools
-		]
-		tool_names = []
-		for tool in formatted_tools:
-			if "function" in tool:
-				tool_names.append(tool["function"]["name"])
-			elif "name" in tool:
-				tool_names.append(tool["name"])
-			else:
-				pass
-		if tool_choice:
-			if isinstance(tool_choice, str):
-				# tool_choice is a tool/function name
-				if tool_choice in tool_names:
-					tool_choice = {
-						"type": "function",
-						"function": {"name": tool_choice},
-					}
-				elif tool_choice in (
-					"file_search",
-					"web_search_preview",
-					"computer_use_preview",
-				):
-					tool_choice = {"type": tool_choice}
-				# 'any' is not natively supported by OpenAI API.
-				# We support 'any' since other models use this instead of 'required'.
-				elif tool_choice == "any":
-					tool_choice = "required"
-				else:
-					pass
-			elif isinstance(tool_choice, bool):
-				tool_choice = "required"
-			elif isinstance(tool_choice, dict):
-				pass
-			else:
-				raise ValueError(
-					f"Unrecognized tool_choice type. Expected str, bool or dict. "
-					f"Received: {tool_choice}"
-				)
-			kwargs["tool_choice"] = tool_choice
-		return super().bind(tools=formatted_tools, **kwargs)
-
-
-	def _generate(
-		self,
-		messages: List[BaseMessage],
-		stop: Optional[List[str]] = None,
-		run_manager: Optional[CallbackManagerForLLMRun] = None,
-		**kwargs: Any,
-	) -> ChatResult:
-		"""Override the _generate method to implement the chat model logic.
-
-		This can be a call to an API, a call to a local model, or any other
-		implementation that generates a response to the input prompt.
-
-		Args:
-			messages: the prompt composed of a list of messages.
-			stop: a list of strings on which the model should stop generating.
-					If generation stops due to a stop token, the stop token itself
-					SHOULD BE INCLUDED as part of the output. This is not enforced
-					across models right now, but it's a good practice to follow since
-					it makes it much easier to parse the output of the model
-					downstream and understand why generation stopped.
-			run_manager: A run manager with callbacks for the LLM.
-		"""
-		# Replace this with actual logic to generate a response from a list
-		# of messages.
-		last_message = messages[-1]
-		# print(f"inside custom llm: messages: {messages}")
-		# last_message = messages[0]
-		# tokens = last_message.content[: self.parrot_buffer_length]
-		tokens = CustomOllama(last_message.content) 
-		ct_input_tokens = sum(len(message.content) for message in messages)
-		ct_output_tokens = len(tokens)
-		message = AIMessage(
-			content=tokens,
-			additional_kwargs={},  # Used to add additional payload to the message
-			response_metadata={  # Use for response metadata
-				"time_in_seconds": 3,
-				"model_name": self.model_name,
-			},
-			usage_metadata={
-				"input_tokens": ct_input_tokens,
-				"output_tokens": ct_output_tokens,
-				"total_tokens": ct_input_tokens + ct_output_tokens,
-			},
-		)
-		##
-		# If tools are bound, include them in the message
-		if hasattr(self, "_tools") and self._tools:
-			message.tool_calls = self._tools
-
-		generation = ChatGeneration(message=message)
-		return ChatResult(generations=[generation])
-
-	def _stream(
-		self,
-		messages: List[BaseMessage],
-		stop: Optional[List[str]] = None,
-		run_manager: Optional[CallbackManagerForLLMRun] = None,
-		**kwargs: Any,
-	) -> Iterator[ChatGenerationChunk]:
-		"""Stream the output of the model.
-
-		This method should be implemented if the model can generate output
-		in a streaming fashion. If the model does not support streaming,
-		do not implement it. In that case streaming requests will be automatically
-		handled by the _generate method.
-
-		Args:
-			messages: the prompt composed of a list of messages.
-			stop: a list of strings on which the model should stop generating.
-					If generation stops due to a stop token, the stop token itself
-					SHOULD BE INCLUDED as part of the output. This is not enforced
-					across models right now, but it's a good practice to follow since
-					it makes it much easier to parse the output of the model
-					downstream and understand why generation stopped.
-			run_manager: A run manager with callbacks for the LLM.
-		"""
-		last_message = messages[-1]
-		tokens = str(last_message.content[: self.parrot_buffer_length])
-		ct_input_tokens = sum(len(message.content) for message in messages)
-
-		for token in tokens:
-			usage_metadata = UsageMetadata(
-				{
-					"input_tokens": ct_input_tokens,
-					"output_tokens": 1,
-					"total_tokens": ct_input_tokens + 1,
-				}
-			)
-			ct_input_tokens = 0
-			chunk = ChatGenerationChunk(
-				message=AIMessageChunk(content=token, usage_metadata=usage_metadata)
-			)
-
-			if run_manager:
-				# This is optional in newer versions of LangChain
-				# The on_llm_new_token will be called automatically
-				run_manager.on_llm_new_token(token, chunk=chunk)
-
-			yield chunk
-
-		# Let's add some other information (e.g., response metadata)
-		chunk = ChatGenerationChunk(
-			message=AIMessageChunk(
-				content="",
-				response_metadata={"time_in_sec": 3, "model_name": self.model_name},
-			)
-		)
-		if run_manager:
-			# This is optional in newer versions of LangChain
-			# The on_llm_new_token will be called automatically
-			run_manager.on_llm_new_token(token, chunk=chunk)
-		yield chunk
-
-	@property
-	def _llm_type(self) -> str:
-		"""Get the type of language model used by this chat model."""
-		return "echoing-chat-model-advanced"
-
-	@property
-	def _identifying_params(self) -> Dict[str, Any]:
-		"""Return a dictionary of identifying parameters.
-
-		This information is used by the LangChain callback system, which
-		is used for tracing purposes make it possible to monitor LLMs.
-		"""
-		return {
-			# The model name allows users to specify custom token counting
-			# rules in LLM monitoring applications (e.g., in LangSmith users
-			# can provide per token pricing for their model and monitor
-			# costs for the given LLM.)
-			"model_name": self.model_name,
-		}
-
 # llm = CustomLLM(n=5)
 # llm = CustomLLM(givenTools=tools)
 # llmRaw = ChatParrotLink(parrot_buffer_length=3, model="my_custom_model_02")
 # llm = llmRaw.bind_tools(tools) # not working as expected
 
 
-llm = ChatParrotLink(parrot_buffer_length=3, model="my_custom_model_02")
+# llm = ChatParrotLink(parrot_buffer_length=3, model="my_custom_model_02")
+from langchain_ollama.chat_models import ChatOllama
+# llm = ChatOllama(model="llama3.2:1b", temperature=0, verbose=True)
+llm = ChatOllama(model="llama3.2:1b", streaming=True, max_tokens=500, temperature=0, max_retries=1)
 
 ## Open AI LLM model
 from langchain_openai import ChatOpenAI
-
+# from langchain_google_genai import GoogleGenerativeAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 # llm = ChatOpenAI(model="gpt-3.5-turbo", max_tokens=500, temperature=0, max_retries=1)
 
 # print(f"CustomLLM llm: {llm}::")
@@ -659,17 +375,23 @@ def UpdateLLM(modeLLM):
 	global modeCurrentLLM
 	# llm = model
 	#print(f"UpdateLLM: modeLLM: {modeLLM}")
-	print(f"UpdateLLM: modeLLM: {modeLLM} :: modeCurrentLLM: {modeCurrentLLM}")
+	# print(f"agent UpdateLLM: modeLLM: {modeLLM} :: modeCurrentLLM: {modeCurrentLLM}")
 
 	if(modeLLM != modeCurrentLLM):
 		modeCurrentLLM = modeLLM
+		# print(f"agent UpdateLLM02: modeLLM: {modeLLM} :: modeCurrentLLM: {modeCurrentLLM}")
 
 		if(modeLLM == "local"):
-			llm = ChatParrotLink(parrot_buffer_length=3, model="my_custom_model_02")
+			# llm = ChatParrotLink(parrot_buffer_length=3, model="my_custom_model_02")
+			llm = ChatOllama(model="llama3.2:1b", streaming=True, max_tokens=500, temperature=0, max_retries=1)
+			# llm = ChatOllama(model="llama3.2:1b", temperature=0, verbose=True)
 		elif(modeLLM == "global"):
 			# llm = ChatOpenAI(model="gpt-3.5-turbo", max_tokens=500, temperature=0, max_retries=1)
 			llm = ChatOpenAI(model="gpt-3.5-turbo", streaming=True, max_tokens=500, temperature=0, max_retries=1)
 		
+		elif(modeLLM == "globalGemini"):
+			# llm = GoogleGenerativeAI(model="models/text-bison-001", google_api_key='AIzaSyBwIrjcMjKA1V3XJ_hCLurJx33wh33NWdk')
+			llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key='AIzaSyBwIrjcMjKA1V3XJ_hCLurJx33wh33NWdk')
 		global graph
 		
 		graph = create_react_agent(
@@ -820,7 +542,7 @@ def ManInTheLoopResponse(toolsRequired):
 		# Read from the file
 		with open(pathManInTheLoopResponse, "r") as file:
 			content = file.read()
-			print(f"content manInTheLoopResponse file: {content}")
+			# print(f"content manInTheLoopResponse file: {content}")
 			# Check if the content is "y" or "n"
 			if content.lower() == "y":
 				print("## Allowed")
@@ -867,20 +589,34 @@ def Main(userInput, threadId, modeLLM, modeContextValue):
 		# Update the thread_id in the config dictionary
 		config["configurable"]["thread_id"] = new_thread_id
 
-		print("## ## config new:", config)
+		# print("## ## config new:", config)
 		#print(f"## ## config new: {config} :: loopCounter: {loopCounter} :: modeLLM: {modeLLM} :: modeContextValue: {modeContextValue}")
 		# print(f"before graph stream llm:{llm}")
+		
+		# if(loopCounter == 0):
+		# 	if(modeLLM == 'local'):
+		# 	 	print_stream_normal(graph, inputs, config)
+		# 	elif(modeLLM == 'global'):
+		# 		#print("here01")
+		# 		asyncio.run(print_stream_coroutine(graph, inputs, config))
+		# else:
+		# 	if(modeLLM == 'local'):
+		# 		print_stream_normal(graph, None, config)
+		# 	elif(modeLLM == 'global'):
+		# 		asyncio.run(print_stream_coroutine(graph, None, config))
+			
 		if(loopCounter == 0):
-			if(modeLLM == 'local'):
+			# if(modeLLM == 'local'):
 			 	print_stream_normal(graph, inputs, config)
-			elif(modeLLM == 'global'):
-				#print("here01")
-				asyncio.run(print_stream_coroutine(graph, inputs, config))
+			# elif(modeLLM == 'global'):
+			# 	#print("here01")
+			# asyncio.run(print_stream_coroutine(graph, inputs, config))
 		else:
-			if(modeLLM == 'local'):
+			# if(modeLLM == 'local'):
 				print_stream_normal(graph, None, config)
-			elif(modeLLM == 'global'):
-				asyncio.run(print_stream_coroutine(graph, None, config))
+			# elif(modeLLM == 'global'):
+			# asyncio.run(print_stream_coroutine(graph, None, config))
+			# await print_stream_coroutine(graph, None, config)
 			
 		loopCounter += 1
 		snapshot = graph.get_state(config)
@@ -915,6 +651,91 @@ def Main(userInput, threadId, modeLLM, modeContextValue):
 			return agentOutput
 			# break
 
+# Global dictionary to hold the response
+# globalState = {
+#     "manInTheLoopResponse": None
+# }
+
+# Get the content in the manInTheLoopResponse.txt file
+def UpdateManInTheLoopResponse(inputData):
+	# Open the file in write mode
+	with open(pathManInTheLoopResponse, "w") as file:
+		file.write(inputData)
+
+def GetManInTheLoopResponse():
+	with open(pathManInTheLoopResponse, "r") as file:
+		content = file.read()
+		# print(f"content manInTheLoopResponse file: {content}")
+		return content
+
+def HandleGraphWithManInTheLoop(user_input, thread_id, config):
+	# print("agent HandleGraphWithManInTheLoop:: user_input:", user_input, ":: thread_id:", thread_id)
+	global loopCounter, agentOutput, modeUserInterface
+	agentOutput = ""
+
+	inputs = {"messages": [("user", user_input)]}
+	new_thread_id = "thread-" + str(thread_id)
+	config["configurable"]["thread_id"] = new_thread_id
+
+	while True:
+		ResetManInTheLoopResponse()
+		# print(f"agent HandleGraphWithManInTheLoop while loop")
+
+		if loopCounter == 0:
+			stream = graph.stream(inputs, config, stream_mode="values")
+		else:
+			stream = graph.stream(None, config, stream_mode="values")
+
+		for s in stream:
+			message = s["messages"][-1]
+			if not isinstance(message, tuple):
+				agentOutput = message.content
+				yield agentOutput
+
+		loopCounter += 1
+		snapshot = graph.get_state(config)
+
+		if not snapshot.next:
+			loopCounter = 0
+			return
+
+		toolsRequired = snapshot.values["messages"][-1].tool_calls
+		print("####### Tools to be called ::: ", toolsRequired)
+
+		modeUserInterface = "web_app"  # or "cli", set this based on your application context
+		
+		if modeUserInterface == "web_app":
+			# manInTheLoop = ManInTheLoopResponse(str(toolsRequired))
+			# Send a special signal to frontend
+			yield f"[[CONFIRM:{toolsRequired}]]"
+
+			# Wait for confirmation to appear in a global or shared state
+			while True:
+				decision = GetManInTheLoopResponse()
+				# print(f"agent HandleGraphWithManInThe waiting in the loop:: GetManInTheLoopResponse(): {GetManInTheLoopResponse()}")
+				# print(f"agent HandleGraphWithManInThe waiting in the loop:: decision: {decision}")
+				if(decision != "na"):
+					# decision = globalState["manInTheLoopResponse"]
+					# globalState["manInTheLoopResponse"] = None  # reset
+					# print("agent HandleGraphWithManInTheLoop: decision:", decision)
+					UpdateManInTheLoopResponse("na")  # reset the file
+					break
+				time.sleep(2)
+
+			if(decision.lower() == "y"):
+				# print("agent HandleGraphWithManInTheLoop: User chose to proceed.")
+				inputs = None  # Continue
+			else:
+				# print("agent HandleGraphWithManInTheLoop: User chose NOT to proceed.")
+				return
+
+		elif modeUserInterface == "cli":
+			manInTheLoop = input("Do you want to proceed (y/n): ")
+
+			if manInTheLoop.lower() == "y":
+				inputs = None  # Continue
+			else:
+				return
 #V01
 # def StreamingResponse(user_input, threadId, modeLLM, modeContextValue):
 #     global modeContext
@@ -949,34 +770,75 @@ def Main(userInput, threadId, modeLLM, modeContextValue):
 #             break
 
 # V02
-def StreamingResponse(user_input, threadId, modeLLM, modeContextValue):
-    global modeContext
-    modeContext = modeContextValue
-    UpdateLLM(modeLLM)
+# def StreamingResponse(user_input, threadIdValue, modeLLMValue, modeContextValue):
+# 	global modeContext
+# 	# global modeLLM
+# 	modeContext = modeContextValue
+# 	modeLLM = modeLLMValue
+# 	print(f"agent StreamingResponse: user_input: {user_input} :: threadIdValue: {threadIdValue} :: modeLLMValue: {modeLLMValue} :: modeContextValue: {modeContextValue}")
+# 	threadId = threadIdValue
+# 	UpdateLLM(modeLLMValue)
+# 	print(f"agent StreamingResponse02: modeLLM: {modeLLM} :: modeContext: {modeContext}")
 
-    global loopCounter
-    global agentOutput
+# 	global loopCounter
+# 	global agentOutput
 
-    ResetManInTheLoopResponse()
-    new_thread_id = "thread-" + str(threadId)
-    config["configurable"]["thread_id"] = new_thread_id
+# 	ResetManInTheLoopResponse()
+# 	new_thread_id = "thread-" + str(threadId)
+# 	config["configurable"]["thread_id"] = new_thread_id
 
-    # If you're using your own custom Ollama stream:
-    if modeLLM == "local":
-        for chunk in CustomOllamaStream(user_input):
-            agentOutput = chunk
-            yield chunk
+# 	print(f"agent here02:: modeLLM: {modeLLM}")
+# 	# If you're using your own custom Ollama stream:
+# 	if modeLLM == "local":
+# 		for chunk in CustomOllamaStream(user_input):
+# 			agentOutput = chunk
+# 			yield chunk
 
-    else:
-        # fallback: stream from langgraph graph
-        inputs = {"messages": [("user", user_input)]}
-        stream = graph.stream(inputs, config, stream_mode="values")
-        for s in stream:
-            message = s["messages"][-1]
-            if not isinstance(message, tuple):
-                agentOutput = message.content
-                yield message.content
+# 	else:
+# 		# fallback: stream from langgraph graph
+# 		print("agent stream from langgraph graph::")
+# 		inputs = {"messages": [("user", user_input)]}
+# 		stream = graph.stream(inputs, config, stream_mode="values")
+# 		for s in stream:
+# 			message = s["messages"][-1]
+# 			if not isinstance(message, tuple):
+# 				agentOutput = message.content
+# 				print(agentOutput)
+# 				yield message.content
 
+# V04
+def StreamingResponse(user_input, threadIdValue, modeLLMValue, modeContextValue):
+	global modeContext
+	# global modeLLM
+	modeContext = modeContextValue
+	modeLLM = modeLLMValue
+	# print(f"agent StreamingResponse: user_input: {user_input} :: threadIdValue: {threadIdValue} :: modeLLMValue: {modeLLMValue} :: modeContextValue: {modeContextValue}")
+	threadId = threadIdValue
+	UpdateLLM(modeLLMValue)
+	# print(f"agent StreamingResponse02: modeLLM: {modeLLM} :: modeContext: {modeContext}")
+
+	global loopCounter
+	global agentOutput
+
+	ResetManInTheLoopResponse()
+	new_thread_id = "thread-" + str(threadId)
+	config["configurable"]["thread_id"] = new_thread_id
+
+	# print(f"agent here02:: modeLLM: {modeLLM}")
+	# If you're using your own custom Ollama stream:
+	if modeLLM == "local":
+		for chunk in CustomOllamaStream(user_input):
+			agentOutput = chunk
+			yield chunk
+
+	else:
+		# print("agent stream from langgraph graph with man-in-the-loop::")
+		print("=====================================================")
+		for chunk in HandleGraphWithManInTheLoop(user_input, threadId, config):
+			print(chunk)
+			yield chunk
+		print("=====================================================")
+	
 
 #if __name__ == '__main__':
 #	app.run(host='0.0.0.0', port=5011)
