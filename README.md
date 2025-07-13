@@ -34,6 +34,35 @@ docker rm ollamaLocal -f
 docker run -d --rm -v ollama:/root/.ollama -v /home/ssbrpi/Project:/root/Project/ -p 11434:11434 --name ollamaLocal personal_assistant
 docker exec -it ollamaLocal python /App/UI/cli.py
 
+//
+ls cli, fabric 02
+docker build -t personal_assistant .
+docker rm ollamaLocal -f
+docker run -d --rm -v ollama:/root/.ollama -v /home/ssbrpi/Project:/root/Project/ -p 11434:11434 --name ollamaLocal personal_assistant
+docker exec -it ollamaLocal python /App/Fabric/script.py ai
+
+docker exec -it ollamaLocal python /App/Fabric/script.py hii there
+docker exec -it ollamaLocal python /App/Fabric/script.py pattern hii 
+
+docker exec -it ollamaLocal /bin/sh
+ssh -o BatchMode=yes -o StrictHostKeyChecking=no ssbrpi@172.17.0.1 pwd
+/bin/sh: 3: ssh: not found
+
+# Install ssh client (Debian/Ubuntu)
+apt update && apt install -y openssh-client
+
+# Run the command
+ssh -o BatchMode=yes -o StrictHostKeyChecking=no ssbrpi@172.17.0.1 pwd
+
+ssh ssbrpi@172.17.0.1 pwd -p 'admin' // can't put password
+
+apt update && apt install -y sshpass
+sshpass -p 'admin' ssh -o StrictHostKeyChecking=no ssbrpi@172.17.0.1 pwd // this is working
+
+sshpass -p 'admin' ssh -o StrictHostKeyChecking=no ssbrpi@172.17.0.1 /home/ssbrpi/Project/Fabric/fabric --version // this is taking so much time, and not outputing any output
+
+
+
 // SSH 
 eval "$(ssh-agent -s)"
 ssh-add GitSSHAuthentication/key05
@@ -98,6 +127,8 @@ docker exec -it ollama07 python /App/getFunctionsList.py
 
 // remove tool calling for local llm
 // tool calling man in the loop not working, global mode, web app
+
+// Need to start logging
 
 done // work on mode context no for local llm
 done // global mode not working for webapp

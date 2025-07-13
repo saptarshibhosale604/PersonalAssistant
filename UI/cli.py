@@ -20,9 +20,10 @@ modeConversation = "wakeUp" 	# sleep: Go to Hibernate
 modeInput = "text" # text / speech
 modeOutput = "text" # text / speech
 modeContext = "yes" # no: no context in conversation
-
 			# yes: the conversation understand the context
-	
+modeCommunication = "fabric" # langchain: use langchain agent
+                                # fabric: use fabric 	
+
 listWakeUpCalls = ["hey there", "hi there", "hey rpi"]
 listSleepCalls = ["sleep now", "go to sleep", "we are done", "got it"]
 
@@ -101,6 +102,7 @@ def BasicCmds(userInput):
 	global modeOutput
 	global modeContext
 	global modeLLM
+	global modeCommunication
 	
 	printData = ""
 
@@ -160,6 +162,12 @@ def BasicCmds(userInput):
 		modeLLM = "globalGemini"
 		modeContext = "no"
 
+	elif (userInput.lower() == "mode communication langchain"):
+		modeCommunication = "langchain"
+
+	elif (userInput.lower() == "mode communication fabric"):
+		modeCommunication = "fabric"
+
 	else:
 		return False
 
@@ -170,6 +178,7 @@ def BasicCmds(userInput):
 	printData += f"mode conversation [awake/sleep]: {modeConversation}\n"
 	printData += f"mode context [yes/no]: {modeContext}\n"
 	printData += f"mode llm [local/global/globalGemini]: {modeLLM}\n"
+	printData += f"mode communication [langchain/fabric]: {modeCommunication}\n"
 	
 	print(printData)
 	return True
@@ -191,7 +200,9 @@ def Input():
 	# ~ print("userInput:",userInput)	
 	logger.info(f"userInput: {userInput}")
 	return userInput
-	
+
+import subprocess
+
 def Processing(userInput):
 	global logger
 	global modeConversation
@@ -227,23 +238,52 @@ def Processing(userInput):
 		# userInput = roleDefining + userInput			
 		logger.debug(f"userInputWithDefinedRole: {userInput}")
 		
-		# Getting responce from LLM model
-		# llmResponce = LLM.Main(userInput)
-		
-		#print("agentResponce:")
-		global threadId
-		global modeLLM
-		global modeContext
+		if(modeCommunication == "agent"):
+			# Getting responce from LLM model
+			# llmResponce = LLM.Main(userInput)
+			
+			#print("agentResponce:")
+			global threadId
+			global modeLLM
+			global modeContext
 
-		if(modeContext == "no"):
-			threadId += 1 # Always changing memory variable
-		
-		#agentResponce = "Na"	
-		agentResponce = Agent.Main(userInput, threadId, modeLLM, modeContext)
-		#userInput = "who is the PM of India?"
-		#agentResponse = requests.get(f"http://agent_langchain:5011/?userInput={userInput}&threadId={threadId}")
-		#print(":agentResp:", agentResponce)
-		return agentResponce
+			if(modeContext == "no"):
+				threadId += 1 # Always changing memory variable
+			
+			#agentResponce = "Na"	
+			agentResponce = Agent.Main(userInput, threadId, modeLLM, modeContext)
+			#userInput = "who is the PM of India?"
+			#agentResponse = requests.get(f"http://agent_langchain:5011/?userInput={userInput}&threadId={threadId}")
+			#print(":agentResp:", agentResponce)
+			return agentResponce
+
+		elif(modeCommunication == "fabric"):
+			print("modeCommunication: fabric")
+			# /home/ssbrpi/Project/Fabric/fabricPattern.sh <pattern_name>
+			# Fabric pattern calling
+			# script_path = "/home/ssbrpi/Project/Fabric/fabricPattern.sh"
+			# script_path = "/root/Project/Fabric/fabricPattern.sh"
+			script_path = "/root/Project/Fabric/fabric"
+
+			# pattern_name = userInput.strip().replace(" ", "_").lower()
+
+			# print("Running:: ", script_path, " --version")
+			print("Running:: ", script_path, userInput)
+
+			try:
+				result = subprocess.run(
+					[script_path, userInput],
+					# [script_path, "--version"],
+					check=True,
+					text=True,
+					stdout=subprocess.PIPE,
+					stderr=subprocess.PIPE
+				)
+				print("Script output:")
+				print(result.stdout)
+			except subprocess.CalledProcessError as e:
+				print("Script failed with error:")
+				print(e.stderr)
 
 def Output(assistantOutput):
 	global logger
