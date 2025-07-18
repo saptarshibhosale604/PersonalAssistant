@@ -69,7 +69,7 @@ ssh-add GitSSHAuthentication/key05
 
 docker build -t personal_assistant .
 
-docker run -it --rm -v /home/rpissb/Project:/root/Project/ personal_assistant /bin/sh 
+docker run -it --rm -v /home/ssbrpi/Project:/root/Project/ personal_assistant /bin/sh 
 
 python UI/cli.py
 
@@ -77,25 +77,25 @@ docker run -it --rm -v /home/ssblinux/ProjectLinux:/root/Project/ personal_assis
 
 docker run -it --rm -v /home/ssblinux/ProjectLinux:/root/Project/ personal_assistant
 
-docker run -it --rm -v /home/rpissb/Project:/root/Project/ -p 5001:5001 personal_assistant python /App/UI/WebApp/app.py
+docker run -it --rm -v /home/ssbrpi/Project:/root/Project/ -p 5001:5001 personal_assistant python /App/UI/WebApp/app.py
 
 // Final
 
 docker build -t personal_assistant .
 
-docker run -it --rm -v /home/rpissb/Project:/root/Project/ personal_assistant
+docker run -it --rm -v /home/ssbrpi/Project:/root/Project/ personal_assistant
 
 
 // working 02
 docker build -t personal_assistant .
 
-docker run -it --rm -v /home/rpissb/Project:/root/Project/ --entrypoint python personal_assistant /App/UI/cli.py
+docker run -it --rm -v /home/ssbrpi/Project:/root/Project/ --entrypoint python personal_assistant /App/UI/cli.py
 
 //
 ls cli
 docker build -t personal_assistant .
 docker rm ollama07 -f
-docker run -d --rm -v ollama:/root/.ollama -v /home/rpissb/Project:/root/Project/ -p 11434:11434 --name ollama07 personal_assistant
+docker run -d --rm -v ollama:/root/.ollama -v /home/ssbrpi/Project:/root/Project/ -p 11434:11434 --name ollama07 personal_assistant
 docker exec -it ollama07 python /App/UI/cli.py
 
 
@@ -104,7 +104,7 @@ docker exec -it ollama07 python /App/UI/cli.py
 ls test.py
 docker build -t personal_assistant .
 docker rm ollama07 -f
-docker run -d --rm -v ollama:/root/.ollama -v /home/rpissb/Project:/root/Project/ -p 11434:11434 --name ollama07 personal_assistant
+docker run -d --rm -v ollama:/root/.ollama -v /home/ssbrpi/Project:/root/Project/ -p 11434:11434 --name ollama07 personal_assistant
 docker exec -it ollama07 python /App/test.py
 
 //
@@ -112,7 +112,7 @@ docker exec -it ollama07 python /App/test.py
 ls agent.py
 docker build -t personal_assistant .
 docker rm ollama07 -f
-docker run -d --rm -v ollama:/root/.ollama -v /home/rpissb/Project:/root/Project/ -p 11434:11434 --name ollama07 personal_assistant
+docker run -d --rm -v ollama:/root/.ollama -v /home/ssbrpi/Project:/root/Project/ -p 11434:11434 --name ollama07 personal_assistant
 docker exec -it ollama07 python /App/Langchain/agent.py
  
  
@@ -120,9 +120,29 @@ docker exec -it ollama07 python /App/Langchain/agent.py
 ls custom
 docker build -t personal_assistant .
 docker rm ollama07 -f
-docker run -d --rm -v ollama:/root/.ollama -v /home/rpissb/Project:/root/Project/ -p 11434:11434 --name ollama07 personal_assistant
+docker run -d --rm -v ollama:/root/.ollama -v /home/ssbrpi/Project:/root/Project/ -p 11434:11434 --name ollama07 personal_assistant
 docker exec -it ollama07 python /App/getFunctionsList.py
+// //
+ls agent.py, no rebuild
+docker rm ollama07 -f
+docker run -d --rm -v ollama:/root/.ollama -v /home/ssbrpi/Project:/root/Project/ -p 11434:11434 --name ollama07 personal_assistant
+docker exec -it ollama07 /bin/sh
 
+python /App/Langchain/agent.py
+python /App/UI/cli.py
+
+// // Append // After appending remove this 
+// requirement.txt
+pip3 install beautifulsoup4
+
+// Dockerfile
+playwright install-deps  
+// delete.me //
+
+rm /App/* -rf
+cp /root/Project/Rpi/PersonalAssistant/* /App/ -r
+
+rm /App/* -rf && cp /root/Project/Rpi/PersonalAssistant/* /App/ -r
 // // // // TODO // // // // 
 
 // remove tool calling for local llm

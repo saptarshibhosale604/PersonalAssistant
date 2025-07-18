@@ -13,15 +13,15 @@ debug01 = True
 print("Initialized assistant.py")
 
 
-modeLLM = "local" # local: Model running locally 
+modeLLM = "globalGemini" # local: Model running locally 
 			# global: Model running on cloud / chatgpt
 modeConversation = "wakeUp" 	# sleep: Go to Hibernate
 	                  	# wakeUp: Goint to answer the user input
 modeInput = "text" # text / speech
 modeOutput = "text" # text / speech
-modeContext = "yes" # no: no context in conversation
+modeContext = "no" # no: no context in conversation
 			# yes: the conversation understand the context
-modeCommunication = "fabric" # langchain: use langchain agent
+modeCommunication = "langchain" # langchain: use langchain agent
                                 # fabric: use fabric 	
 
 listWakeUpCalls = ["hey there", "hi there", "hey rpi"]
@@ -238,7 +238,7 @@ def Processing(userInput):
 		# userInput = roleDefining + userInput			
 		logger.debug(f"userInputWithDefinedRole: {userInput}")
 		
-		if(modeCommunication == "agent"):
+		if(modeCommunication == "langchain"):
 			# Getting responce from LLM model
 			# llmResponce = LLM.Main(userInput)
 			

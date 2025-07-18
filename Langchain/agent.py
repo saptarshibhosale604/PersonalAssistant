@@ -170,14 +170,49 @@ Make cron job with following format:
 toolYoutube = YouTubeSearchTool()
 toolWebSearch = TavilySearchResults(max_results=1)
 
+from langchain_community.agent_toolkits import PlayWrightBrowserToolkit
+from langchain_community.tools.playwright.utils import (
+    create_async_playwright_browser,  # A synchronous browser is available, though it isn't compatible with jupyter.\n",	  },
+)
+# This import is required only for jupyter notebooks, since they have their own eventloop
+import nest_asyncio
+import asyncio
+nest_asyncio.apply()
 
+async_browser = create_async_playwright_browser()
+toolkit = PlayWrightBrowserToolkit.from_browser(async_browser=async_browser)
+toolPlaywright = toolkit.get_tools()
+# print(f"toolplaywright:{toolPlaywright}")
+tools_by_name = {tool.name: tool for tool in toolPlaywright} 
+navigate_tool = tools_by_name["navigate_browser"]
+get_elements_tool = tools_by_name["get_elements"]
+# print(f"get_elements_tool: {get_elements_tool}")
+async def Test():
+	result01 = await navigate_tool.arun(
+		# {"url": "https://web.archive.org/web/20230428133211/https://cnn.com/world"}
+		{"url": "https://google.com"}
+	)
+	print(f"result01: { result01 }")
+	# The browser is shared across tools, so the agent can interact in a stateful man
+
+	result02 = await get_elements_tool.arun(
+		{"selector": ".container__headline", "attributes": ["innerText"]}
+	)
+	print(f"result02: {result02}")
+	
+	result03 = await tools_by_name["current_webpage"].arun({})
+	print(f"result03: {result03}")
+	input("HumanBreak04:")
+asyncio.run(Test())
 #toolsAdvance =  [toolShell] + toolGmail               	# Need for human in loop
 # toolsAdvance =  [toolShell] + toolSQL_DB                	# Need for human in loop
-toolsAdvance =  [toolShell]             	# Need for human in loop
+# toolsAdvance =  [toolShell]             	# Need for human in loop
+toolsAdvance =  toolPlaywright             	# Need for human in loop
 toolsIntermediate = [toolSetCronRemainder]
 toolsBasic = [toolYoutube, toolWebSearch, toolMyName]                  # No need for human in loop
 
-tools = toolsAdvance + toolsIntermediate + toolsBasic
+# tools = toolsAdvance + toolsIntermediate + toolsBasic
+tools =  toolsAdvance 
 # globalTools = tools
 
 
@@ -607,15 +642,15 @@ def Main(userInput, threadId, modeLLM, modeContextValue):
 			
 		if(loopCounter == 0):
 			# if(modeLLM == 'local'):
-			 	print_stream_normal(graph, inputs, config)
+			# print_stream_normal(graph, inputs, config)
 			# elif(modeLLM == 'global'):
 			# 	#print("here01")
-			# asyncio.run(print_stream_coroutine(graph, inputs, config))
+			asyncio.run(print_stream_coroutine(graph, inputs, config))
 		else:
 			# if(modeLLM == 'local'):
-				print_stream_normal(graph, None, config)
+			# print_stream_normal(graph, None, config)
 			# elif(modeLLM == 'global'):
-			# asyncio.run(print_stream_coroutine(graph, None, config))
+			asyncio.run(print_stream_coroutine(graph, None, config))
 			# await print_stream_coroutine(graph, None, config)
 			
 		loopCounter += 1
