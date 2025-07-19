@@ -8,6 +8,7 @@ docker exec -it ollamaLocal python /App/UI/WebApp/app.py
  
 docker exec -it ollamaLocal /bin/sh
 
+
 //
 
 -Tech Used:
