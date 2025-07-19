@@ -65,7 +65,7 @@ sshpass -p 'admin' ssh -o StrictHostKeyChecking=no ssbrpi@172.17.0.1 /home/ssbrp
 
 // SSH 
 eval "$(ssh-agent -s)"
-ssh-add GitSSHAuthentication/key05
+ssh-add GitSSHAuthentication/key08
 
 docker build -t personal_assistant .
 
