@@ -1,19 +1,19 @@
 #Langchain/agent
-langchain_openai
-langgraph
-langgraph.prebuilt
-langchain_community
-langchain_google_community
-langchain-experimental
-langchain_ollama
-langchain_google_genai 
+# langchain_openai
+# langgraph
+# langgraph.prebuilt
+# langchain_community
+# langchain_google_community
+# langchain-experimental
+# langchain_ollama
+# langchain_google_genai 
 
 #TextToSpeech
-gtts
-paramiko
+# gtts
+# paramiko
 
 #UI/WebApp
-flask
+# flask
 
 #UI
-ollama
+# ollama

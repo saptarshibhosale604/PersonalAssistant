@@ -1,6 +1,23 @@
-// //
+# TECH USED
+-Raspberry pi
+-Docker containers
+-Langchain framework
+-Python
+-SQL lite
+- The agent is using local llm and calls the tools
+	- But the model llama3.2:1b is not smart enough to use the tools
+- The agent is working with google gemini llm with tools
 
-ls index.html
+# CLI // WORKING
+docker build -t personal_assistant .
+docker rm ollamaLocal -f
+docker run -d --rm -v ollama:/root/.ollama -v /home/ssbrpi/Project:/root/Project/ -p 11434:11434 --name ollamaLocal personal_assistant
+docker exec -it ollamaLocal /bin/sh
+
+
+docker exec -it ollamaLocal python /App/UI/cli.py
+
+# WEB APP // WORKING
 docker build -t personal_assistant .
 docker rm ollamaLocal -f
 docker run -d --rm -v ollama:/root/.ollama -v /home/ssbrpi/Project:/root/Project/ -p 11434:11434 -p 5001:5001 --name ollamaLocal personal_assistant
@@ -8,35 +25,7 @@ docker exec -it ollamaLocal python /App/UI/WebApp/app.py
  
 docker exec -it ollamaLocal /bin/sh
 
-
-//
-
--Tech Used:
-	+Raspberry pi
-	+Docker containers
-	+Langchain framework
-	+Python
-	+SQL lite
-	+ The agent is using local llm and calls the tools
-		- But the model llama3.2:1b is not smart enough to use the tools
-	- The agent is working with google gemini llm with tools
--Cmd list:
-	alias dockerBuild='docker build -t personal_assistant .'
-	alias dockerRun='docker run -it personal_assistant'
-	docker run -it --rm personal_assistant /bin/sh
-	docker run -it -v /home/ec2-user/Test:/Data --rm personal_assistant /bin/sh
-	docker run -it -v /home/ec2-user/Project:/root/Project/ --rm personal_assistant /bin/sh
-
-//
-working
-ls cli
-docker build -t personal_assistant .
-docker rm ollamaLocal -f
-docker run -d --rm -v ollama:/root/.ollama -v /home/ssbrpi/Project:/root/Project/ -p 11434:11434 --name ollamaLocal personal_assistant
-docker exec -it ollamaLocal python /App/UI/cli.py
-
-//
-ls cli, fabric 02
+# TESTING
 docker build -t personal_assistant .
 docker rm ollamaLocal -f
 docker run -d --rm -v ollama:/root/.ollama -v /home/ssbrpi/Project:/root/Project/ -p 11434:11434 --name ollamaLocal personal_assistant
@@ -49,10 +38,12 @@ docker exec -it ollamaLocal /bin/sh
 ssh -o BatchMode=yes -o StrictHostKeyChecking=no ssbrpi@172.17.0.1 pwd
 /bin/sh: 3: ssh: not found
 
-# Install ssh client (Debian/Ubuntu)
-apt update && apt install -y openssh-client
+# SSH 
+eval "$(ssh-agent -s)"
+ssh-add GitSSHAuthentication/key08
 
-# Run the command
+# INSIDE DOCKER CMDS
+## sshpass
 ssh -o BatchMode=yes -o StrictHostKeyChecking=no ssbrpi@172.17.0.1 pwd
 
 ssh ssbrpi@172.17.0.1 pwd -p 'admin' // can't put password
@@ -62,99 +53,35 @@ sshpass -p 'admin' ssh -o StrictHostKeyChecking=no ssbrpi@172.17.0.1 pwd // this
 
 sshpass -p 'admin' ssh -o StrictHostKeyChecking=no ssbrpi@172.17.0.1 /home/ssbrpi/Project/Fabric/fabric --version // this is taking so much time, and not outputing any output
 
+## 
+- for applying the alias
+. /root/.profile
 
 
-// SSH 
-eval "$(ssh-agent -s)"
-ssh-add GitSSHAuthentication/key08
-
-docker build -t personal_assistant .
-
-docker run -it --rm -v /home/ssbrpi/Project:/root/Project/ personal_assistant /bin/sh 
-
-python UI/cli.py
-
-docker run -it --rm -v /home/ssblinux/ProjectLinux:/root/Project/ personal_assistant /bin/sh 
-
-docker run -it --rm -v /home/ssblinux/ProjectLinux:/root/Project/ personal_assistant
-
-docker run -it --rm -v /home/ssbrpi/Project:/root/Project/ -p 5001:5001 personal_assistant python /App/UI/WebApp/app.py
-
-// Final
-
-docker build -t personal_assistant .
-
-docker run -it --rm -v /home/ssbrpi/Project:/root/Project/ personal_assistant
-
-
-// working 02
-docker build -t personal_assistant .
-
-docker run -it --rm -v /home/ssbrpi/Project:/root/Project/ --entrypoint python personal_assistant /App/UI/cli.py
-
-//
-ls cli
-docker build -t personal_assistant .
-docker rm ollama07 -f
-docker run -d --rm -v ollama:/root/.ollama -v /home/ssbrpi/Project:/root/Project/ -p 11434:11434 --name ollama07 personal_assistant
-docker exec -it ollama07 python /App/UI/cli.py
-
-
-//
-
-ls test.py
-docker build -t personal_assistant .
-docker rm ollama07 -f
-docker run -d --rm -v ollama:/root/.ollama -v /home/ssbrpi/Project:/root/Project/ -p 11434:11434 --name ollama07 personal_assistant
-docker exec -it ollama07 python /App/test.py
-
-//
-
-ls agent.py
-docker build -t personal_assistant .
-docker rm ollama07 -f
-docker run -d --rm -v ollama:/root/.ollama -v /home/ssbrpi/Project:/root/Project/ -p 11434:11434 --name ollama07 personal_assistant
-docker exec -it ollama07 python /App/Langchain/agent.py
- 
- 
- //
-ls custom
-docker build -t personal_assistant .
-docker rm ollama07 -f
-docker run -d --rm -v ollama:/root/.ollama -v /home/ssbrpi/Project:/root/Project/ -p 11434:11434 --name ollama07 personal_assistant
-docker exec -it ollama07 python /App/getFunctionsList.py
-// //
-ls agent.py, no rebuild
-docker rm ollama07 -f
-docker run -d --rm -v ollama:/root/.ollama -v /home/ssbrpi/Project:/root/Project/ -p 11434:11434 --name ollama07 personal_assistant
-docker exec -it ollama07 /bin/sh
-
-python /App/Langchain/agent.py
-python /App/UI/cli.py
-
-// // Append // After appending remove this 
-// requirement.txt
+# APPEND // AFTER APPENDING REMOVE THIS 
+- requirement.txt
 pip3 install beautifulsoup4
 
-// Dockerfile
+- Dockerfile
 playwright install-deps  
-// delete.me //
 
-rm /App/* -rf
-cp /root/Project/Rpi/PersonalAssistant/* /App/ -r
+- Install ssh client (Debian/Ubuntu)
+apt update && apt install -y openssh-client
 
-rm /App/* -rf && cp /root/Project/Rpi/PersonalAssistant/* /App/ -r
-// // // // TODO // // // // 
+# DELETE.ME 
+docker exec -it ollamaLocal /bin/sh . /root/.profile // not wokring
+docker exec -it ollamaLocal /bin/sh 
+. /root/.profile 
 
-// remove tool calling for local llm
-// tool calling man in the loop not working, global mode, web app
+# TODO 
+- remove tool calling for local llm
+- tool calling man in the loop not working, global mode, web app
 
-// Need to start logging
+- Need to start logging
 
-done // work on mode context no for local llm
-done // global mode not working for webapp
-done // help function is not working here
-Done // work on context of local llm
-done // work on streaming input from global llm
-done // work on streaming input form local llm
-
+done - work on mode context no for local llm
+done - global mode not working for webapp
+done - help function is not working here
+Done - work on context of local llm
+done - work on streaming input from global llm
+done - work on streaming input form local llm

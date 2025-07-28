@@ -1,8 +1,6 @@
-# FROM python:3.9
+# First build Layer02
 
-# WORKDIR /App
-
-FROM ollama-python39 
+FROM ollama-python39-02
 
 # Set the working directory in the container
 WORKDIR /App
@@ -28,7 +26,7 @@ RUN pip3.9 install -r requirements.txt
 
 ## ## For Cron service
 # Install necessary packages
-RUN apt-get update && apt-get install -y cron
+# RUN apt-get update && apt-get install -y cron
 
 # Copy the cron file into the container
 COPY Langchain/ToolCronRemainder/Data/myCronJobs /etc/cron.d/mycron
@@ -47,6 +45,16 @@ RUN echo "Initialized notification log file" > /var/log/notify.log
 
 # Change timezone to India
 RUN ln -sf /usr/share/zoneinfo/Asia/Kolkata /etc/localtime
+
+# RUN alias refresh="rm /App/* -rf && cp /root/Project/Rpi/PersonalAssistant/* /App/ -r"
+RUN echo 'alias refresh="rm /App/* -rf && cp /root/Project/Rpi/PersonalAssistant/* /App/ -r"' >> /root/.profile
+
+# Fabric
+
+# Install dependencies for curl and give execution permission
+RUN apt-get update && apt-get install -y curl && \
+    curl -L https://github.com/danielmiessler/Fabric/releases/download/v1.4.264/fabric-linux-arm64 -o /usr/local/bin/fabric && \
+    chmod +x /usr/local/bin/fabric
 
 COPY . .
 
