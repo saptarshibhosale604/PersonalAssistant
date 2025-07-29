@@ -14,15 +14,17 @@ print("Initialized assistant.py")
 
 
 modeLLM = "globalGemini" # local: Model running locally 
-			# global: Model running on cloud / chatgpt
-modeConversation = "wakeUp" 	# sleep: Go to Hibernate
-	                  	# wakeUp: Goint to answer the user input
+            # global: Model running on cloud / chatgpt
+modeConversation = "wakeUp"     # sleep: Go to Hibernate
+                        # wakeUp: Goint to answer the user input
 modeInput = "text" # text / speech
 modeOutput = "text" # text / speech
 modeContext = "no" # no: no context in conversation
-			# yes: the conversation understand the context
+            # yes: the conversation understand the context
 modeCommunication = "langchain" # langchain: use langchain agent
-                                # fabric: use fabric 	
+                                # fabric: use fabric    
+modeMultilineInput = False      # False: user input is in single line
+                                # True: user input is in muliple lines
 
 listWakeUpCalls = ["hey there", "hi there", "hey rpi"]
 listSleepCalls = ["sleep now", "go to sleep", "we are done", "got it"]
@@ -38,7 +40,7 @@ User Input = """
 
 # ~ who is the presedent of india
 
-threadId = 0	# Memory Id for agent graph
+threadId = 0    # Memory Id for agent graph
 mainLoopCnt = 0 # counting looping of Main()
 
 import logging
@@ -51,42 +53,42 @@ logger.setLevel(logging.INFO)
 
 
 def InitializingLogging():
-	global logger
-	
-	# Create a log file handler
-	file_handler_log = logging.FileHandler("Logs/log.log")
-	file_handler_log.setLevel(logging.DEBUG)
-	# file_handler_log.setLevel(logging.INFO)
+    global logger
+    
+    # Create a log file handler
+    file_handler_log = logging.FileHandler("Logs/log.log")
+    file_handler_log.setLevel(logging.DEBUG)
+    # file_handler_log.setLevel(logging.INFO)
 
-	# Create a chat file handler
-	file_handler_chat = logging.FileHandler("Logs/chat.log")
-	file_handler_chat.setLevel(logging.INFO)
-	# file_handler_log.setLevel(logging.INFO)
+    # Create a chat file handler
+    file_handler_chat = logging.FileHandler("Logs/chat.log")
+    file_handler_chat.setLevel(logging.INFO)
+    # file_handler_log.setLevel(logging.INFO)
 
-	# Create a console handler
-	console_handler = logging.StreamHandler()
-	# console_handler.setLevel(logging.DEBUG)
-	console_handler.setLevel(logging.INFO)
+    # Create a console handler
+    console_handler = logging.StreamHandler()
+    # console_handler.setLevel(logging.DEBUG)
+    console_handler.setLevel(logging.INFO)
 
-	# Create a formatter and set it for both handlers
-	formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
-	file_handler_log.setFormatter(formatter)
-	file_handler_chat.setFormatter(formatter)
-	console_handler.setFormatter(formatter)
+    # Create a formatter and set it for both handlers
+    formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+    file_handler_log.setFormatter(formatter)
+    file_handler_chat.setFormatter(formatter)
+    console_handler.setFormatter(formatter)
 
-	# Add the handlers to the logger
-	logger.addHandler(file_handler_log)
-	logger.addHandler(file_handler_chat)
-	logger.addHandler(console_handler)
+    # Add the handlers to the logger
+    logger.addHandler(file_handler_log)
+    logger.addHandler(file_handler_chat)
+    logger.addHandler(console_handler)
 
-	
-	# ~ logging.basicConfig(
-		# ~ level=logging.DEBUG,
-		# ~ format="%(asctime)s %(levelname)s %(message)s",
-		# ~ datefmt="%Y-%m-%d %H:%M:%S",
-		# ~ filename="Logs/basic.log")
-		
-	logger.debug("InitializingLogging()")
+    
+    # ~ logging.basicConfig(
+        # ~ level=logging.DEBUG,
+        # ~ format="%(asctime)s %(levelname)s %(message)s",
+        # ~ datefmt="%Y-%m-%d %H:%M:%S",
+        # ~ filename="Logs/basic.log")
+        
+    logger.debug("InitializingLogging()")
     # ~ logging.debug("This is a debug message.")
     # ~ logging.info("This is an info message.")
     # ~ logging.warning("This is a warning message.")
@@ -96,208 +98,216 @@ def InitializingLogging():
 #InitializingLogging()
 
 def BasicCmds(userInput):
-	global logger
-	global modeConversation
-	global modeInput
-	global modeOutput
-	global modeContext
-	global modeLLM
-	global modeCommunication
-	
-	printData = ""
+    global logger
+    global modeConversation
+    global modeInput
+    global modeOutput
+    global modeContext
+    global modeLLM
+    global modeCommunication
+    global modeMultilineInput
+    
+    printData = ""
 
-	if (userInput.lower() == "help"):
-		print("Help:")
-		# printData += "CurrentStatus:: modeInput:", modeInput, ":modeOutput:" , modeOutput, ":modeConversation:" , modeConversation, ":modeContext:", modeContext, ":##"
-		# print(printData)
-		# return printData
+    if (userInput.lower() == "help"):
+        print("Help:")
+        # printData += "CurrentStatus:: modeInput:", modeInput, ":modeOutput:" , modeOutput, ":modeConversation:" , modeConversation, ":modeContext:", modeContext, ":##"
+        # print(printData)
+        # return printData
 
-	# Checking for input mode
-	elif (userInput.lower() == "mode input text"):
-		modeInput = "text"
-		
-	
-	elif (userInput.lower() == "mode input speech"):
-		modeInput = "speech"
-		
+    # Checking for input mode
+    elif (userInput.lower() == "mode input text"):
+        modeInput = "text"
+        
+    
+    elif (userInput.lower() == "mode input speech"):
+        modeInput = "speech"
+        
 
-	# Checking for output mode
-	elif (userInput.lower() == "mode output text"):
-		modeOutput = "text"
-		
-	
-	elif (userInput.lower() == "mode output speech"):
-		modeOutput = "speech"
-		
+    # Checking for output mode
+    elif (userInput.lower() == "mode output text"):
+        modeOutput = "text"
+        
+    
+    elif (userInput.lower() == "mode output speech"):
+        modeOutput = "speech"
+        
 
-	# Checking for wake up call
-	elif any(call in userInput.lower() for call in listWakeUpCalls):
-		modeConversation = "wakeUp"
-		
-	
-	# Checking for sleep call
-	elif any(call in userInput.lower() for call in listSleepCalls):
-		modeConversation = "sleep"
-		
+    # Checking for wake up call
+    elif any(call in userInput.lower() for call in listWakeUpCalls):
+        modeConversation = "wakeUp"
+        
+    
+    # Checking for sleep call
+    elif any(call in userInput.lower() for call in listSleepCalls):
+        modeConversation = "sleep"
+        
 
-	# checking for mode context 
-	elif (userInput.lower() == "mode context yes"):
-		modeContext = "yes"
-		
+    # checking for mode context 
+    elif (userInput.lower() == "mode context yes"):
+        modeContext = "yes"
+        
 
-	elif (userInput.lower() == "mode context no"):
-		modeContext = "no"
-		
+    elif (userInput.lower() == "mode context no"):
+        modeContext = "no"
+        
 
-	# checking for mode LLM
-	elif (userInput.lower() == "mode llm local"):
-		modeLLM = "local"
-		
+    # checking for mode LLM
+    elif (userInput.lower() == "mode llm local"):
+        modeLLM = "local"
+        
 
-	elif (userInput.lower() == "mode llm global"):
-		modeLLM = "global"
-		modeContext = "no"
-		
-	elif (userInput.lower() == "mode llm globalgemini"):
-		modeLLM = "globalGemini"
-		modeContext = "no"
+    elif (userInput.lower() == "mode llm global"):
+        modeLLM = "global"
+        modeContext = "no"
+        
+    elif (userInput.lower() == "mode llm globalgemini"):
+        modeLLM = "globalGemini"
+        modeContext = "no"
 
-	elif (userInput.lower() == "mode communication langchain"):
-		modeCommunication = "langchain"
+    elif (userInput.lower() == "mode communication langchain"):
+        modeCommunication = "langchain"
 
-	elif (userInput.lower() == "mode communication fabric"):
-		modeCommunication = "fabric"
+    elif (userInput.lower() == "mode communication fabric"):
+        modeCommunication = "fabric"
 
-	else:
-		return False
+    elif (userInput.lower() == "mode multilineinput true"):
+        modeMultilineInput = True
 
-	# print("## modeInput:", modeInput, ":modeOutput:" , modeOutput, ":modeConversation:" , modeConversation, ":modeContext:", modeContext, ":modeLLM:", modeLLM, ":##")
-	printData = "mode [options]: current mode\n"
-	printData += f"mode input [text/speech]: {modeInput}\n"
-	printData += f"mode output [text/speech]: {modeOutput}\n"
-	printData += f"mode conversation [awake/sleep]: {modeConversation}\n"
-	printData += f"mode context [yes/no]: {modeContext}\n"
-	printData += f"mode llm [local/global/globalGemini]: {modeLLM}\n"
-	printData += f"mode communication [langchain/fabric]: {modeCommunication}\n"
-	
-	print(printData)
-	return True
+    elif (userInput.lower() == "mode multilineinput false"):
+        modeMultilineInput = False
 
-def Input():	
-	global logger
-	global modeInput
-		
-	## ## Input ## ##
-	# Getting user input
-	# userInput = "Hey there how its going on?" # sample 
-	if(modeInput == "text"):
-		userInput = input("userInput: ")	# Text 
-	elif(modeInput == "speech"):
-		userInput = STT.Main()			# Speech To Text
-	else:
-		print("Error: Invalid modeInput:", modeInput)
-	
-	# ~ print("userInput:",userInput)	
-	logger.info(f"userInput: {userInput}")
-	return userInput
+    else:
+        return False
+
+    # print("## modeInput:", modeInput, ":modeOutput:" , modeOutput, ":modeConversation:" , modeConversation, ":modeContext:", modeContext, ":modeLLM:", modeLLM, ":##")
+    printData = "mode [options]: current mode\n"
+    printData += f"mode input [text/speech]: {modeInput}\n"
+    printData += f"mode output [text/speech]: {modeOutput}\n"
+    printData += f"mode conversation [awake/sleep]: {modeConversation}\n"
+    printData += f"mode context [yes/no]: {modeContext}\n"
+    printData += f"mode llm [local/global/globalGemini]: {modeLLM}\n"
+    printData += f"mode communication [langchain/fabric]: {modeCommunication}\n"
+    printData += f"mode multilineinput [true/false]: {modeMultilineInput}\n"
+    
+    print(printData)
+    return True
+
+def Input():    
+    global logger
+    global modeInput
+        
+    ## ## Input ## ##
+    # Getting user input
+    # userInput = "Hey there how its going on?" # sample 
+    if(modeInput == "text"):
+        userInput = input("userInput: ")    # Text 
+    elif(modeInput == "speech"):
+        userInput = STT.Main()          # Speech To Text
+    else:
+        print("Error: Invalid modeInput:", modeInput)
+    
+    # ~ print("userInput:",userInput)   
+    logger.info(f"userInput: {userInput}")
+    return userInput
 
 import subprocess
 
 def Processing(userInput):
-	global logger
-	global modeConversation
-	
-	
-	if(BasicCmds(userInput)):
-		return
-		
-	
-	# for debug only conversation mode only wake up
-	# ~ modeConversation = "wakeUp"
-	
-		
-	# ~ # Checking for sleep call
-	# ~ if any(call in userInput.lower() for call in listSleepCalls):
-		# ~ modeConversation = "sleep"
-		
-	# if(debug01): print("modeConversation:",modeConversation)
-	
-	if (modeConversation == "wakeUp"):
-		# userInputToScriptInvocation
-		
-		# ~ terminalOutput = UITSI.Main(userInput)
-		# ~ print(f"TerminalOutput: {terminalOutput}")
-		
-		# ~ if(terminalOutput is not None):
-			# ~ # LLM User Responce generation
-		# ~ else:
-			# ~ # LLM General Question
-		
-		
-		# define role to userInput
-		# userInput = roleDefining + userInput			
-		logger.debug(f"userInputWithDefinedRole: {userInput}")
-		
-		if(modeCommunication == "langchain"):
-			# Getting responce from LLM model
-			# llmResponce = LLM.Main(userInput)
-			
-			#print("agentResponce:")
-			global threadId
-			global modeLLM
-			global modeContext
+    global logger
+    global modeConversation
+    
+    
+    if(BasicCmds(userInput)):
+        return
+        
+    
+    # for debug only conversation mode only wake up
+    # ~ modeConversation = "wakeUp"
+    
+        
+    # ~ # Checking for sleep call
+    # ~ if any(call in userInput.lower() for call in listSleepCalls):
+        # ~ modeConversation = "sleep"
+        
+    # if(debug01): print("modeConversation:",modeConversation)
+    
+    if (modeConversation == "wakeUp"):
+        # userInputToScriptInvocation
+        
+        # ~ terminalOutput = UITSI.Main(userInput)
+        # ~ print(f"TerminalOutput: {terminalOutput}")
+        
+        # ~ if(terminalOutput is not None):
+            # ~ # LLM User Responce generation
+        # ~ else:
+            # ~ # LLM General Question
+        
+        
+        # define role to userInput
+        # userInput = roleDefining + userInput          
+        logger.debug(f"userInputWithDefinedRole: {userInput}")
+        
+        if(modeCommunication == "langchain"):
+            # Getting responce from LLM model
+            # llmResponce = LLM.Main(userInput)
+            
+            #print("agentResponce:")
+            global threadId
+            global modeLLM
+            global modeContext
 
-			if(modeContext == "no"):
-				threadId += 1 # Always changing memory variable
-			
-			#agentResponce = "Na"	
-			agentResponce = Agent.Main(userInput, threadId, modeLLM, modeContext)
-			#userInput = "who is the PM of India?"
-			#agentResponse = requests.get(f"http://agent_langchain:5011/?userInput={userInput}&threadId={threadId}")
-			#print(":agentResp:", agentResponce)
-			return agentResponce
+            if(modeContext == "no"):
+                threadId += 1 # Always changing memory variable
+            
+            #agentResponce = "Na"   
+            agentResponce = Agent.Main(userInput, threadId, modeLLM, modeContext)
+            #userInput = "who is the PM of India?"
+            #agentResponse = requests.get(f"http://agent_langchain:5011/?userInput={userInput}&threadId={threadId}")
+            #print(":agentResp:", agentResponce)
+            return agentResponce
 
-		elif(modeCommunication == "fabric"):
-			print("modeCommunication: fabric")
-			# /home/ssbrpi/Project/Fabric/fabricPattern.sh <pattern_name>
-			# Fabric pattern calling
-			# script_path = "/home/ssbrpi/Project/Fabric/fabricPattern.sh"
-			# script_path = "/root/Project/Fabric/fabricPattern.sh"
-			script_path = "/root/Project/Fabric/fabric"
+        elif(modeCommunication == "fabric"):
+            print("modeCommunication: fabric")
+            # /home/ssbrpi/Project/Fabric/fabricPattern.sh <pattern_name>
+            # Fabric pattern calling
+            # script_path = "/home/ssbrpi/Project/Fabric/fabricPattern.sh"
+            # script_path = "/root/Project/Fabric/fabricPattern.sh"
+            script_path = "/root/Project/Fabric/fabric"
 
-			# pattern_name = userInput.strip().replace(" ", "_").lower()
+            # pattern_name = userInput.strip().replace(" ", "_").lower()
 
-			# print("Running:: ", script_path, " --version")
-			print("Running:: ", script_path, userInput)
+            # print("Running:: ", script_path, " --version")
+            print("Running:: ", script_path, userInput)
 
-			try:
-				result = subprocess.run(
-					[script_path, userInput],
-					# [script_path, "--version"],
-					check=True,
-					text=True,
-					stdout=subprocess.PIPE,
-					stderr=subprocess.PIPE
-				)
-				print("Script output:")
-				print(result.stdout)
-			except subprocess.CalledProcessError as e:
-				print("Script failed with error:")
-				print(e.stderr)
+            try:
+                result = subprocess.run(
+                    [script_path, userInput],
+                    # [script_path, "--version"],
+                    check=True,
+                    text=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE
+                )
+                print("Script output:")
+                print(result.stdout)
+            except subprocess.CalledProcessError as e:
+                print("Script failed with error:")
+                print(e.stderr)
 
 def Output(assistantOutput):
-	global logger
-	global modeOutput
+    global logger
+    global modeOutput
 
-	logger.info(f"assistantOutput: {assistantOutput}")	# Text 
-	
-	if(modeOutput == "text"):
-		return
-	elif(modeOutput == "speech"):	
-		TTS.Main(assistantOutput) 			# Text to speech
-	else:
-		print("Error: Invalid modeOutput:", modeOutput)
-			
+    logger.info(f"assistantOutput: {assistantOutput}")  # Text 
+    
+    if(modeOutput == "text"):
+        return
+    elif(modeOutput == "speech"):   
+        TTS.Main(assistantOutput)           # Text to speech
+    else:
+        print("Error: Invalid modeOutput:", modeOutput)
+            
 
 ## ## FLASK APP INITIALIZATION ## ##
 
@@ -305,56 +315,66 @@ def Output(assistantOutput):
 # Set debug mode to True
 #app.debug = True
 
+import sys
+
 #@app.route('/')
 def Main():
-	global logger
-	global mainLoopCnt
-	#return "this is from ui app"
-	
-	mainLoopCnt += 1
-	logger.info(f"mainLoopCnt: {mainLoopCnt}")
-	
-	# userInput = "Give me list of 3 fruits"
-	userInput = Input()
-	#userInput = request.args.get('userInput', 'how are you?')
-	
-	#print("userInput:",userInput)
-	
-	if (userInput is not None):
+    global logger
+    global mainLoopCnt
+    global modeMultilineInput
+    #return "this is from ui app"
 
-		# if(debug01): print("input Not null")
-		assistantOutput = Processing(userInput)
 
-		if (assistantOutput is not None):
-			#print("final:", assistantOutput)
-			# return
-			Output(assistantOutput)
+    mainLoopCnt += 1
+    logger.info(f"mainLoopCnt: {mainLoopCnt}")
+
+    userInput = ""
+    # userInput = "Give me list of 3 fruits"
+
+    if(modeMultilineInput==True):
+        print("Paste your multiline input followed by Ctrl-D (Linux/macOS) or Ctrl-Z then Enter (Windows):")
+        userInput = sys.stdin.read()
+    else:
+        userInput = Input()
+    #userInput = request.args.get('userInput', 'how are you?')
+
+    #print("userInput:",userInput)
+
+    if (userInput is not None):
+
+        # if(debug01): print("input Not null")
+        assistantOutput = Processing(userInput)
+
+        if (assistantOutput is not None):
+            #print("final:", assistantOutput)
+            # return
+            Output(assistantOutput)
 
 def WelcomeUser():
-	global logger
-	logger.info("WelcomeUser()")
-	
-	print("Welcome to Personal Assistant CLI")
-	print("Type 'help' for list of commands")
-	
-	assistantOutput = Processing("help")
+    global logger
+    logger.info("WelcomeUser()")
+    
+    print("Welcome to Personal Assistant CLI")
+    print("Type 'help' for list of commands")
+    
+    assistantOutput = Processing("help")
 
-	if (assistantOutput is not None):
-		#print("final:", assistantOutput)
-		# return
-		Output(assistantOutput)
+    if (assistantOutput is not None):
+        #print("final:", assistantOutput)
+        # return
+        Output(assistantOutput)
 
 #if __name__ == '__main__':
-#	app.run(host='0.0.0.0', port=5010)
+#   app.run(host='0.0.0.0', port=5010)
 # Welcome User script
 WelcomeUser()
 
 while(True):
-	Main()
+    Main()
 
 # userInput = "The current Prime Minister of India is Narendra Modi. He has been in office since 2014 and is serving his third term as Prime Minister."
 # Output(userInput)
-	
+    
 # ~ userInput = "Give me a youtube video link on valorant"
 # ~ step 1 find youtube video link of valorant, step 2 run firefox cmd with that link
 # ~ Do 1 step at a time. step 1 get 2 youtube video links of valorant game, step 2 draft a mail to my brother ved with these links

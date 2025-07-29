@@ -211,8 +211,8 @@ toolsAdvance =  [toolShell]             	# Need for human in loop
 toolsIntermediate = [toolSetCronRemainder]
 toolsBasic = [toolYoutube, toolWebSearch, toolMyName]                  # No need for human in loop
 
-# tools = toolsAdvance + toolsIntermediate + toolsBasic
-tools =  toolsAdvance 
+tools = toolsAdvance + toolsIntermediate + toolsBasic
+# tools =  toolsAdvance 
 # globalTools = tools
 
 
@@ -260,110 +260,6 @@ localLLMMessages = []
 
 # print("Welcome to ChatBot! Type 'exit' to quit.\n")
 modeContext = 'no'
-
-# V00
-def CustomOllama(user_input):
-	global localLLMMessages
-	global modeContext
-    # while True:
-	# user_input = input("You: ")
-
-	# if user_input.lower() in ['exit', 'quit']:
-	#     print("Goodbye!")
-	#     break
-	# print("here03")
-	# Add user message to history
-	localLLMMessages.append({'role': 'user', 'content': user_input})
-
-	# Get response from the model
-	stream = chat(
-		model='llama3.2:1b',
-		messages=localLLMMessages,
-		stream=True,
-	)
-
-	# Collect response and print it
-	response = ""
-	print("Streaming responce: ", end='', flush=True)
-	for chunk in stream:
-		content = chunk['message']['content']
-		print(content, end='', flush=True)
-		response += content  
-		
-	print()
-
-	# Add assistant response to history
-	if modeContext == 'yes':
-		localLLMMessages.append({'role': 'assistant', 'content': response})
-	elif modeContext == 'no':
-		localLLMMessages = []
-
-	return response
-
-#V01 // working, but not ending
-# # def CustomOllamaStream(user_input):
-#     global localLLMMessages
-#     global modeContext
-
-#     localLLMMessages.append({'role': 'user', 'content': user_input})
-
-#     stream = chat(
-#         model='llama3.2:1b',
-#         messages=localLLMMessages,
-#         stream=True,
-#     )
-
-#     full_response = ""
-#     print("Streaming response: ", end='', flush=True)
-
-#     for chunk in stream:
-#         content = chunk['message']['content']
-#         print(content, end='', flush=True)
-#         full_response += content
-#         yield content  # <-- streaming each chunk
-
-#     print()
-
-#     if modeContext == 'yes':
-#         localLLMMessages.append({'role': 'assistant', 'content': full_response})
-#     elif modeContext == 'no':
-#         localLLMMessages = []
-
-#     # Optionally yield a final marker
-#     # yield "[[END]]"
-
-# V02
-def CustomOllamaStream(user_input):
-	global localLLMMessages
-	global modeContext
-
-	localLLMMessages.append({'role': 'user', 'content': user_input})
-
-	stream = chat(
-		model='llama3.2:1b',
-		messages=localLLMMessages,
-		stream=True,
-	)
-
-	full_response = ""
-	print("Streaming response: ", end='', flush=True)
-
-	for chunk in stream:
-		content = chunk['message']['content']
-		print(content, end='', flush=True)
-		full_response += content
-		yield content  # <-- streaming each chunk
-
-	print()
-
-	if modeContext == 'yes':
-		localLLMMessages.append({'role': 'assistant', 'content': full_response})
-	elif modeContext == 'no':
-		localLLMMessages = []
-
-	# Optionally yield a final marker
-	yield "[[END]]"
-
 
 from typing import Any, Dict, Iterator, List, Optional, Literal
 

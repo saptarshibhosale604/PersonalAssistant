@@ -9,13 +9,13 @@
 - The agent is working with google gemini llm with tools
 
 # CLI // WORKING
-docker build -t personal_assistant .
+docker build -t personal_assistant . 
 docker rm ollamaLocal -f
 docker run -d --rm -v ollama:/root/.ollama -v /home/ssbrpi/Project:/root/Project/ -p 11434:11434 --name ollamaLocal personal_assistant
+docker exec -it ollamaLocal python /App/UI/cli.py
+
 docker exec -it ollamaLocal /bin/sh
 
-
-docker exec -it ollamaLocal python /App/UI/cli.py
 
 # WEB APP // WORKING
 docker build -t personal_assistant .
@@ -68,10 +68,23 @@ playwright install-deps
 - Install ssh client (Debian/Ubuntu)
 apt update && apt install -y openssh-client
 
-# DELETE.ME 
+# TEMP
 docker exec -it ollamaLocal /bin/sh . /root/.profile // not wokring
 docker exec -it ollamaLocal /bin/sh 
 . /root/.profile 
+python /App/UI/cli.py
+
+docker build -t personal_assistant .  && /
+docker rm ollamaLocal -f && \
+docker run -d --rm -v ollama:/root/.ollama -v /home/ssbrpi/Project:/root/Project/ -p 11434:11434 --name ollamaLocal personal_assistant && \
+docker exec -it ollamaLocal /bin/sh 
+
+## Make session
+nvim -S my-session.vim
+:source my-session.vim
+:mksession my-session.vim
+:mksession! my-session.vim
+
 
 # TODO 
 - remove tool calling for local llm

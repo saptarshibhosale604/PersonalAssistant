@@ -48,6 +48,7 @@ RUN ln -sf /usr/share/zoneinfo/Asia/Kolkata /etc/localtime
 
 # RUN alias refresh="rm /App/* -rf && cp /root/Project/Rpi/PersonalAssistant/* /App/ -r"
 RUN echo 'alias refresh="rm /App/* -rf && cp /root/Project/Rpi/PersonalAssistant/* /App/ -r"' >> /root/.profile
+# . /root/.profile --  to apply the .profile to current terminal
 
 # Fabric
 
