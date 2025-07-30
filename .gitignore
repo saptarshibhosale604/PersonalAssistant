@@ -4,5 +4,6 @@ GitSSHAuthentication
 
 Langchain/toolsRequired.txt
 
-my-session.vim
+Session.vim
 
+__pycache__

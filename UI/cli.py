@@ -193,20 +193,42 @@ def BasicCmds(userInput):
     print(printData)
     return True
 
+
+import readline
+
+# COMMANDS = ['hello', 'help', 'exit', 'weather', 'time']
+
+COMMANDS = ['mode', 'input', 'text', 'speech', 'output', 'context', 'yes', 'no', 'llm', 'local', 'global', 'globalgemini', 'communication', 'langchain', 'fabric', 'multilineInput', 'True', 'False']
+
+def completer(text, state):
+    options = [i for i in COMMANDS if i.startswith(text)]
+    if state < len(options):
+        return options[state]
+    return None
+
+readline.set_completer(completer)
+readline.parse_and_bind("tab: complete")
+
+
 def Input():    
     global logger
     global modeInput
-        
+    global modeMultilineInput
+
     ## ## Input ## ##
     # Getting user input
     # userInput = "Hey there how its going on?" # sample 
     if(modeInput == "text"):
-        userInput = input("userInput: ")    # Text 
+        if(modeMultilineInput==True):
+            print("Paste your multiline input followed by Ctrl-D (Linux/macOS) or Ctrl-Z then Enter (Windows):")
+            userInput = sys.stdin.read()
+        else:
+            userInput = input("userInput: ")    # Text 
     elif(modeInput == "speech"):
         userInput = STT.Main()          # Speech To Text
     else:
         print("Error: Invalid modeInput:", modeInput)
-    
+
     # ~ print("userInput:",userInput)   
     logger.info(f"userInput: {userInput}")
     return userInput
@@ -321,21 +343,16 @@ import sys
 def Main():
     global logger
     global mainLoopCnt
-    global modeMultilineInput
     #return "this is from ui app"
 
 
     mainLoopCnt += 1
     logger.info(f"mainLoopCnt: {mainLoopCnt}")
 
-    userInput = ""
+    # userInput = ""
     # userInput = "Give me list of 3 fruits"
 
-    if(modeMultilineInput==True):
-        print("Paste your multiline input followed by Ctrl-D (Linux/macOS) or Ctrl-Z then Enter (Windows):")
-        userInput = sys.stdin.read()
-    else:
-        userInput = Input()
+    userInput = Input()
     #userInput = request.args.get('userInput', 'how are you?')
 
     #print("userInput:",userInput)

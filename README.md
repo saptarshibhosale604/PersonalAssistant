@@ -72,6 +72,7 @@ apt update && apt install -y openssh-client
 docker exec -it ollamaLocal /bin/sh . /root/.profile // not wokring
 docker exec -it ollamaLocal /bin/sh 
 . /root/.profile 
+refresh
 python /App/UI/cli.py
 
 docker build -t personal_assistant .  && /
@@ -79,11 +80,22 @@ docker rm ollamaLocal -f && \
 docker run -d --rm -v ollama:/root/.ollama -v /home/ssbrpi/Project:/root/Project/ -p 11434:11434 --name ollamaLocal personal_assistant && \
 docker exec -it ollamaLocal /bin/sh 
 
-## Make session
-nvim -S my-session.vim
-:source my-session.vim
-:mksession my-session.vim
-:mksession! my-session.vim
+# Make session
+- open my-session
+nvim -S my-session.vim 
+nvim -S
+- // Not workin
+:source my-session.vim 
+- Create my-session
+:mksession my-session.vim 
+:mksession
+- Overwrite my-session
+:mksession! my-session.vim 
+mksession!
+- Save current files and quit nvim
+:qa
+- put current line to cmd line
+:<C-r><C-l> 
 
 
 # TODO 
