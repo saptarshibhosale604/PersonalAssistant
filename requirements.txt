@@ -1,4 +1,4 @@
-#Langchain/agent
+## Langchain/agent
 # langchain_openai
 # langgraph
 # langgraph.prebuilt
@@ -8,13 +8,14 @@
 # langchain_ollama
 # langchain_google_genai 
 nest_asyncio
+# duckduckgo-search // need to download from the docker terminal
 
-#TextToSpeech
+## TextToSpeech
 # gtts
 # paramiko
 
-#UI/WebApp
+## UI/WebApp
 # flask
 
-#UI
+## UI
 # ollama

@@ -64,6 +64,11 @@ pip3 install beautifulsoup4
 
 - Dockerfile
 playwright install-deps  
+# Install Rust (stable)
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y // done
+ENV PATH="/root/.cargo/bin:${PATH}" // done
+
+pip install -U duckduckgo-search // done
 
 - Install ssh client (Debian/Ubuntu)
 apt update && apt install -y openssh-client
