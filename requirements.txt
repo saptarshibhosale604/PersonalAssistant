@@ -7,7 +7,7 @@
 # langchain-experimental
 # langchain_ollama
 # langchain_google_genai 
-nest_asyncio
+# nest_asyncio
 # duckduckgo-search // need to download from the docker terminal
 
 ## TextToSpeech

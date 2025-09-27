@@ -19,14 +19,29 @@ FROM ollama-python39
 ## ## For python app
 COPY requirements.txt .
 #Use of cache
-RUN pip3.9 install -r requirements.txt
+# RUN pip3.9 install -r requirements.txt
+RUN pip install -r requirements.txt
 #NO use of cache
 #RUN pip install --no-cache-dir -r requirements.txt 
 
 
 ## ## For Cron service
 # Install necessary packages
+RUN apt-get update && \
+    apt-get install -y cron && \
+    apt-get install -y cron && \
+
 RUN apt-get update && apt-get install -y cron
+
+# Install fabric
+RUN curl -L https://github.com/danielmiessler/Fabric/releases/download/v1.4.264/fabric-linux-arm64 -o /usr/local/bin/fabric && \
+    chmod +x /usr/local/bin/fabric
+
+# Install Rust
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
+
+# Add Rust to PATH for all subsequent steps
+ENV PATH="/root/.cargo/bin:${PATH}"
 
 # # Copy the cron file into the container
 # COPY Langchain/ToolCronRemainder/Data/myCronJobs /etc/cron.d/mycron

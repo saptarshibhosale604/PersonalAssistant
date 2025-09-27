@@ -29,8 +29,14 @@ RUN python -m ensurepip --upgrade
 #     ln -sf /usr/bin/pip3 /usr/bin/pip
 
 
+CMD ["serve"]
+# CMD ["/bin/sh"]
 # Save this image
 # docker build -t ollama-python39 .
 # docker build -t ollama-python38 .
 # docker build -t ollama-python39 .                                                             
-# docker run -it --rm ollama-python39 /bin/sh
+# docker run -it --rm ollama-python39 
+# docker run -it --rm ollama-python39 
+
+# docker run -d --rm --name test-docker ollama-python39 
+# docker exec -it test-docker /bin/sh

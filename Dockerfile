@@ -6,7 +6,7 @@ FROM ollama-python39-02
 WORKDIR /App
 
 # Copy the requirements file into the container
-COPY requirements.txt .
+# COPY requirements.txt .
 
 # Install the dependencies
 # RUN pip install -r requirements.txt
@@ -20,16 +20,16 @@ COPY requirements.txt .
 # ENV PATH="/root/.cargo/bin:${PATH}"
 
 # Install curl
-RUN apt-get update && apt-get install -y curl
+# RUN apt-get update && apt-get install -y curl
 
-# Install Rust
-RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
-
-# Add Rust to PATH for all subsequent steps
-ENV PATH="/root/.cargo/bin:${PATH}"
+# # Install Rust
+# RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
+#
+# # Add Rust to PATH for all subsequent steps
+# ENV PATH="/root/.cargo/bin:${PATH}"
 
 ## ## For python app
-# COPY requirements.txt .
+COPY requirements.txt .
 #Use of cache
 RUN pip3.9 install -r requirements.txt
 
