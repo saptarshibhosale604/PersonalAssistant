@@ -11,11 +11,13 @@
 # CLI // WORKING
 docker build -t personal_assistant . 
 docker rm ollamaLocal -f
-docker run -d --rm -v ollama:/root/.ollama -v /home/ssbrpi/Project:/root/Project/ -p 11434:11434 --name ollamaLocal personal_assistant
-docker exec -it ollamaLocal python /App/UI/cli.py
-
+docker run -d --rm -v ollama:/root/.ollama -v /home/ssbrpi/ProjectRpi:/root/ProjectRpi/ -p 11434:11434 --name ollamaLocal personal_assistant
 docker exec -it ollamaLocal /bin/sh
 
+docker exec -it ollamaLocal python /App/UI/cli.py
+
+- for applying the alias
+. /root/.profile
 
 # WEB APP // WORKING
 docker build -t personal_assistant .
@@ -54,8 +56,6 @@ sshpass -p 'admin' ssh -o StrictHostKeyChecking=no ssbrpi@172.17.0.1 pwd // this
 sshpass -p 'admin' ssh -o StrictHostKeyChecking=no ssbrpi@172.17.0.1 /home/ssbrpi/Project/Fabric/fabric --version // this is taking so much time, and not outputing any output
 
 ## 
-- for applying the alias
-. /root/.profile
 
 
 # APPEND // AFTER APPENDING REMOVE THIS 
@@ -105,9 +105,8 @@ mksession!
 
 # TODO 
 - remove tool calling for local llm
-- tool calling man in the loop not working, global mode, web app
-
 - Need to start logging
+- gemini llm integration is not working
 
 done - work on mode context no for local llm
 done - global mode not working for webapp
@@ -115,3 +114,4 @@ done - help function is not working here
 Done - work on context of local llm
 done - work on streaming input from global llm
 done - work on streaming input form local llm
+notDone - tool calling man in the loop not working, global mode, web app; not continuing the web app

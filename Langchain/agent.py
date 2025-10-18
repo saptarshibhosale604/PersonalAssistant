@@ -1,5 +1,5 @@
 import Langchain.toolsGeneral as toolsGeneral
-import Langchain.toolsTravel as toolsTravel
+# import Langchain.toolsTravel as toolsTravel
 ## ## INFO ## ##
 # llm model: chat gpt
 # memory: for each new chat from assistant.py, new memory allocated, no context
@@ -38,8 +38,8 @@ os.environ["TAVILY_API_KEY"] = RemoveSpaces(tavily_key)
 ## ## INITIALIZATION ## ## 
 
 
-# tools = toolsGeneral.ToolsList()
-tools = toolsTravel.ToolsList()
+tools = toolsGeneral.ToolsList()
+# tools = toolsTravel.ToolsList()
 # print(f"tools: {tools} ")
 
 # humanBreak = input("humanBreak:")
@@ -143,7 +143,7 @@ def UpdateLLM(modeLLM):
 		
 		elif(modeLLM == "globalGemini"):
 			# llm = GoogleGenerativeAI(model="models/text-bison-001", google_api_key='AIzaSyBwIrjcMjKA1V3XJ_hCLurJx33wh33NWdk')
-			llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key='AIzaSyBwIrjcMjKA1V3XJ_hCLurJx33wh33NWdk')
+			llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key='AIzaSyBPH-0Dd5e2Heu8lFs1rCci8ZdGxnr_ZvE')
 		global graph
 		
 		graph = create_react_agent(
@@ -405,15 +405,15 @@ def Main(userInput, threadId, modeLLM, modeContextValue):
 		if(modeUserInterface == "web_app"):
 			manInTheLoop = ManInTheLoopResponse(str(toolsRequired))
 		elif(modeUserInterface == "cli"):
-			manInTheLoop = input("Do you want to proceed (y/n): ")
+			manInTheLoop = input("Do you want to proceed (Y/n): ")
 		
-		if manInTheLoop.lower() == "y":
+		if manInTheLoop.lower() == "n":
+			print("## Denied")	
+			return agentOutput
+		else:
 			print("## Allowed")
 			snapshot.next
 			inputs = None  # Continue with the next step
-		else:
-			print("## Denied")	
-			return agentOutput
 			# break
 
 # Global dictionary to hold the response
