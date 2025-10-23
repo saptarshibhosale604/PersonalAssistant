@@ -13,18 +13,18 @@ debug01 = True
 print("Initialized assistant.py")
 
 
-modeLLM = "globalGemini" # local: Model running locally 
-            # global: Model running on cloud / chatgpt
-modeConversation = "wakeUp"     # sleep: Go to Hibernate
-                        # wakeUp: Goint to answer the user input
-modeInput = "text" # text / speech
-modeOutput = "text" # text / speech
-modeContext = "no" # no: no context in conversation
-            # yes: the conversation understand the context
-modeCommunication = "langchain" # langchain: use langchain agent
-                                # fabric: use fabric    
-modeMultilineInput = False      # False: user input is in single line
-                                # True: user input is in muliple lines
+# modeLLM = "globalGemini" # local: Model running locally 
+#             # global: Model running on cloud / chatgpt
+# modeConversation = "wakeUp"     # sleep: Go to Hibernate
+#                         # wakeUp: Goint to answer the user input
+# modeInput = "text" # text / speech
+# modeOutput = "text" # text / speech
+# modeContext = "no" # no: no context in conversation
+#             # yes: the conversation understand the context
+# modeCommunication = "langchain" # langchain: use langchain agent
+#                                 # fabric: use fabric    
+# modeMultilineInput = False      # False: user input is in single line
+#                                 # True: user input is in muliple lines
 
 listWakeUpCalls = ["hey there", "hi there", "hey rpi"]
 listSleepCalls = ["sleep now", "go to sleep", "we are done", "got it"]
@@ -97,102 +97,244 @@ def InitializingLogging():
 
 #InitializingLogging()
 
+mode_config_file = '/tmp/mode_config_file.json'
+
+# Define full mode configuration with current value and allowed options with descriptions
+mode_config_initialization = {
+    'mode-llm': {
+        'current': 'local',
+        'allowed': {
+            'local': 'Model running locally',
+            'global': 'Model running on cloud / chatgpt'
+        }
+    },
+    'mode-conversation': {
+        'current': 'wakeUp',
+        'allowed': {
+            'sleep': 'Go to Hibernate',
+            'wakeUp': 'Goint to answer the user input'
+        }
+    },
+    'mode-input': {
+        'current': 'text',
+        'allowed': {
+            'text': 'Text input mode',
+            'speech': 'Speech input mode'
+        }
+    },
+    'mode-output': {
+        'current': 'text',
+        'allowed': {
+            'text': 'Text output mode',
+            'speech': 'Speech output mode'
+        }
+    },
+    'mode-context': {
+        'current': 'yes',
+        'allowed': {
+            'no': 'No context in conversation',
+            'yes': 'The conversation understands the context'
+        }
+    },
+    'mode-communication': {
+        'current': 'langchain',
+        'allowed': {
+            'langchain': 'Use langchain agent',
+            'fabric': 'Use fabric'
+        }
+    },
+    'mode-multiline-input': {
+        'current': 'true',
+        'allowed': {
+            'false': 'User input is in single line',
+            'true': 'User input is in multiple lines'
+        }
+    }
+}
+
+
+
+import json
+import os
+
+
+def save_modes(mode_config):
+    with open(mode_config_file, 'w') as f:
+        json.dump(mode_config, f, indent=4)
+
+def load_modes():
+    if os.path.exists(mode_config_file):
+        print("load modes: getting current mode config file")
+        with open(mode_config_file, 'r') as f:
+            return json.load(f)
+    else: # Initialize the MODE_CONFIG_FILE
+        print("load modes: initiaizing the mode config file")
+        with open(mode_config_file, 'w') as f:
+            json.dump(mode_config_initialization, f, indent=4)
+        with open(mode_config_file, 'r') as f:
+            return json.load(f)
+    # return mode_config
+
+
 def BasicCmds(userInput):
-    global logger
-    global modeConversation
-    global modeInput
-    global modeOutput
-    global modeContext
-    global modeLLM
-    global modeCommunication
-    global modeMultilineInput
+    # global mode_config
+    mode_config_load = load_modes()
+
+    parts = userInput.lower().split()
+
+
+    if parts[0] == "help":
+        print('Help:')
+
+    # Check if user input matches the pattern: mode <mode-name> <mode-value>
+    elif len(parts) == 3 and parts[0] == 'mode':
+        mode_name = 'mode-' + parts[1]  # construct key, e.g. 'modeInput'
+        mode_value = parts[2]
+        if mode_name in mode_config_load:
+            if mode_value in mode_config_load[mode_name]['allowed']:
+                mode_config_load[mode_name]['current'] = mode_value
+                print(f"Set {mode_name} to {mode_value}")
+                save_modes(mode_config_load)
+            else:
+                print(f"Invalid option '{mode_value}' for {mode_name}. Use 'help' to see allowed options.")
+        else:
+            print(f"Invalid mode '{mode_name}'. Use 'help' to see available modes.")
     
-    printData = ""
-
-    if (userInput.lower() == "help"):
-        print("Help:")
-        # printData += "CurrentStatus:: modeInput:", modeInput, ":modeOutput:" , modeOutput, ":modeConversation:" , modeConversation, ":modeContext:", modeContext, ":##"
-        # print(printData)
-        # return printData
-
-    # Checking for input mode
-    elif (userInput.lower() == "mode input text"):
-        modeInput = "text"
-        
-    
-    elif (userInput.lower() == "mode input speech"):
-        modeInput = "speech"
-        
-
-    # Checking for output mode
-    elif (userInput.lower() == "mode output text"):
-        modeOutput = "text"
-        
-    
-    elif (userInput.lower() == "mode output speech"):
-        modeOutput = "speech"
-        
-
-    # Checking for wake up call
-    elif any(call in userInput.lower() for call in listWakeUpCalls):
-        modeConversation = "wakeUp"
-        
-    
-    # Checking for sleep call
-    elif any(call in userInput.lower() for call in listSleepCalls):
-        modeConversation = "sleep"
-        
-
-    # checking for mode context 
-    elif (userInput.lower() == "mode context yes"):
-        modeContext = "yes"
-        
-
-    elif (userInput.lower() == "mode context no"):
-        modeContext = "no"
-        
-
-    # checking for mode LLM
-    elif (userInput.lower() == "mode llm local"):
-        modeLLM = "local"
-        
-
-    elif (userInput.lower() == "mode llm global"):
-        modeLLM = "global"
-        modeContext = "no"
-        
-    elif (userInput.lower() == "mode llm globalgemini"):
-        modeLLM = "globalGemini"
-        modeContext = "no"
-
-    elif (userInput.lower() == "mode communication langchain"):
-        modeCommunication = "langchain"
-
-    elif (userInput.lower() == "mode communication fabric"):
-        modeCommunication = "fabric"
-
-    elif (userInput.lower() == "mode multilineinput true"):
-        modeMultilineInput = True
-
-    elif (userInput.lower() == "mode multilineinput false"):
-        modeMultilineInput = False
-
     else:
+        # print("Invalid mode. Use 'help' to see available modes.")
         return False
 
-    # print("## modeInput:", modeInput, ":modeOutput:" , modeOutput, ":modeConversation:" , modeConversation, ":modeContext:", modeContext, ":modeLLM:", modeLLM, ":##")
-    printData = "mode [options]: current mode\n"
-    printData += f"mode input [text/speech]: {modeInput}\n"
-    printData += f"mode output [text/speech]: {modeOutput}\n"
-    printData += f"mode conversation [awake/sleep]: {modeConversation}\n"
-    printData += f"mode context [yes/no]: {modeContext}\n"
-    printData += f"mode llm [local/global/globalGemini]: {modeLLM}\n"
-    printData += f"mode communication [langchain/fabric]: {modeCommunication}\n"
-    printData += f"mode multilineinput [true/false]: {modeMultilineInput}\n"
-    
-    print(printData)
+    for key, details in mode_config_load.items():
+        print(f"{key}: {details['current']}")
+        for option, desc in details['allowed'].items():
+            print(f"  {option}: {desc}")
+        print()
+
     return True
 
+    # if userInput.lower() == 'help':
+    #     print('Help:')
+    #
+    # # Example to change modeInput
+    # elif userInput.lower() == 'mode input blah':
+    #     mode_config['modeInput']['current'] = 'blah'
+    #     print("Input mode set to blah")
+    #
+    # save_modes()
+    #
+    # # Print the values
+    # for key, details in mode_config.items():
+    #     print(f"{key}: {details['current']}")
+    #     for option, desc in details['allowed'].items():
+    #         print(f"  {option}: {desc}")
+    #     print()
+
+
+# checkpoint
+# save_modes()
+# userInput02 = input("testing: ") 
+# BasicCmds(userInput02)
+# # return 
+# # exit
+# sys.exit()
+# print("still here")
+
+# def BasicCmds(userInput):
+#     global logger
+#     global modeConversation
+#     global modeInput
+#     global modeOutput
+#     global modeContext
+#     global modeLLM
+#     global modeCommunication
+#     global modeMultilineInput
+#
+#     printData = ""
+#
+#     if (userInput.lower() == "help"):
+#         print("Help:")
+#         # printData += "CurrentStatus:: modeInput:", modeInput, ":modeOutput:" , modeOutput, ":modeConversation:" , modeConversation, ":modeContext:", modeContext, ":##"
+#         # print(printData)
+#         # return printData
+#
+#     # Checking for input mode
+#     elif (userInput.lower() == "mode input text"):
+#         modeInput = "text"
+#
+#
+#     elif (userInput.lower() == "mode input speech"):
+#         modeInput = "speech"
+#
+#
+#     # Checking for output mode
+#     elif (userInput.lower() == "mode output text"):
+#         modeOutput = "text"
+#
+#
+#     elif (userInput.lower() == "mode output speech"):
+#         modeOutput = "speech"
+#
+#
+#     # Checking for wake up call
+#     elif any(call in userInput.lower() for call in listWakeUpCalls):
+#         modeConversation = "wakeUp"
+#
+#
+#     # Checking for sleep call
+#     elif any(call in userInput.lower() for call in listSleepCalls):
+#         modeConversation = "sleep"
+#
+#
+#     # checking for mode context 
+#     elif (userInput.lower() == "mode context yes"):
+#         modeContext = "yes"
+#
+#
+#     elif (userInput.lower() == "mode context no"):
+#         modeContext = "no"
+#
+#
+#     # checking for mode LLM
+#     elif (userInput.lower() == "mode llm local"):
+#         modeLLM = "local"
+#
+#
+#     elif (userInput.lower() == "mode llm global"):
+#         modeLLM = "global"
+#         modeContext = "no"
+#
+#     elif (userInput.lower() == "mode llm globalgemini"):
+#         modeLLM = "globalGemini"
+#         modeContext = "no"
+#
+#     elif (userInput.lower() == "mode communication langchain"):
+#         modeCommunication = "langchain"
+#
+#     elif (userInput.lower() == "mode communication fabric"):
+#         modeCommunication = "fabric"
+#
+#     elif (userInput.lower() == "mode multilineinput true"):
+#         modeMultilineInput = True
+#
+#     elif (userInput.lower() == "mode multilineinput false"):
+#         modeMultilineInput = False
+#
+#     else:
+#         return False
+#
+#     # print("## modeInput:", modeInput, ":modeOutput:" , modeOutput, ":modeConversation:" , modeConversation, ":modeContext:", modeContext, ":modeLLM:", modeLLM, ":##")
+#     printData = "mode [options]: current mode\n"
+#     printData += f"mode input [text/speech]: {modeInput}\n"
+#     printData += f"mode output [text/speech]: {modeOutput}\n"
+#     printData += f"mode conversation [awake/sleep]: {modeConversation}\n"
+#     printData += f"mode context [yes/no]: {modeContext}\n"
+#     printData += f"mode llm [local/global/globalGemini]: {modeLLM}\n"
+#     printData += f"mode communication [langchain/fabric]: {modeCommunication}\n"
+#     printData += f"mode multilineinput [true/false]: {modeMultilineInput}\n"
+#
+#     print(printData)
+#     return True
+#
 
 import readline
 
@@ -212,14 +354,14 @@ readline.parse_and_bind("tab: complete")
 
 def Input():    
     global logger
-    global modeInput
+    # global modeInput
     global modeMultilineInput
 
     ## ## Input ## ##
     # Getting user input
     # userInput = "Hey there how its going on?" # sample 
-    if(modeInput == "text"):
-        if(modeMultilineInput==True):
+    if (GetModeValue("mode-input") == "text"):
+        if (GetModeValue("mode-multiline-input") == True):
             print("Paste your multiline input followed by Ctrl-D (Linux/macOS) or Ctrl-Z then Enter (Windows):")
             userInput = sys.stdin.read()
         else:
@@ -235,14 +377,25 @@ def Input():
 
 import subprocess
 
+def GetModeValue(mode_name):
+    mode_config = load_modes()
+    return mode_config[mode_name]['current']
+
+# print(GetModeValue("mode-conversation"))
+# hahahah
+
 def Processing(userInput):
     global logger
-    global modeConversation
+    # global modeConversation
     
-    
-    if(BasicCmds(userInput)):
+    basicCmdReturn = BasicCmds(userInput)
+    # print(f"Processing basicCmdReturn: {basicCmdReturn} : type: {type(basicCmdReturn)} ")
+
+    if(basicCmdReturn):
+        # print("Processing: UserInput is in BasicCmds")
         return
-        
+    # else: 
+    #     print("Processing: UserInput is NOT in BasicCmds")
     
     # for debug only conversation mode only wake up
     # ~ modeConversation = "wakeUp"
@@ -254,7 +407,8 @@ def Processing(userInput):
         
     # if(debug01): print("modeConversation:",modeConversation)
     
-    if (modeConversation == "wakeUp"):
+    # if (modeConversation == "wakeUp"):
+    if (GetModeValue("mode-conversation") == "wakeUp"):
         # userInputToScriptInvocation
         
         # ~ terminalOutput = UITSI.Main(userInput)
@@ -270,26 +424,29 @@ def Processing(userInput):
         # userInput = roleDefining + userInput          
         logger.debug(f"userInputWithDefinedRole: {userInput}")
         
-        if(modeCommunication == "langchain"):
+        # if(modeCommunication == "langchain"):
+        if (GetModeValue("mode-communication") == "langchain"):
             # Getting responce from LLM model
             # llmResponce = LLM.Main(userInput)
             
             #print("agentResponce:")
             global threadId
-            global modeLLM
-            global modeContext
+            # global modeLLM
+            # global modeContext
 
-            if(modeContext == "no"):
+            # if(modeContext == "no"):
+            if (GetModeValue("mode-context") == "no"):
                 threadId += 1 # Always changing memory variable
             
             #agentResponce = "Na"   
-            agentResponce = Agent.Main(userInput, threadId, modeLLM, modeContext)
+            agentResponce = Agent.Main(userInput, threadId, GetModeValue("mode-llm"), GetModeValue("mode-context"))
             #userInput = "who is the PM of India?"
             #agentResponse = requests.get(f"http://agent_langchain:5011/?userInput={userInput}&threadId={threadId}")
             #print(":agentResp:", agentResponce)
             return agentResponce
 
-        elif(modeCommunication == "fabric"):
+        # elif(modeCommunication == "fabric"):
+        if (GetModeValue("mode-communication") == "langchain"):
             print("modeCommunication: fabric")
             # /home/ssbrpi/Project/Fabric/fabricPattern.sh <pattern_name>
             # Fabric pattern calling
@@ -319,13 +476,13 @@ def Processing(userInput):
 
 def Output(assistantOutput):
     global logger
-    global modeOutput
+    # global modeOutput
 
     logger.info(f"assistantOutput: {assistantOutput}")  # Text 
     
-    if(modeOutput == "text"):
+    if (GetModeValue("mode-output") == "text"):
         return
-    elif(modeOutput == "speech"):   
+    elif (GetModeValue("mode-output") == "speech"):   
         TTS.Main(assistantOutput)           # Text to speech
     else:
         print("Error: Invalid modeOutput:", modeOutput)

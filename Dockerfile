@@ -1,6 +1,7 @@
 # First build Layer02
 
-FROM ollama-python39-02
+# FROM ollama-python39-02
+FROM alpine-ollama-python39-02
 
 # Set the working directory in the container
 WORKDIR /App
@@ -31,7 +32,8 @@ WORKDIR /App
 ## ## For python app
 COPY requirements.txt .
 #Use of cache
-RUN pip3.9 install -r requirements.txt
+# RUN pip3.9 install -r requirements.txt
+RUN pip install -r requirements.txt
 
 # NO use of cache
 #RUN pip install --no-cache-dir -r requirements.txt 
@@ -60,7 +62,7 @@ RUN echo "Initialized notification log file" > /var/log/notify.log
 RUN ln -sf /usr/share/zoneinfo/Asia/Kolkata /etc/localtime
 
 # RUN alias refresh="rm /App/* -rf && cp /root/Project/Rpi/PersonalAssistant/* /App/ -r"
-RUN echo 'alias refresh="rm /App/* -rf && cp /root/Project/Rpi/PersonalAssistant/* /App/ -r"' >> /root/.profile
+RUN echo 'alias refresh="rm /App/* -rf && cp /root/ProjectRpi/Rpi/PersonalAssistant/* /App/ -r"' >> /root/.profile
 # . /root/.profile --  to apply the .profile to current terminal
 
 # Fabric

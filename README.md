@@ -1,9 +1,9 @@
 # TECH USED
--Raspberry pi
--Docker containers
--Langchain framework
--Python
--SQL lite
+- Raspberry pi
+- Docker containers
+- Langchain framework
+- Python
+- SQL lite
 - The agent is using local llm and calls the tools
 	- But the model llama3.2:1b is not smart enough to use the tools
 - The agent is working with google gemini llm with tools
@@ -16,8 +16,9 @@ docker exec -it ollamaLocal /bin/sh
 
 docker exec -it ollamaLocal python /App/UI/cli.py
 
-- for applying the alias
-. /root/.profile
+. /root/.profile # for applying the alias
+refresh
+python /App/UI/cli.py
 
 # WEB APP // WORKING
 docker build -t personal_assistant .
@@ -42,7 +43,7 @@ ssh -o BatchMode=yes -o StrictHostKeyChecking=no ssbrpi@172.17.0.1 pwd
 
 # SSH 
 eval "$(ssh-agent -s)"
-ssh-add GitSSHAuthentication/key08
+ssh-add ~/.ssh/GitAuthentication/PersonalAssistant_01/id_rsa
 
 # INSIDE DOCKER CMDS
 ## sshpass
@@ -54,8 +55,6 @@ apt update && apt install -y sshpass
 sshpass -p 'admin' ssh -o StrictHostKeyChecking=no ssbrpi@172.17.0.1 pwd // this is working
 
 sshpass -p 'admin' ssh -o StrictHostKeyChecking=no ssbrpi@172.17.0.1 /home/ssbrpi/Project/Fabric/fabric --version // this is taking so much time, and not outputing any output
-
-## 
 
 
 # APPEND // AFTER APPENDING REMOVE THIS 
@@ -104,6 +103,7 @@ mksession!
 
 
 # TODO 
+- remember last help options
 - remove tool calling for local llm
 - Need to start logging
 - gemini llm integration is not working
@@ -114,4 +114,5 @@ done - help function is not working here
 Done - work on context of local llm
 done - work on streaming input from global llm
 done - work on streaming input form local llm
+
 notDone - tool calling man in the loop not working, global mode, web app; not continuing the web app

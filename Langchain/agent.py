@@ -125,6 +125,7 @@ modeCurrentLLM = "na" # save mode current llm, for detecting changes in the mode
 def UpdateLLM(modeLLM):
 	global llm
 	global modeCurrentLLM
+	global graph
 	# llm = model
 	#print(f"UpdateLLM: modeLLM: {modeLLM}")
 	# print(f"agent UpdateLLM: modeLLM: {modeLLM} :: modeCurrentLLM: {modeCurrentLLM}")
@@ -134,9 +135,13 @@ def UpdateLLM(modeLLM):
 		# print(f"agent UpdateLLM02: modeLLM: {modeLLM} :: modeCurrentLLM: {modeCurrentLLM}")
 
 		if(modeLLM == "local"):
-			# llm = ChatParrotLink(parrot_buffer_length=3, model="my_custom_model_02")
 			llm = ChatOllama(model="llama3.2:1b", streaming=True, max_tokens=500, temperature=0, max_retries=1)
 			# llm = ChatOllama(model="llama3.2:1b", temperature=0, verbose=True)
+
+		elif(modeLLM == "local-3b"):
+			llm = ChatOllama(model="llama3.2", streaming=True, max_tokens=500, temperature=0, max_retries=1)
+			# llm = ChatOllama(model="llama3.2:1b", temperature=0, verbose=True)
+
 		elif(modeLLM == "global"):
 			# llm = ChatOpenAI(model="gpt-3.5-turbo", max_tokens=500, temperature=0, max_retries=1)
 			llm = ChatOpenAI(model="gpt-3.5-turbo", streaming=True, max_tokens=500, temperature=0, max_retries=1)
@@ -144,7 +149,6 @@ def UpdateLLM(modeLLM):
 		elif(modeLLM == "globalGemini"):
 			# llm = GoogleGenerativeAI(model="models/text-bison-001", google_api_key='AIzaSyBwIrjcMjKA1V3XJ_hCLurJx33wh33NWdk')
 			llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key='AIzaSyBPH-0Dd5e2Heu8lFs1rCci8ZdGxnr_ZvE')
-		global graph
 		
 		graph = create_react_agent(
 			llm, 
@@ -300,7 +304,7 @@ def ManInTheLoopResponse(toolsRequired):
 			# print(f"content manInTheLoopResponse file: {content}")
 			# Check if the content is "y" or "n"
 			if content.lower() == "y":
-				print("## Allowed")
+				# print("## Allowed")
 				ResetManInTheLoopResponse()
 				return "y"
 			elif content.lower() == "n":
@@ -321,7 +325,7 @@ def Main(userInput, threadId, modeLLM, modeContextValue):
 #@app.route('/')
 #def Main():
 	#return "hey there, this is me"
-	# print(f"## ## Main: userInput: {userInput} ::threadId: {threadId} :: modeLLM: {modeLLM} :: modeContextValue: {modeContextValue}")
+	# print(f"## ## Agent Main: userInput: {userInput} ::threadId: {threadId} :: modeLLM: {modeLLM} :: modeContextValue: {modeContextValue}")
 	global modeContexupdatest
 	modeContext = modeContextValue
 	UpdateLLM(modeLLM)
@@ -398,7 +402,7 @@ def Main(userInput, threadId, modeLLM, modeContextValue):
 		existing_message = snapshot.values["messages"][-1]
 		toolsRequired = existing_message.tool_calls
 
-		print("####### Tools to be called ::: ", toolsRequired)
+		print("Tools to be called ::: ", toolsRequired)
 		
 		global modeUserInterface
 		

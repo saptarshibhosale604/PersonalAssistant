@@ -154,9 +154,9 @@ from langchain_community.tools.playwright.utils import (
     create_async_playwright_browser,  # A synchronous browser is available, though it isn't compatible with jupyter.\n",	  },
 )
 # This import is required only for jupyter notebooks, since they have their own eventloop
-import nest_asyncio
-import asyncio
-nest_asyncio.apply()
+# import nest_asyncio
+# import asyncio
+# nest_asyncio.apply()
 
 # async_browser = create_async_playwright_browser()
 # toolkit = PlayWrightBrowserToolkit.from_browser(async_browser=async_browser)
