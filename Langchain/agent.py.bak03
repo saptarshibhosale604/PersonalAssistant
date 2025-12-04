@@ -1,0 +1,274 @@
+# working, but the human in the loop is not wokring
+"""
+LangChain Agent Script with User-Approved Tool Selection and Streaming Response
+
+This script demonstrates a complete agent workflow that:
+1. Accepts user input
+2. Determines which tool to use
+3. Asks for user approval before tool execution
+4. Streams the agent response
+"""
+
+import os
+from typing import Any
+
+from langchain.agents import create_agent
+from langchain.chat_models import init_chat_model
+from langchain.tools import tool
+from langchain.messages import HumanMessage
+
+
+# ============================================================================
+# TOOL DEFINITIONS
+# ============================================================================
+
+@tool
+def SearchWeb(query: str) -> str:
+    """Search the web for information about a topic.
+    
+    Args:
+        query: The search query to look up
+    
+    Returns:
+        Search results related to the query
+    """
+    # Simulated web search function
+    return f"Web search results for '{query}': Found 10+ relevant articles about {query}. Top results include information about latest trends and research."
+
+
+@tool
+def GetWeather(location: str) -> str:
+    """Get current weather information for a specific location.
+    
+    Args:
+        location: The city or location name
+    
+    Returns:
+        Current weather information
+    """
+    # Simulated weather function
+    weatherData = {
+        "temperature": "22°C",
+        "condition": "Partly Cloudy",
+        "humidity": "65%",
+        "windSpeed": "12 km/h"
+    }
+    return f"Weather in {location}: {weatherData['temperature']}, {weatherData['condition']}, Humidity: {weatherData['humidity']}, Wind: {weatherData['windSpeed']}"
+
+
+@tool
+def CalculateExpression(expression: str) -> str:
+    """Calculate a mathematical expression.
+    
+    Args:
+        expression: A mathematical expression to evaluate (e.g., "2 + 2 * 3")
+    
+    Returns:
+        The result of the calculation
+    """
+    try:
+        result = eval(expression)
+        return f"Result of '{expression}' = {result}"
+    except Exception as error:
+        return f"Error calculating expression: {str(error)}"
+
+# ============================================================================
+# API KEYS 
+# ============================================================================
+
+df RemoveSpaces(input_string):
+    # Remove spaces from the input string
+    return input_string.replace(" ", "")
+
+openai_key = "sk-proj-zP6XLa1m5gtlBcXJCaHZGmAvXEvUrP 5ATJSPBfLRdEuF-vSroLAG4V0zBdpwPz9PTXe9rM0-CgT3BlbkFJ83 AZyS7Zds5OT4G7S7MJslTok1O8P7ftX6Zz_IvdtMsy_CnjJeBoOv-o-G5t13-1Yw20ei_BwA" # myTestKey08, saptarshibhosale604@gmail.com
+tavily_key = "tvly-kX76LCz C36oih0u9COcf6oa 53A47MX0g"
+
+os.environ["OPENAI_API_KEY"] = RemoveSpaces(openai_key)
+os.environ["TAVILY_API_KEY"] = RemoveSpaces(tavily_key)
+
+# ============================================================================
+# MAIN AGENT FUNCTIONS
+# ============================================================================
+
+def InitializeAgent() -> Any:
+    """Initialize and configure the LangChain agent.
+    
+    Returns:
+        Configured agent instance with tools bound
+    """
+    # Initialize the chat model
+    modelInstance = init_chat_model(
+        "gpt-4o-mini",
+        model_provider="openai"
+    )
+    
+    # Define tools list
+    toolsList = [SearchWeb, GetWeather, CalculateExpression]
+    
+    # Create agent with tools
+    agentInstance = create_agent(
+        modelInstance,
+        tools=toolsList,
+        system_prompt="You are a helpful assistant. Answer questions accurately and concisely."
+    )
+    
+    return agentInstance
+
+
+def GetUserInput() -> str:
+    """Get user query from command line input.
+    
+    Returns:
+        User's input query
+    """
+    print("\n" + "="*70)
+    userQuery = input("Enter your question (or 'quit' to exit): ").strip()
+    print("="*70)
+    return userQuery
+
+
+from pprint import pprint
+
+def CheckToolSelection(modelResponse: dict) -> bool:
+    """Display selected tools and ask for user approval.
+    
+    Args:
+        modelResponse: The model's response containing tool calls
+    
+    Returns:
+        True if user approves, False otherwise
+    """
+    print("CheckToolSelection Start")
+    # Extract messages from response
+    messages = modelResponse.get("messages", [])
+
+    # print(f"messages: {messages}")
+    pprint(f"messages: {messages}")
+    
+    if not messages:
+        return True
+    
+    # Get the last AI message
+    lastMessage = messages[-1]
+
+    # print(f"lastMessage: {lastMessage}")
+    
+    # Check if there are tool calls
+    if hasattr(lastMessage, "tool_calls") and lastMessage.tool_calls:
+        print("\n" + "-"*70)
+        print("🔧 TOOLS TO BE USED:")
+        print("-"*70)
+        
+        for toolCall in lastMessage.tool_calls:
+            toolName = toolCall.get("name", "Unknown")
+            toolArgs = toolCall.get("args", {})
+            
+            print(f"\n  Tool: {toolName}")
+            print(f"  Arguments: {toolArgs}")
+        
+        print("\n" + "-"*70)
+        userApproval = input("Do you approve these tools? (yes/no): ").strip().lower()
+        
+        return userApproval in ["yes", "y"]
+    
+    print("CheckToolSelection END")
+    return True
+
+
+def StreamAgentResponse(agent: Any, userQuery: str) -> None:
+    """Stream the agent's response for real-time output.
+    
+    Args:
+        agent: The configured agent instance
+        userQuery: The user's input query
+    """
+    print("\n" + "="*70)
+    print("📢 STREAMING RESPONSE:")
+    print("="*70 + "\n")
+    
+    try:
+        # Stream the response
+        for chunk in agent.stream(
+            {"messages": [HumanMessage(content=userQuery)]},
+            stream_mode="values"
+        ):
+            # Get the last message in the chunk
+            messages = chunk.get("messages", [])
+            if messages:
+                lastMessage = messages[-1]
+                
+                # Display AI responses
+                if hasattr(lastMessage, "content") and lastMessage.content:
+                    if not hasattr(lastMessage, "tool_calls"):  # Skip tool call messages
+                        print(lastMessage.content, end="", flush=True)
+        
+        print("\n")
+    except Exception as error:
+        print(f"❌ Error during streaming: {str(error)}")
+
+
+def ProcessUserQuery(agent: Any, userQuery: str) -> None:
+    """Process a user query through the agent workflow.
+    
+    Args:
+        agent: The configured agent instance
+        userQuery: The user's input query
+    """
+    # Step 1: Get initial response to check tool selection
+    print("\n🤔 Analyzing your question...")
+    
+    initialResponse = agent.invoke(
+        {"messages": [HumanMessage(content=userQuery)]}
+    )
+    
+    # Step 2: Ask for tool approval
+    isApproved = CheckToolSelection(initialResponse)
+    
+    if not isApproved:
+        print("\n⚠️  Tool selection rejected by user. Please try a different question.")
+        return
+    
+    print("\n✅ Tool selection approved!")
+    
+    # Step 3: Stream the response
+    StreamAgentResponse(agent, userQuery)
+
+
+def RunMain() -> None:
+    """Main function to run the agent interaction loop."""
+    print("\n" + "="*70)
+    print("🤖 LANGCHAIN AGENT WITH USER-APPROVED TOOLS")
+    print("="*70)
+    print("\nInitializing agent...")
+    
+    # Initialize agent
+    agent = InitializeAgent()
+    print("✅ Agent initialized successfully!\n")
+    
+    # Main interaction loop
+    while True:
+        # Get user input
+        userQuery = GetUserInput()
+        
+        # Check for exit command
+        if userQuery.lower() == "quit":
+            print("\n👋 Thank you for using the agent. Goodbye!")
+            break
+        
+        # Validate input
+        if not userQuery:
+            print("\n⚠️  Please enter a valid question.")
+            continue
+        
+        # Process the query
+        ProcessUserQuery(agent, userQuery)
+
+
+# ============================================================================
+# ENTRY POINT
+# ============================================================================
+
+if __name__ == "__main__":
+    RunMain()
+
+

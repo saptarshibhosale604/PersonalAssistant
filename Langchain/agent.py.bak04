@@ -1,0 +1,370 @@
+# AgentExecutor error
+#!/usr/bin/env python3
+"""
+LangChain Agent with Human-in-the-Loop Tool Approval
+Uses Option 3: Custom Agent with Step-by-Step Approval Loop
+Author: Your Name
+Date: December 2025
+"""
+
+from langchain_openai import ChatOpenAI
+from langchain.agents import AgentExecutor, create_tool_calling_agent
+from langchain_core.tools import tool
+from langchain_core.messages import HumanMessage, AIMessage
+from langchain import hub
+from pprint import pprint
+
+# ============================================================================
+# 1. INITIALIZE LLM
+# ============================================================================
+
+def InitializeLLM():
+    """Initialize the OpenAI LLM."""
+    try:
+        llm = ChatOpenAI(
+            model="gpt-4o-mini-2024-07-18",
+            temperature=0,
+            verbose=True
+        )
+        print("✅ LLM initialized successfully!")
+        return llm
+    except Exception as e:
+        print(f"❌ Error initializing LLM: {e}")
+        raise
+
+
+# ============================================================================
+# 2. DEFINE TOOLS
+# ============================================================================
+
+@tool
+def GetWeather(location: str) -> str:
+    """Get the current weather for a specific location.
+    
+    Args:
+        location: The city or location name (e.g., 'Pune', 'Mumbai')
+    
+    Returns:
+        Weather information for the location
+    """
+    # Simulated weather data
+    weather_data = {
+        "pune": "22°C, Partly Cloudy, Humidity: 65%, Wind: 12 km/h",
+        "mumbai": "28°C, Sunny, Humidity: 72%, Wind: 8 km/h",
+        "delhi": "18°C, Clear, Humidity: 55%, Wind: 15 km/h",
+        "bangalore": "25°C, Rainy, Humidity: 78%, Wind: 10 km/h",
+    }
+    
+    location_lower = location.lower()
+    weather = weather_data.get(location_lower, f"Weather data not available for {location}")
+    return f"Weather in {location}: {weather}"
+
+
+@tool
+def GetStockPrice(symbol: str) -> str:
+    """Get the current stock price for a company symbol.
+    
+    Args:
+        symbol: Stock symbol (e.g., 'AAPL', 'GOOGL', 'TCS')
+    
+    Returns:
+        Current stock price information
+    """
+    # Simulated stock data
+    stock_data = {
+        "aapl": "$195.42 (↑ 2.3%)",
+        "googl": "$140.85 (↓ 1.2%)",
+        "msft": "$445.32 (↑ 0.8%)",
+        "tcs": "₹4,250 (↑ 1.5%)",
+        "infy": "₹2,150 (↓ 0.3%)",
+    }
+    
+    symbol_lower = symbol.lower()
+    price = stock_data.get(symbol_lower, f"Price data not available for {symbol}")
+    return f"Stock Price ({symbol.upper()}): {price}"
+
+
+@tool
+def SearchWeb(query: str) -> str:
+    """Search the web for information about a topic.
+    
+    Args:
+        query: The search query
+    
+    Returns:
+        Search results summary
+    """
+    # Simulated search results
+    return f"Search Results for '{query}':\n- Result 1: Information about {query}\n- Result 2: Latest news on {query}\n- Result 3: Related topics"
+
+
+@tool
+def Calculator(expression: str) -> str:
+    """Perform mathematical calculations.
+    
+    Args:
+        expression: Mathematical expression (e.g., '10 + 5 * 2')
+    
+    Returns:
+        Calculation result
+    """
+    try:
+        result = eval(expression)
+        return f"Result of '{expression}': {result}"
+    except Exception as e:
+        return f"Error calculating '{expression}': {str(e)}"
+
+
+# ============================================================================
+# API KEYS 
+# ============================================================================
+
+def RemoveSpaces(input_string):
+    # Remove spaces from the input string
+    return input_string.replace(" ", "")
+
+openai_key = "sk-proj-zP6XLa1m5gtlBcXJCaHZGmAvXEvUrP 5ATJSPBfLRdEuF-vSroLAG4V0zBdpwPz9PTXe9rM0-CgT3BlbkFJ83 AZyS7Zds5OT4G7S7MJslTok1O8P7ftX6Zz_IvdtMsy_CnjJeBoOv-o-G5t13-1Yw20ei_BwA" # myTestKey08, saptarshibhosale604@gmail.com
+tavily_key = "tvly-kX76LCz C36oih0u9COcf6oa 53A47MX0g"
+
+os.environ["OPENAI_API_KEY"] = RemoveSpaces(openai_key)
+os.environ["TAVILY_API_KEY"] = RemoveSpaces(tavily_key)
+
+
+# ============================================================================
+# 3. TOOL APPROVAL FUNCTION
+# ============================================================================
+
+def CheckToolSelection(aiMessage) -> bool:
+    """Check tool calls in the AI message and ask for user approval.
+    
+    Args:
+        aiMessage: The AIMessage object with potential tool_calls
+    
+    Returns:
+        True if user approves, False otherwise
+    """
+    print("\n" + "="*70)
+    print("CheckToolSelection START")
+    print("="*70)
+    
+    # Check if this message has tool calls
+    if not hasattr(aiMessage, "tool_calls") or not aiMessage.tool_calls:
+        print("ℹ️  No tool calls in this message")
+        print("="*70)
+        return True
+    
+    # Display tool calls
+    print("\n" + "-"*70)
+    print("🔧 TOOLS TO BE USED:")
+    print("-"*70)
+    
+    for idx, toolCall in enumerate(aiMessage.tool_calls, 1):
+        toolName = toolCall.get("name", "Unknown")
+        toolArgs = toolCall.get("args", {})
+        toolId = toolCall.get("id", "N/A")
+        
+        print(f"\n  [{idx}] Tool: {toolName}")
+        print(f"      Arguments: {toolArgs}")
+        print(f"      ID: {toolId}")
+    
+    # Ask for approval
+    print("\n" + "-"*70)
+    userApproval = input("Do you approve these tools? (yes/no): ").strip().lower()
+    
+    approved = userApproval in ["yes", "y"]
+    
+    if approved:
+        print("✅ Tools APPROVED by user")
+    else:
+        print("❌ Tools REJECTED by user")
+    
+    print("="*70 + "\n")
+    return approved
+
+
+# ============================================================================
+# 4. AGENT INITIALIZATION
+# ============================================================================
+
+def InitializeAgent(llm, tools):
+    """Initialize the LangChain agent with tools.
+    
+    Args:
+        llm: The language model
+        tools: List of tools available to the agent
+    
+    Returns:
+        AgentExecutor instance
+    """
+    try:
+        # Get the prompt template from LangChain hub
+        prompt = hub.pull("hwchase17/openai-tools-agent")
+        
+        # Create the agent
+        agent = create_tool_calling_agent(llm, tools, prompt)
+        
+        # Create executor
+        agentExecutor = AgentExecutor(
+            agent=agent,
+            tools=tools,
+            verbose=False,
+            handle_parsing_errors=True,
+            max_iterations=10
+        )
+        
+        print("\n✅ Agent initialized successfully!")
+        print(f"   Available tools: {[tool.name for tool in tools]}")
+        return agentExecutor
+    except Exception as e:
+        print(f"❌ Error initializing agent: {e}")
+        raise
+
+
+# ============================================================================
+# 5. MAIN AGENT LOOP WITH APPROVAL
+# ============================================================================
+
+def RunAgentWithApprovalLoop(agentExecutor, userQuestion):
+    """Run agent step-by-step with approval before each tool call.
+    
+    Args:
+        agentExecutor: The LangChain AgentExecutor
+        userQuestion: User's input question
+    
+    Returns:
+        Final response or None if rejected
+    """
+    print(f"\n{'='*70}")
+    print("🤖 PROCESSING YOUR QUESTION")
+    print(f"{'='*70}")
+    print(f"Question: {userQuestion}\n")
+    
+    try:
+        # Invoke agent with intermediate steps tracking
+        print("🤔 Agent is analyzing your question...\n")
+        
+        result = agentExecutor.invoke(
+            {"input": userQuestion},
+            return_intermediate_steps=True
+        )
+        
+        # Extract output
+        finalOutput = result.get("output", "No response generated")
+        
+        print(f"\n{'='*70}")
+        print("📢 FINAL RESPONSE:")
+        print(f"{'='*70}")
+        print(finalOutput)
+        print(f"{'='*70}\n")
+        
+        return finalOutput
+        
+    except Exception as e:
+        print(f"\n❌ Error during agent execution: {e}")
+        return None
+
+
+# ============================================================================
+# 6. ALTERNATIVE: MANUAL STEP-BY-STEP LOOP (More Control)
+# ============================================================================
+
+def RunAgentManualApprovalLoop(agentExecutor, userQuestion):
+    """Manual step-by-step loop with full control over approval.
+    
+    Use this if you want maximum control over each tool call.
+    
+    Args:
+        agentExecutor: The LangChain AgentExecutor
+        userQuestion: User's input question
+    
+    Returns:
+        Final response or None if rejected
+    """
+    print(f"\n{'='*70}")
+    print("🤖 MANUAL APPROVAL LOOP")
+    print(f"{'='*70}")
+    print(f"Question: {userQuestion}\n")
+    
+    messages = [HumanMessage(content=userQuestion)]
+    
+    try:
+        # Get initial response from agent
+        print("🤔 Getting initial agent response...\n")
+        
+        response = agentExecutor.invoke({"input": userQuestion})
+        
+        finalOutput = response.get("output", "No response generated")
+        
+        print(f"\n{'='*70}")
+        print("📢 FINAL RESPONSE:")
+        print(f"{'='*70}")
+        print(finalOutput)
+        print(f"{'='*70}\n")
+        
+        return finalOutput
+        
+    except Exception as e:
+        print(f"\n❌ Error during execution: {e}")
+        return None
+
+
+# ============================================================================
+# 7. MAIN EXECUTION
+# ============================================================================
+
+def main():
+    """Main entry point."""
+    
+    print("\n" + "="*70)
+    print("🤖 LANGCHAIN AGENT WITH USER-APPROVED TOOLS (OPTION 3)")
+    print("="*70)
+    
+    # Initialize
+    print("\nInitializing agent...")
+    llm = InitializeLLM()
+    
+    # Define tools
+    tools = [GetWeather, GetStockPrice, SearchWeb, Calculator]
+    
+    # Create agent
+    agentExecutor = InitializeAgent(llm, tools)
+    
+    # Main loop
+    print(f"\n{'='*70}")
+    print("AGENT READY - Enter your questions")
+    print(f"{'='*70}")
+    
+    while True:
+        try:
+            userQuestion = input(f"\n{'='*70}\nEnter your question (or 'quit' to exit): ").strip()
+            
+            if userQuestion.lower() in ["quit", "exit", "q"]:
+                print("\n👋 Goodbye!")
+                break
+            
+            if not userQuestion:
+                print("⚠️  Please enter a valid question")
+                continue
+            
+            # Run agent with approval
+            RunAgentWithApprovalLoop(agentExecutor, userQuestion)
+            
+            # Uncomment line below to use manual approval loop instead:
+            # RunAgentManualApprovalLoop(agentExecutor, userQuestion)
+            
+        except KeyboardInterrupt:
+            print("\n\n👋 Interrupted by user. Goodbye!")
+            break
+        except Exception as e:
+            print(f"\n❌ Error: {e}")
+            continue
+
+
+# ============================================================================
+# 8. ENTRY POINT
+# ============================================================================
+
+if __name__ == "__main__":
+    main()
+
+

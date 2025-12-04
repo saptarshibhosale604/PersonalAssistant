@@ -24,9 +24,13 @@ from langchain_google_community.gmail.utils import (
 
 ## ## INITIALIZING TOOLS ## ## 
 
-toolShell = ShellTool(ask_human_input=False, verbose=True)
+# toolShell = ShellTool(ask_human_input=False, verbose=True)
+# toolShell = ShellTool(ask_human_input=True ) # this is also working fine
+toolShell = ShellTool() 
 toolShell.description = toolShell.description + f"args {toolShell.args}".replace("{", "{{").replace("}", "}}")
-toolShell.description += f" Note: This tool should only be called if the input explicitly includes the phrase 'my pc'"
+# toolShell.description += f" Note: This tool should only be called if the input explicitly includes the phrase 'my pc'"
+toolShell.description = f"This tool should only call if the input includes the phrase `my pc`. The tool " + toolShell.description
+toolShell.name = "toolShell"
 
 # ~ print("toolShell.description: ", toolShell.description)
 # ~ humanBreak = input("humanBreak:")
@@ -105,13 +109,13 @@ def UpdateCronFile(data, filename):
 	with open(filename, 'a') as file:  # Open the file in append mode
 		file.write(str(data) + '\n')  # Write the data followed by a newline
 
-@tool
-def toolMyName(userInput :str) -> str:
-	'''Returns My Name.'''
-	userInput = f"user input = '{userInput}'"
-
-	return {"SSB"}
-
+# @tool
+# def toolMyName(userInput :str) -> str:
+# 	'''Returns My Name.'''
+# 	userInput = f"user input = '{userInput}'"
+#
+# 	return {"SSB"}
+#
 
 @tool
 def toolSetCronRemainder(userInput :str) -> str:
@@ -146,13 +150,14 @@ Make cron job with following format:
 
 
 
-toolYoutube = YouTubeSearchTool()
+# toolYoutube = YouTubeSearchTool()
 toolWebSearch = TavilySearchResults(max_results=1)
 
-from langchain_community.agent_toolkits import PlayWrightBrowserToolkit
-from langchain_community.tools.playwright.utils import (
-    create_async_playwright_browser,  # A synchronous browser is available, though it isn't compatible with jupyter.\n",	  },
-)
+toolWebSearch.name = "toolWebSearch"
+# from langchain_community.agent_toolkits import PlayWrightBrowserToolkit
+# from langchain_community.tools.playwright.utils import (
+#     create_async_playwright_browser,  # A synchronous browser is available, though it isn't compatible with jupyter.\n",	  },
+# )
 # This import is required only for jupyter notebooks, since they have their own eventloop
 # import nest_asyncio
 # import asyncio
@@ -185,10 +190,32 @@ from langchain_community.tools.playwright.utils import (
 # asyncio.run(Test())
 # #toolsAdvance =  [toolShell] + toolGmail               	# Need for human in loop
 # # toolsAdvance =  [toolShell] + toolSQL_DB                	# Need for human in loop
+
+# for tool in toolShell.get_tools():
+# 	print("tool: ", tool)
+# 	print("tool.name: ", tool.name)
+
+# print(" \n toolsGeneral: toolShell")
+# print(toolShell)
+#
+# print(" \n toolsGeneral: toolSetCronRemainder")
+# print(toolSetCronRemainder)
+#
+# # print(" \n toolsGeneral: toolYoutube")
+# # print(toolYoutube)
+#
+# print(" \n toolsGeneral: toolWebSearch")
+# print(toolWebSearch)
+#
+# print(" \n toolsGeneral: toolSetCronRemainder")
+# print(toolSetCronRemainder)
+
 toolsAdvance =  [toolShell]             	# Need for human in loop
 # toolsAdvance =  toolPlaywright             	# Need for human in loop
 toolsIntermediate = [toolSetCronRemainder]
-toolsBasic = [toolYoutube, toolWebSearch, toolMyName]                  # No need for human in loop
+# toolsBasic = [toolYoutube, toolWebSearch, toolMyName]                  # No need for human in loop
+# toolsBasic = [toolYoutube, toolWebSearch]                  # No need for human in loop
+toolsBasic = [toolWebSearch]                  # No need for human in loop
 
 tools = toolsAdvance + toolsIntermediate + toolsBasic
 # tools =  toolsAdvance 

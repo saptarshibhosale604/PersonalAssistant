@@ -4,9 +4,15 @@
 - Langchain framework
 - Python
 - SQL lite
-- The agent is using local llm and calls the tools
-	- But the model llama3.2:1b is not smart enough to use the tools
-- The agent is working with google gemini llm with tools
+
+# Features
+- LLM model
+    - Chatgpt, with tools
+    - Local LLM, no tools
+- can specify which tools to be interrupted and which tools dont need human in the loop
+- context remembering
+- Multi line user input
+
 
 # CLI // WORKING
 docker build -t personal_assistant . 
@@ -20,13 +26,25 @@ docker exec -it ollamaLocal python /App/UI/cli.py
 refresh
 python /App/UI/cli.py
 
+. /root/.profile # for applying the alias
+refresh && python /App/Langchain/agent02.py
+refresh && python /App/Langchain/agent.py
+
+what is the weather in PUN?
+
+cat /root/ProjectRpi/Rpi/PersonalAssistant/Log/log.log
+
+/App # pip install --upgrade langchain
+
+docker run -d --rm -v ollama:/root/.ollama -v /home/ssbrpi/ProjectRpi:/root/ProjectRpi/ -p 11434:11434 --name ollamaLocal personal_assistant
+
+docker exec -it ollamaLocal /bin/sh . /root/.profile
 # WEB APP // WORKING
 docker build -t personal_assistant .
 docker rm ollamaLocal -f
 docker run -d --rm -v ollama:/root/.ollama -v /home/ssbrpi/Project:/root/Project/ -p 11434:11434 -p 5001:5001 --name ollamaLocal personal_assistant
 docker exec -it ollamaLocal python /App/UI/WebApp/app.py
  
-docker exec -it ollamaLocal /bin/sh
 
 # TESTING
 docker build -t personal_assistant .
@@ -73,6 +91,8 @@ pip install -U duckduckgo-search // done
 apt update && apt install -y openssh-client
 
 # TEMP
+pip install --upgrade langchain
+
 docker exec -it ollamaLocal /bin/sh . /root/.profile // not wokring
 docker exec -it ollamaLocal /bin/sh 
 . /root/.profile 
@@ -103,12 +123,19 @@ mksession!
 
 
 # TODO 
-- remember last help options
-- remove tool calling for local llm
-- Need to start logging
+- refresh .profile auto load with the docker exec
 - gemini llm integration is not working
+- mode multiline input true is not working
+- logging.print this prints timestamp in the console pring 
+- B, BUG, randomly tocket.content_blocks[0] dont have text value in it
+    - print(token.content_blocks[0]["text"], end="", flush=True) ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^ KeyError: 'text'
+    - Print the whole block with pprint
 
+
+done - remove tool calling for local llm
+done - Need to start logging
 done - work on mode context no for local llm
+done - remember last help options
 done - global mode not working for webapp
 done - help function is not working here
 Done - work on context of local llm
@@ -116,3 +143,6 @@ done - work on streaming input from global llm
 done - work on streaming input form local llm
 
 notDone - tool calling man in the loop not working, global mode, web app; not continuing the web app
+- The agent is using local llm and calls the tools
+	- But the model llama3.2:1b is not smart enough to use the tools
+- The agent is working with google gemini llm with tools

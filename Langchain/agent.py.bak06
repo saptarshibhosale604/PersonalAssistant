@@ -1,0 +1,110 @@
+from langchain.tools import tool
+from langchain_openai import ChatOpenAI
+from langchain.agents import create_agent
+from langchain.agents.middleware import HumanInTheLoopMiddleware
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.types import Command
+import os
+
+# ============================================================================
+# API KEYS 
+# ============================================================================
+
+def RemoveSpaces(input_string):
+    # Remove spaces from the input string
+    return input_string.replace(" ", "")
+
+openai_key = "sk-proj-zP6XLa1m5gtlBcXJCaHZGmAvXEvUrP 5ATJSPBfLRdEuF-vSroLAG4V0zBdpwPz9PTXe9rM0-CgT3BlbkFJ83 AZyS7Zds5OT4G7S7MJslTok1O8P7ftX6Zz_IvdtMsy_CnjJeBoOv-o-G5t13-1Yw20ei_BwA" # myTestKey08, saptarshibhosale604@gmail.com
+tavily_key = "tvly-kX76LCz C36oih0u9COcf6oa 53A47MX0g"
+
+os.environ["OPENAI_API_KEY"] = RemoveSpaces(openai_key)
+os.environ["TAVILY_API_KEY"] = RemoveSpaces(tavily_key)
+
+# -- Define tools using the @tool decorator (UpperCamelCase function names) --
+@tool("SearchWeb", description="Searches the web for information.")
+def SearchWeb(query: str) -> str:
+    """Simulated web search tool."""
+    # In practice, you might call a search API here.
+    return f"Results for '{query}': [Example web search results here]"
+
+@tool("GetWeather", description="Gets current weather for a location.")
+def GetWeather(location: str) -> str:
+    """Simulated weather lookup tool."""
+    # In practice, you might call a weather API.
+    return f"Sunny and 25°C in {location}"
+
+@tool("CalculateExpression", description="Evaluates a math expression.")
+def CalculateExpression(expression: str) -> str:
+    """Evaluates a mathematical expression."""
+    try:
+        result = eval(expression)
+        return str(result)
+    except Exception as e:
+        return f"Error: {e}"
+
+# -- Create the OpenAI model and agent (LangChain v1) --
+model = ChatOpenAI(model="gpt-3.5-turbo-16k", streaming=True)
+agent = create_agent(
+    model=model,
+    tools=[SearchWeb, GetWeather, CalculateExpression],
+    middleware=[
+        HumanInTheLoopMiddleware(
+            # Interrupt on any call to our tools, requiring user approval
+            interrupt_on={
+                "SearchWeb": True,
+                "GetWeather": True,
+                "CalculateExpression": True
+            },
+            description_prefix="Action pending approval"
+        )
+    ],
+    checkpointer=InMemorySaver()  # required for pausing/resuming the agent graph
+)
+
+def main():
+    threadId = "session-1"
+    print("LangChain Agent is running (type an empty line to exit).")
+    while True:
+        userInput = input("\nQuestion: ")
+        if not userInput:
+            print("Exiting.")
+            break
+        config = {"configurable": {"thread_id": threadId}}
+        # First invoke: this will generate a response with a potential interrupt (tool call)
+        result = agent.invoke({"messages": [{"role": "user", "content": userInput}]}, config=config)
+        # Check if an interrupt (tool call) was triggered
+        if "__interrupt__" in result:
+            interrupt = result["__interrupt__"][0]["value"]
+            action_requests = interrupt["action_requests"]
+            # We assume one tool call is requested
+            if action_requests:
+                action = action_requests[0]
+                toolName = action["name"]
+                args = action["arguments"]
+                print(f"Agent wants to use tool '{toolName}' with arguments {args}.")
+                # Ask user for approval
+                confirm = input("Allow this tool usage? (yes/no): ")
+                if confirm.strip().lower().startswith("y"):
+                    # Resume the agent with approval
+                    agent.invoke(Command(resume={"decisions": [{"type": "approve"}]}), config=config)
+                    # Now stream the final answer
+                    print("Streaming agent response:")
+                    for step in agent.stream(
+                        {"messages": [{"role": "user", "content": userInput}]},
+                        stream_mode="values"
+                    ):
+                        msg = step["messages"][-1]
+                        if msg["type"] == "text":
+                            # Print each text token as it arrives
+                            print(msg["text"], end="")
+                    print()
+                else:
+                    print("Tool usage denied by user. No answer provided.")
+        else:
+            # No tool was needed; just print the model's response
+            print("Answer:", result["text"])
+            
+if __name__ == "__main__":
+    main()
+
+

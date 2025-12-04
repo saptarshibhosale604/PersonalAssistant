@@ -1,29 +1,17 @@
-import Langchain.toolsGeneral as toolsGeneral
-# import Langchain.toolsTravel as toolsTravel
-## ## INFO ## ##
-# llm model: chat gpt
-# memory: for each new chat from assistant.py, new memory allocated, no context
-
-## ## IMPORTING ## ## 
-from langgraph.checkpoint.memory import MemorySaver
-from langgraph.prebuilt import create_react_agent
-
-#from flask import Flask, request
+# working perfect
+from langchain.tools import tool
+from langchain.agents import create_agent
+from langchain.agents.middleware import HumanInTheLoopMiddleware
+from langchain_openai import ChatOpenAI
+from langchain_ollama.chat_models import ChatOllama
+from langgraph.types import Command
+from langgraph.checkpoint.memory import InMemorySaver
 import os
-import time
-
-#Vars
-pathManInTheLoopResponse = "/root/ProjectRpi/Rpi/PersonalAssistant/Langchain/manInTheLoopResponce.txt"
-pathToolsRequired = "/root/ProjectRpi/Rpi/PersonalAssistant/Langchain/toolsRequired.txt"
 
 
-modeUserInterface = "cli" # "web_app" / "cli"
-
-def UpdateModeUserInterface(mode):
-	global modeUserInterface
-	modeUserInterface = mode
-	
-## ## API KEYS ## ## 
+# ============================================================================
+# API KEYS 
+# ============================================================================
 
 def RemoveSpaces(input_string):
     # Remove spaces from the input string
@@ -35,586 +23,248 @@ tavily_key = "tvly-kX76LCz C36oih0u9COcf6oa 53A47MX0g"
 os.environ["OPENAI_API_KEY"] = RemoveSpaces(openai_key)
 os.environ["TAVILY_API_KEY"] = RemoveSpaces(tavily_key)
 
-## ## INITIALIZATION ## ## 
+# Define tools with @tool decorator (UpperCamelCase names)
+@tool("SearchWeb", description="Search the web for information.")
+def SearchWeb(query: str) -> str:
+    # Placeholder for an actual web search
+    return f"Simulated search results for: {query}"
 
+@tool("GetWeather", description="Get weather information for a location.")
+def GetWeather(location: str) -> str:
+    # Placeholder for a real weather API call
+    return f"Simulated weather for {location}: 72°F, Sunny"
 
-tools = toolsGeneral.ToolsList()
-# tools = toolsTravel.ToolsList()
-# print(f"tools: {tools} ")
+@tool("CalculateExpression", description="Calculate an arithmetic expression.")
+def CalculateExpression(expression: str) -> str:
+    try:
+        # Simple evaluation for demo (use with caution on untrusted input)
+        result = eval(expression)
+    except Exception as e:
+        result = f"Error: {e}"
+    return str(result)
 
-# humanBreak = input("humanBreak:")
+@tool("CreatePoem", description="Create a poem on the topic given")
+def CreatePoem(topic: str) -> str:
+    # return f"create a 2 stanza poem on : {topic}"
+    return f"create a 2 stanza poem on : {topic}"
 
-## Initializing llm models
-## Custom LLM
+llm = ChatOllama(model="llama3.2:1b", max_tokens=500, temperature=0, max_retries=1) # Default
 
-# from typing import Any, Dict, Iterator, List, Mapping, Optional
+def BuildAgent():
+    """Create the LangChain agent with OpenAI and our tools, plus HITL middleware."""
+    print("Agent BuildAgent new instance")
+    # Initialize the OpenAI chat model (replace "gpt-4" with your model of choice)
+    # model = ChatOpenAI(model="gpt-4", temperature=0.1)
+    # model = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.1)
+    # model = ChatOllama(model="llama3.2:1b", streaming=True, max_tokens=500, temperature=0, max_retries=1)
+    model = llm
+    # tools = [SearchWeb, GetWeather, CalculateExpression]
+    # tools = [SearchWeb, GetWeather, CalculateExpression, CreatePoem]
+    # tools = []
+    # Require human approval for each tool call
+    interrupt_policy = {
+        "SearchWeb": True,
+        "GetWeather": True,
+        "CalculateExpression": True,
+        "CreatePoem": True
+    }
+    middleware = [
+        HumanInTheLoopMiddleware(
+            interrupt_on=interrupt_policy,
+            description_prefix="Tool execution pending approval"
+        )
+    ]
 
-# from langchain_core.callbacks.manager import CallbackManagerForLLMRun
-# from langchain_core.language_models.llms import LLM
-# from langchain_core.outputs import GenerationChunk
+    # Create the agent with model, tools, and middleware
+    agent = create_agent(model=model, tools=tools, middleware=middleware, checkpointer=InMemorySaver())
+    return agent
 
-from ollama import chat
-from ollama import ChatResponse
+from pprint import pprint
+# userInput, threadId, GetModeValue("mode-llm"), GetModeValue("mode-context")
+# def main():
+# def Main(userInput, threadId, modeLLM, modeContextValue):
 
-
-# print("initialized")
-# def CustomOllamaOld(userInput):
-
-# 	# simple one question answer
-# 	response: ChatResponse = chat(model='llama3.2:1b', messages=[
-# 	{
-# 		'role': 'user',
-# 		'content': userInput,
-# 	},
-# 	])
-# 	# print(response['message']['content'])
-# 	# or access fields directly from the response object
-# 	# print(f"CustomOllama: {response.message.content}")
-# 	# humanBreak = input("humanBreak03:")
-# 	return response.message.content
-
-
-
-
-# Initialize message history
-localLLMMessages = []
-
-# print("Welcome to ChatBot! Type 'exit' to quit.\n")
-modeContext = 'no'
-
-from typing import Any, Dict, Iterator, List, Optional, Literal
-
-from langchain_core.callbacks import (
-    CallbackManagerForLLMRun,
-)
-from langchain_core.language_models import BaseChatModel
-from langchain_core.messages import (
-    AIMessage,
-    AIMessageChunk,
-    BaseMessage,
-)
-from langchain_core.messages.ai import UsageMetadata
-from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResult
-from pydantic import Field
-
-from typing import Sequence, Union, Callable, Type
-from langchain_core.tools import BaseTool
-from langchain_core.utils.function_calling import convert_to_openai_tool
-
-#for custom llm class
-# llm = CustomLLM(n=5)
-# llm = CustomLLM(givenTools=tools)
-# llmRaw = ChatParrotLink(parrot_buffer_length=3, model="my_custom_model_02")
-# llm = llmRaw.bind_tools(tools) # not working as expected
-
-
-# llm = ChatParrotLink(parrot_buffer_length=3, model="my_custom_model_02")
-from langchain_ollama.chat_models import ChatOllama
-# llm = ChatOllama(model="llama3.2:1b", temperature=0, verbose=True)
-llm = ChatOllama(model="llama3.2:1b", streaming=True, max_tokens=500, temperature=0, max_retries=1)
-
-## Open AI LLM model
-from langchain_openai import ChatOpenAI
-# from langchain_google_genai import GoogleGenerativeAI
-from langchain_google_genai import ChatGoogleGenerativeAI
-# llm = ChatOpenAI(model="gpt-3.5-turbo", max_tokens=500, temperature=0, max_retries=1)
-
-# print(f"CustomLLM llm: {llm}::")
 modeCurrentLLM = "na" # save mode current llm, for detecting changes in the mode
 
+tools = []
+# tools = [SearchWeb, GetWeather, CalculateExpression, CreatePoem]
+agent = BuildAgent()
+
 def UpdateLLM(modeLLM):
-	global llm
-	global modeCurrentLLM
-	global graph
-	# llm = model
-	#print(f"UpdateLLM: modeLLM: {modeLLM}")
-	# print(f"agent UpdateLLM: modeLLM: {modeLLM} :: modeCurrentLLM: {modeCurrentLLM}")
-
-	if(modeLLM != modeCurrentLLM):
-		modeCurrentLLM = modeLLM
-		# print(f"agent UpdateLLM02: modeLLM: {modeLLM} :: modeCurrentLLM: {modeCurrentLLM}")
-
-		if(modeLLM == "local"):
-			llm = ChatOllama(model="llama3.2:1b", streaming=True, max_tokens=500, temperature=0, max_retries=1)
-			# llm = ChatOllama(model="llama3.2:1b", temperature=0, verbose=True)
-
-		elif(modeLLM == "local-3b"):
-			llm = ChatOllama(model="llama3.2", streaming=True, max_tokens=500, temperature=0, max_retries=1)
-			# llm = ChatOllama(model="llama3.2:1b", temperature=0, verbose=True)
-
-		elif(modeLLM == "global"):
-			# llm = ChatOpenAI(model="gpt-3.5-turbo", max_tokens=500, temperature=0, max_retries=1)
-			llm = ChatOpenAI(model="gpt-3.5-turbo", streaming=True, max_tokens=500, temperature=0, max_retries=1)
-		
-		elif(modeLLM == "globalGemini"):
-			# llm = GoogleGenerativeAI(model="models/text-bison-001", google_api_key='AIzaSyBwIrjcMjKA1V3XJ_hCLurJx33wh33NWdk')
-			llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key='AIzaSyBPH-0Dd5e2Heu8lFs1rCci8ZdGxnr_ZvE')
-		
-		graph = create_react_agent(
-			llm, 
-			tools, 
-			interrupt_before=["tools"], 
-			checkpointer=MemorySaver()
-			# debug=True
-            # verbose=True
-		) 
-		# print(f"UpdateLLM llm: {llm}")
-
-
-# from pydantic import BaseModel, Field
-
-
-# class GetWeather(BaseModel):
-#     '''Get the current weather in a given location'''
-
-#     location: str = Field(
-#         ..., description="The city and state, e.g. San Francisco, CA"
-#     )
-
-
-# class GetPopulation(BaseModel):
-#     '''Get the current population in a given location'''
-
-#     location: str = Field(
-#         ..., description="The city and state, e.g. San Francisco, CA"
-#     )
-
-
-# llm_with_tools = llm.bind_tools(
-#     [GetWeather, GetPopulation]
-#     # strict = True  # enforce tool args schema is respected
-# )
-
-# ai_msg = llm_with_tools.invoke(
-#     "Which city is hotter today and which is bigger: LA or NY?"
-# )
-# ai_msg.tool_calls
-
-# # print(f"ai_msg: {ai_msg}")
-# print("#########################")
-# print(f"ai_msg.tool_calls: {ai_msg.tool_calls}")
-# print("#########################")
-# humanBreak = input("humanBreak05:")
-
-## memory
-# ~ config = {"configurable": {"thread_id": "thread-1"}}
-config = {"configurable": {"thread_id": "thread-1"}}
-
-## UserInput
-# ~ userInput = "Tell me where is 13_agentBasic.py file in my pc"
-# ~ userInput = "step 1: Tell me where is 13_agentBasic.py file and step 2: then find other python files from same folder"
-# ~ userInput = "start a timer for 10 sec and after timer over play alarm clock sound to notify"
-# ~ userInput = "play blue eyes by honey singh youtube video on the firefox app"
-# ~ userInput = "play blue eyes by honey singh youtube video using firefox cmd in background"
-# ~ userInput = "play doku punjabi song youtube video using firefox cmd in background"
-# ~ userInput = "start the stopwatch in terminal"
-# ~ userInput = "start the timer for 5 sec and notify with alarm clock sound"
-# userInput = "tell me storage information"
-# ~ userInput = "get link for blue eyes by honey singh youtube video and then run the 1st link using only firefox cmd"
-# ~ userInput = "play blue eyes by honey singh youtube video"
-# ~ userInput = "find the location of lanchain dir and then Give me the list of python files from that langchain directory"
-# ~ userInput = "find the location of 'Lanchain' dir"
-# userInput = "Give me 1 link of youtube video of linux"
-
-## other
-loopCounter = 0
-agentOutput = ""
-
-
-
-# humanBreak = input("humanBreakLast:")
-## graph and agent
-graph = create_react_agent(
-	llm, 
-	tools, 
-	interrupt_before=["tools"], 
-	checkpointer=MemorySaver()
-	# debug=True,
-    # verbose=True
-    # intermediate_steps=True
-) 
-
-## ## SCRIPTS ## ##
-# working
-def print_stream_normal(graph, inputs, config):
-	global agentOutput
-	# humanBreak = input("humanBreak02:")
-	for s in graph.stream(inputs, config, stream_mode="updates"):
-		message = s["messages"][-1]
-		if isinstance(message, tuple):
-			print(message)
-		
-		else:
-			message.pretty_print()
-			agentOutput = message.content
-
-#testing
-import asyncio
-
-# def print_stream(graph, inputs, config):
-async def print_stream_coroutine(graph, inputs, config):
-# def print_stream(graph, inputs, config):
-	global agentOutput
-	#print("inside print_stream_coroutine")
-	print("\n============================================")  # final newline
-	print("============================================\n")  # final newline
-	async for event in graph.astream_events(inputs, config, version="v1"):
-	# for event in graph.astream_events(inputs, config, version="v1"):
-		if event["event"] == "on_chat_model_stream":
-			chunk = event["data"]["chunk"]
-			if chunk.content:
-				# print(chunk.content, end="|", flush=True)
-				print(chunk.content, end="", flush=True)
-				agentOutput += chunk.content
-				
-	# print()  # final newline
-	print("\n============================================")  # final newline
-	print("============================================\n")  # final newline
-	# message = "done"
-	# message.pretty_print()
-	# humanBreak = input("humanBreak02:")
-		# message = s["messages"][stream_events-1]
-		# if isinstance(message, tuple):
-		# 	print(message)
-		
-		# else:
-		# 	message.pretty_print()
-		# 	agentOutput = message.content
-
-# Refresh the content in the manInTheLoopResponse.txt file
-def ResetManInTheLoopResponse():
-	# Open the file in write mode
-	with open(pathManInTheLoopResponse, "w") as file:
-		# Write the new content to the file
-		file.write("na")
-
-# Update the content in the toolsRequired.txt file
-def UpdateToolsRequired(toolsRequired):
-	with open(pathToolsRequired, "w") as file:
-		# Write the new content to the file
-		file.write(toolsRequired)
-
-# Check manInTheLoopResponse.txt file
-def ManInTheLoopResponse(toolsRequired):
-	UpdateToolsRequired(toolsRequired)
-	while True:
-		# Read from the file
-		with open(pathManInTheLoopResponse, "r") as file:
-			content = file.read()
-			# print(f"content manInTheLoopResponse file: {content}")
-			# Check if the content is "y" or "n"
-			if content.lower() == "y":
-				# print("## Allowed")
-				ResetManInTheLoopResponse()
-				return "y"
-			elif content.lower() == "n":
-				print("## Denied")
-				ResetManInTheLoopResponse()
-				return "n"
-			else:
-				print("## No response")
-			
-		# Wait for a while before checking again
-		time.sleep(0.5)  # Check every second (adjust as needed)
-
-from langchain_core.messages import HumanMessage, SystemMessage
-
-
-# Main loop to process the graph
-def Main(userInput, threadId, modeLLM, modeContextValue):
-#@app.route('/')
-#def Main():
-	#return "hey there, this is me"
-	# print(f"## ## Agent Main: userInput: {userInput} ::threadId: {threadId} :: modeLLM: {modeLLM} :: modeContextValue: {modeContextValue}")
-	global modeContexupdatest
-	modeContext = modeContextValue
-	UpdateLLM(modeLLM)
-
-	#userInput = request.args.get('userInput', 'how are you?')
-	#threadId = request.args.get('threadId', '1')	
-	
-	#return "Hello there"
-
-	# ~ RefreshGraph()
-	inputs = {"messages": [("user", userInput)]}  # Replace with actual input
-
-	# new_thread_id ="thread-" + str(threadId)
-	# config["configurable"]["thread_id"] = new_thread_id
-	#
-	# result = graph.invoke({"messages": [HumanMessage(content="who's the pm of india?")]})
-	# print(result["messages"])
-	#
-	# input("UserInterrupt02")
-
-	while True:
-		global loopCounter
-		global agentOutput
-
-		ResetManInTheLoopResponse()
-		# Variable to hold the desired thread ID
-		new_thread_id ="thread-" + str(threadId)
-		#print("Memory: new_thread_id:", new_thread_id)
-
-		# Update the thread_id in the config dictionary
-		config["configurable"]["thread_id"] = new_thread_id
-
-		# print("## ## config new:", config)
-		#print(f"## ## config new: {config} :: loopCounter: {loopCounter} :: modeLLM: {modeLLM} :: modeContextValue: {modeContextValue}")
-		# print(f"before graph stream llm:{llm}")
-		
-		# if(loopCounter == 0):
-		# 	if(modeLLM == 'local'):
-		# 	 	print_stream_normal(graph, inputs, config)
-		# 	elif(modeLLM == 'global'):
-		# 		#print("here01")
-		# 		asyncio.run(print_stream_coroutine(graph, inputs, config))
-		# else:
-		# 	if(modeLLM == 'local'):
-		# 		print_stream_normal(graph, None, config)
-		# 	elif(modeLLM == 'global'):
-		# 		asyncio.run(print_stream_coroutine(graph, None, config))
-			
-		if(loopCounter == 0):
-			# if(modeLLM == 'local'):
-			# print_stream_normal(graph, inputs, config)
-			# elif(modeLLM == 'global'):
-			# 	#print("here01")
-			asyncio.run(print_stream_coroutine(graph, inputs, config))
-		else:
-			# if(modeLLM == 'local'):
-			# print_stream_normal(graph, None, config)
-			# elif(modeLLM == 'global'):
-			asyncio.run(print_stream_coroutine(graph, None, config))
-			# await print_stream_coroutine(graph, None, config)
-			
-		loopCounter += 1
-		snapshot = graph.get_state(config)
-		
-		# Check if the graph has ended
-		if not snapshot.next:  # If `snapshot.next` is None or empty, the graph is finished
-			print("### Graph has ended.")
-			# ~ checkpointer = MemorySaver()
-			loopCounter = 0
-			return agentOutput
-			# break
-
-		# Get the list of called tools
-		existing_message = snapshot.values["messages"][-1]
-		toolsRequired = existing_message.tool_calls
-
-		print("Tools to be called ::: ", toolsRequired)
-		
-		global modeUserInterface
-		
-		if(modeUserInterface == "web_app"):
-			manInTheLoop = ManInTheLoopResponse(str(toolsRequired))
-		elif(modeUserInterface == "cli"):
-			manInTheLoop = input("Do you want to proceed (Y/n): ")
-		
-		if manInTheLoop.lower() == "n":
-			print("## Denied")	
-			return agentOutput
-		else:
-			print("## Allowed")
-			snapshot.next
-			inputs = None  # Continue with the next step
-			# break
-
-# Global dictionary to hold the response
-# globalState = {
-#     "manInTheLoopResponse": None
-# }
-
-# Get the content in the manInTheLoopResponse.txt file
-def UpdateManInTheLoopResponse(inputData):
-	# Open the file in write mode
-	with open(pathManInTheLoopResponse, "w") as file:
-		file.write(inputData)
-
-def GetManInTheLoopResponse():
-	with open(pathManInTheLoopResponse, "r") as file:
-		content = file.read()
-		# print(f"content manInTheLoopResponse file: {content}")
-		return content
-
-def HandleGraphWithManInTheLoop(user_input, thread_id, config):
-	# print("agent HandleGraphWithManInTheLoop:: user_input:", user_input, ":: thread_id:", thread_id)
-	global loopCounter, agentOutput, modeUserInterface
-	agentOutput = ""
-
-	inputs = {"messages": [("user", user_input)]}
-	new_thread_id = "thread-" + str(thread_id)
-	config["configurable"]["thread_id"] = new_thread_id
-
-	while True:
-		ResetManInTheLoopResponse()
-		# print(f"agent HandleGraphWithManInTheLoop while loop")
-
-		if loopCounter == 0:
-			# stream = graph.stream(inputs, config, stream_mode="values")
-			stream = graph.stream(inputs, config, stream_mode="updates")
-		else:
-			# stream = graph.stream(None, config, stream_mode="values")
-			stream = graph.stream(None, config, stream_mode="updates")
-
-		for s in stream:
-			message = s["messages"][-1]
-			if not isinstance(message, tuple):
-				agentOutput = message.content
-				yield agentOutput
-
-		loopCounter += 1
-		snapshot = graph.get_state(config)
-
-		if not snapshot.next:
-			loopCounter = 0
-			return
-
-		toolsRequired = snapshot.values["messages"][-1].tool_calls
-		print("####### Tools to be called ::: ", toolsRequired)
-
-		modeUserInterface = "web_app"  # or "cli", set this based on your application context
-		
-		if modeUserInterface == "web_app":
-			# manInTheLoop = ManInTheLoopResponse(str(toolsRequired))
-			# Send a special signal to frontend
-			yield f"[[CONFIRM:{toolsRequired}]]"
-
-			# Wait for confirmation to appear in a global or shared state
-			while True:
-				decision = GetManInTheLoopResponse()
-				# print(f"agent HandleGraphWithManInThe waiting in the loop:: GetManInTheLoopResponse(): {GetManInTheLoopResponse()}")
-				# print(f"agent HandleGraphWithManInThe waiting in the loop:: decision: {decision}")
-				if(decision != "na"):
-					# decision = globalState["manInTheLoopResponse"]
-					# globalState["manInTheLoopResponse"] = None  # reset
-					# print("agent HandleGraphWithManInTheLoop: decision:", decision)
-					UpdateManInTheLoopResponse("na")  # reset the file
-					break
-				time.sleep(2)
-
-			if(decision.lower() == "y"):
-				# print("agent HandleGraphWithManInTheLoop: User chose to proceed.")
-				inputs = None  # Continue
-			else:
-				# print("agent HandleGraphWithManInTheLoop: User chose NOT to proceed.")
-				return
-
-		elif modeUserInterface == "cli":
-			manInTheLoop = input("Do you want to proceed (y/n): ")
-
-			if manInTheLoop.lower() == "y":
-				inputs = None  # Continue
-			else:
-				return
-#V01
-# def StreamingResponse(user_input, threadId, modeLLM, modeContextValue):
-#     global modeContext
-#     modeContext = modeContextValue
-#     UpdateLLM(modeLLM)
-
-#     inputs = {"messages": [("user", user_input)]}
-#     global loopCounter
-#     global agentOutput
-
-#     ResetManInTheLoopResponse()
-#     new_thread_id = "thread-" + str(threadId)
-#     config["configurable"]["thread_id"] = new_thread_id
-
-#     if modeLLM == 'local':
-#         stream = graph.stream(inputs, config, stream_mode="values")
-#     else:
-#         stream = asyncio.run(graph.astream(inputs, config, stream_mode="values"))
-
-#     for s in stream:
-#         message = s["messages"][-1]
-#         if isinstance(message, tuple):
-#             yield str(message)
-#         else:
-#             content = message.content
-#             agentOutput = content
-#             yield content  # <-- This sends each chunk
-
-#         snapshot = graph.get_state(config)
-#         if not snapshot.next:
-#             loopCounter = 0
-#             break
-
-# V02
-# def StreamingResponse(user_input, threadIdValue, modeLLMValue, modeContextValue):
-# 	global modeContext
-# 	# global modeLLM
-# 	modeContext = modeContextValue
-# 	modeLLM = modeLLMValue
-# 	print(f"agent StreamingResponse: user_input: {user_input} :: threadIdValue: {threadIdValue} :: modeLLMValue: {modeLLMValue} :: modeContextValue: {modeContextValue}")
-# 	threadId = threadIdValue
-# 	UpdateLLM(modeLLMValue)
-# 	print(f"agent StreamingResponse02: modeLLM: {modeLLM} :: modeContext: {modeContext}")
-
-# 	global loopCounter
-# 	global agentOutput
-
-# 	ResetManInTheLoopResponse()
-# 	new_thread_id = "thread-" + str(threadId)
-# 	config["configurable"]["thread_id"] = new_thread_id
-
-# 	print(f"agent here02:: modeLLM: {modeLLM}")
-# 	# If you're using your own custom Ollama stream:
-# 	if modeLLM == "local":
-# 		for chunk in CustomOllamaStream(user_input):
-# 			agentOutput = chunk
-# 			yield chunk
-
-# 	else:
-# 		# fallback: stream from langgraph graph
-# 		print("agent stream from langgraph graph::")
-# 		inputs = {"messages": [("user", user_input)]}
-# 		stream = graph.stream(inputs, config, stream_mode="values")
-# 		for s in stream:
-# 			message = s["messages"][-1]
-# 			if not isinstance(message, tuple):
-# 				agentOutput = message.content
-# 				print(agentOutput)
-# 				yield message.content
-
-# V04
-def StreamingResponse(user_input, threadIdValue, modeLLMValue, modeContextValue):
-	global modeContext
-	# global modeLLM
-	modeContext = modeContextValue
-	modeLLM = modeLLMValue
-	# print(f"agent StreamingResponse: user_input: {user_input} :: threadIdValue: {threadIdValue} :: modeLLMValue: {modeLLMValue} :: modeContextValue: {modeContextValue}")
-	threadId = threadIdValue
-	UpdateLLM(modeLLMValue)
-	# print(f"agent StreamingResponse02: modeLLM: {modeLLM} :: modeContext: {modeContext}")
-
-	global loopCounter
-	global agentOutput
-
-	ResetManInTheLoopResponse()
-	new_thread_id = "thread-" + str(threadId)
-	config["configurable"]["thread_id"] = new_thread_id
-
-	# print(f"agent here02:: modeLLM: {modeLLM}")
-	# If you're using your own custom Ollama stream:
-	if modeLLM == "local":
-		for chunk in CustomOllamaStream(user_input):
-			agentOutput = chunk
-			yield chunk
-
-	else:
-		# print("agent stream from langgraph graph with man-in-the-loop::")
-		print("=====================================================")
-		for chunk in HandleGraphWithManInTheLoop(user_input, threadId, config):
-			print(chunk)
-			yield chunk
-		print("=====================================================")
-	
-
-#if __name__ == '__main__':
-#	app.run(host='0.0.0.0', port=5011)
-
-# AgentCall("Give me 1 link of youtube video of linux")
-
-# print("Main return: ", Main("draft a mail about saying hi", 1))
-# print("Main return: ", Main("Give me temperature of the cpu of my pc", 1))
+    global llm
+    global modeCurrentLLM
+    global agent
+    global tools
+    # global graph
+    # llm = model
+    #print(f"UpdateLLM: modeLLM: {modeLLM}")
+    # print(f"agent UpdateLLM: modeLLM: {modeLLM} :: modeCurrentLLM: {modeCurrentLLM}")
+
+    print(f"Agent UpdateLLM: modeLLM: {modeLLM}, modeCurrentLLM: {modeCurrentLLM}")
+    if(modeLLM != modeCurrentLLM):
+        print("Changing the LLM")
+        modeCurrentLLM = modeLLM
+        # print(f"agent UpdateLLM02: modeLLM: {modeLLM} :: modeCurrentLLM: {modeCurrentLLM}")
+
+        if(modeLLM == "local"):
+            llm = ChatOllama(model="llama3.2:1b", streaming=True, max_tokens=500, temperature=0, max_retries=1)
+            # llm = ChatOllama(model="llama3.2:1b", temperature=0, verbose=True)
+
+        elif(modeLLM == "local-3b"):
+            llm = ChatOllama(model="llama3.2", streaming=True, max_tokens=500, temperature=0, max_retries=1)
+            # llm = ChatOllama(model="llama3.2:1b", temperature=0, verbose=True)
+
+        elif(modeLLM == "global"):
+            # llm = ChatOpenAI(model="gpt-3.5-turbo", max_tokens=500, temperature=0, max_retries=1)
+            llm = ChatOpenAI(model="gpt-3.5-turbo", streaming=True, max_tokens=500, temperature=0, max_retries=1)
+            tools = [SearchWeb, GetWeather, CalculateExpression, CreatePoem]
+        
+        elif(modeLLM == "globalGemini"):
+            # llm = GoogleGenerativeAI(model="models/text-bison-001", google_api_key='AIzaSyBwIrjcMjKA1V3XJ_hCLurJx33wh33NWdk')
+            llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key='AIzaSyBPH-0Dd5e2Heu8lFs1rCci8ZdGxnr_ZvE')
+        
+        agent = BuildAgent()
+        # graph = create_react_agent(
+        # 	llm, 
+        # 	tools, 
+        # 	interrupt_before=["tools"], 
+        # 	checkpointer=MemorySaver()
+        # 	# debug=True
+        #           # verbose=True
+        # ) 
+        # print(f"UpdateLLM llm: {llm}")
+# agent = BuildAgent()
+
+def Main(userInput, threadId, modeLLM):
+    # global modeContext
+    # modeContext = modeContextValue
+    UpdateLLM(modeLLM)
+    # agent = BuildAgent()
+    print("LangChain agent is ready. Type a question (or 'quit' to exit).")
+    while True:
+        print("Agent Main Entering the while loop ...")
+        # userInput = input("\nUser: ")
+        if not userInput or userInput.lower() == "quit":
+            print("Goodbye!")
+            break
+
+        thread_id ="thread-" + str(threadId)
+        # memory
+        configMemory = {"configurable": {"thread_id": thread_id}}
+        print(f"configMemory: {configMemory}")
+
+        # result = agent.invoke({"messages": [{"role": "user", "content": userInput}]},config=configMemory)
+        # result = agent.stream({"messages": [{"role": "user", "content": userInput}]},config=configMemory)
+        # result = agent.stream({"messages": [{"role": "user", "content": userInput}]},config=configMemory)
+        # for token, metadata in agent.stream( {"messages": [{"role": "user", "content": userInput}]},config=configMemory):
+        # result = ""
+
+        if "local" in modeLLM:
+            print("agent while loop, LOCAL in the modeLLM")
+
+            print("Direct Anwer:")
+            # Working piece
+            for token, metadata in agent.stream(
+                        {"messages": [{"role": "user", "content": userInput}]},
+                        stream_mode="messages",
+                        config=configMemory
+                    ):
+                # stream_mode="messages",
+                # Each token has content_blocks; we print the text
+                # This loops until the final answer is complete
+                if token.content_blocks:
+                    # result += (token.content_blocks[0]["text"])
+                    print(token.content_blocks[0]["text"], end="", flush=True)
+
+            print()
+            print()
+            break
+
+        elif "global" in modeLLM:
+
+            print("agent while loop, GLOBAL in the modeLLM")
+            # work in progress
+            # for token, metadata in agent.stream(
+            #             {"messages": [{"role": "user", "content": userInput}]},
+            #             stream_mode="messages",
+            #             config=configMemory
+            #         ):
+            #     # stream_mode="messages",
+            #     # Each token has content_blocks; we print the text
+            #     # This loops until the final answer is complete
+            #     # if token.content_blocks:
+            #     #     # result += (token.content_blocks[0]["text"])
+            #     #     print(token.content_blocks[0]["text"], end="", flush=True)
+            #     # stream tokens
+            #     # what's the weather in PUNE?
+            #     if token.content_blocks:
+            #         first_block = token.content_blocks[0]
+            #         if isinstance(first_block, dict) and "text" in first_block:
+            #             print(token.content_blocks[0]["text"], end="", flush=True)
+            #
+            #     # check for interrupt in this streamed state/event
+            #     interrupts = getattr(token, "__interrupt__", None) or metadata.get("__interrupt__")
+            #     if interrupts:
+            #         print("interrupt detected")  # newline before prompt to human;
+            #
+            # print("streaming done")
+            # input("HumanInterrupt01")
+            # break
+            # continue
+
+            result = agent.invoke({"messages": [{"role": "user", "content": userInput}]},config=configMemory)
+            pprint(f"result before human interrupt: {result}")
+
+            # Only show final answer content, not the full result
+            interrupts = result.get("__interrupt__", [])
+            if interrupts:
+                # There is a tool call awaiting approval
+                first_interrupt = interrupts[0]
+                action = first_interrupt.value["action_requests"][0]
+                tool_name = action["name"]
+                args = action.get("args", action.get("arguments", {}))
+                print(f"Agent is requesting to call tool '{tool_name}' with args {args}")
+                decision = input("Approve this tool call? (approve/reject): ")
+                if decision.strip().lower() == "reject":
+                    print("Tool call rejected. Aborting this run.")
+                    continue
+                else:
+                    # Approve and resume
+                    # resumed = agent.invoke(Command(resume={"decisions": [{"type": "approve"}]}))
+                    # working, but not streaming
+                    # resumed = agent.invoke(Command(resume={"decisions": [{"type": "approve"}]}), config=config)# Same thread ID to resume the paused conversation
+                    # answer = resumed["messages"][-1].content
+
+                    # Stream and print the final answer token-by-token
+                    print("\nAgent stream Anwer:", end=" ", flush=True)
+                    print("\n")
+                    # for token, metadata in agent.stream(
+                    #     {"messages": [{"role": "user", "content": userInput}]},
+                    #     stream_mode="messages"
+                    # ):
+                    for token, metadata in agent.stream(
+                        Command(resume={"decisions": [{"type": "approve"}]}),
+                        config=configMemory,
+                        stream_mode="messages"
+                    ):
+                        # Each token has content_blocks; we print the text
+                        # This loops until the final answer is complete
+                        if token.content_blocks:
+                            print(token.content_blocks[0]["text"], end="", flush=True)
+                    print()  # new line after answer
+
+            else:
+                # No interrupt, just take the agent's answer
+                # answer = result["messages"][-1].content
+                answer02 = result["messages"][-1].content
+                print(f"Direct answer: {answer02}")
+
+            # print(answer02)
+            print("END")
+            break
+
+
+# if __name__ == "__main__":
+#     main()
+
+

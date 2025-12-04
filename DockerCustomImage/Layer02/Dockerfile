@@ -1,6 +1,7 @@
 # First build Layer01
 
-FROM ollama-python39 
+# FROM ollama-python39 
+FROM alpine-ollama-python39
 
 # Set the working directory in the container
 # WORKDIR /App
@@ -27,21 +28,20 @@ RUN pip install -r requirements.txt
 
 ## ## For Cron service
 # Install necessary packages
-RUN apt-get update && \
-    apt-get install -y cron && \
-    apt-get install -y cron && \
+# RUN apt-get update && \
+#     apt-get install -y cron 
 
-RUN apt-get update && apt-get install -y cron
+# RUN apt-get update && apt-get install -y cron
 
-# Install fabric
-RUN curl -L https://github.com/danielmiessler/Fabric/releases/download/v1.4.264/fabric-linux-arm64 -o /usr/local/bin/fabric && \
-    chmod +x /usr/local/bin/fabric
-
-# Install Rust
-RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
-
-# Add Rust to PATH for all subsequent steps
-ENV PATH="/root/.cargo/bin:${PATH}"
+# # Install fabric
+# RUN curl -L https://github.com/danielmiessler/Fabric/releases/download/v1.4.264/fabric-linux-arm64 -o /usr/local/bin/fabric && \
+#     chmod +x /usr/local/bin/fabric
+#
+# # Install Rust
+# RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
+#
+# # Add Rust to PATH for all subsequent steps
+# ENV PATH="/root/.cargo/bin:${PATH}"
 
 # # Copy the cron file into the container
 # COPY Langchain/ToolCronRemainder/Data/myCronJobs /etc/cron.d/mycron
@@ -75,3 +75,5 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 
 # Save this image
 # docker build -t ollama-python39-02 .
+# docker build -t alpine-ollama-python39-02 .
+# alpine-ollama-python39

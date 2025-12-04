@@ -6,6 +6,7 @@ FROM alpine-ollama-python39-02
 # Set the working directory in the container
 WORKDIR /App
 
+
 # Copy the requirements file into the container
 # COPY requirements.txt .
 
@@ -35,32 +36,37 @@ COPY requirements.txt .
 # RUN pip3.9 install -r requirements.txt
 RUN pip install -r requirements.txt
 
+#Upgrade the langchain
+RUN pip install --upgrade langchain
+
 # NO use of cache
 #RUN pip install --no-cache-dir -r requirements.txt 
 
 
 ## ## For Cron service
-# Install necessary packages
-# RUN apt-get update && apt-get install -y cron
+# # Install necessary packages
+# # RUN apt-get update && apt-get install -y cron
+#
+# # Copy the cron file into the container
+# COPY Langchain/ToolCronRemainder/Data/myCronJobs /etc/cron.d/mycron
+#
+# # Give execution rights on the cron job
+# RUN chmod 0644 /etc/cron.d/mycron
+#
+# # Apply the cron job to the root user's crontab
+# RUN crontab /etc/cron.d/mycron
+#
+# # Create a directory for notification logs
+# RUN mkdir -p /var/log
+#
+# # Initialize the file
+# RUN echo "Initialized notification log file" > /var/log/notify.log
+#
+# # Change timezone to India
+# RUN ln -sf /usr/share/zoneinfo/Asia/Kolkata /etc/localtime
+#
 
-# Copy the cron file into the container
-COPY Langchain/ToolCronRemainder/Data/myCronJobs /etc/cron.d/mycron
-
-# Give execution rights on the cron job
-RUN chmod 0644 /etc/cron.d/mycron
-
-# Apply the cron job to the root user's crontab
-RUN crontab /etc/cron.d/mycron
-
-# Create a directory for notification logs
-RUN mkdir -p /var/log
-
-# Initialize the file
-RUN echo "Initialized notification log file" > /var/log/notify.log
-
-# Change timezone to India
-RUN ln -sf /usr/share/zoneinfo/Asia/Kolkata /etc/localtime
-
+## ## .profile file
 # RUN alias refresh="rm /App/* -rf && cp /root/Project/Rpi/PersonalAssistant/* /App/ -r"
 RUN echo 'alias refresh="rm /App/* -rf && cp /root/ProjectRpi/Rpi/PersonalAssistant/* /App/ -r"' >> /root/.profile
 # . /root/.profile --  to apply the .profile to current terminal

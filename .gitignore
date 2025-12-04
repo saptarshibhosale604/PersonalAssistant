@@ -7,3 +7,4 @@ Langchain/toolsRequired.txt
 Session.vim
 
 __pycache__
+Log/*

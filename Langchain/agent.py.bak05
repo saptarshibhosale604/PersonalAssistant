@@ -1,0 +1,409 @@
+# Not wokring at all
+"""
+LangChain Agent Script with User-Approved Tool Selection and Streaming Response
+with Proper Human-in-the-Loop Implementation
+
+This script demonstrates a complete agent workflow that:
+1. Accepts user input
+2. Determines which tool to use
+3. Asks for user approval BEFORE tool execution
+4. Streams the agent response
+"""
+
+import os
+from typing import Any
+
+from langgraph.graph import START, END, StateGraph
+from langchain.agents import create_agent
+from langchain.chat_models import init_chat_model
+from langchain.tools import tool
+from langchain.messages import HumanMessage, AIMessage, ToolMessage
+from langchain_core.messages import BaseMessage
+from typing import TypedDict, Annotated
+import operator
+# ============================================================================
+# API KEYS 
+# ============================================================================
+
+def RemoveSpaces(input_string):
+    # Remove spaces from the input string
+    return input_string.replace(" ", "")
+
+openai_key = "sk-proj-zP6XLa1m5gtlBcXJCaHZGmAvXEvUrP 5ATJSPBfLRdEuF-vSroLAG4V0zBdpwPz9PTXe9rM0-CgT3BlbkFJ83 AZyS7Zds5OT4G7S7MJslTok1O8P7ftX6Zz_IvdtMsy_CnjJeBoOv-o-G5t13-1Yw20ei_BwA" # myTestKey08, saptarshibhosale604@gmail.com
+tavily_key = "tvly-kX76LCz C36oih0u9COcf6oa 53A47MX0g"
+
+os.environ["OPENAI_API_KEY"] = RemoveSpaces(openai_key)
+os.environ["TAVILY_API_KEY"] = RemoveSpaces(tavily_key)
+
+
+# ============================================================================
+# TOOL DEFINITIONS
+# ============================================================================
+
+@tool
+def SearchWeb(query: str) -> str:
+    """Search the web for information about a topic.
+    
+    Args:
+        query: The search query to look up
+    
+    Returns:
+        Search results related to the query
+    """
+    # Simulated web search function
+    return f"Web search results for '{query}': Found 10+ relevant articles about {query}. Top results include information about latest trends and research."
+
+
+@tool
+def GetWeather(location: str) -> str:
+    """Get current weather information for a specific location.
+    
+    Args:
+        location: The city or location name
+    
+    Returns:
+        Current weather information
+    """
+    # Simulated weather function
+    weatherData = {
+        "temperature": "22°C",
+        "condition": "Partly Cloudy",
+        "humidity": "65%",
+        "windSpeed": "12 km/h"
+    }
+    return f"Weather in {location}: {weatherData['temperature']}, {weatherData['condition']}, Humidity: {weatherData['humidity']}, Wind: {weatherData['windSpeed']}"
+
+
+@tool
+def CalculateExpression(expression: str) -> str:
+    """Calculate a mathematical expression.
+    
+    Args:
+        expression: A mathematical expression to evaluate (e.g., "2 + 2 * 3")
+    
+    Returns:
+        The result of the calculation
+    """
+    try:
+        result = eval(expression)
+        return f"Result of '{expression}' = {result}"
+    except Exception as error:
+        return f"Error calculating expression: {str(error)}"
+
+
+# ============================================================================
+# STATE DEFINITION
+# ============================================================================
+
+class AgentState(TypedDict):
+    """State for the human-in-the-loop agent."""
+    messages: Annotated[list[BaseMessage], operator.add]
+    toolsApproved: bool
+
+
+# ============================================================================
+# MAIN AGENT FUNCTIONS
+# ============================================================================
+
+def InitializeAgent() -> Any:
+    """Initialize and configure the LangChain agent.
+    
+    Returns:
+        Configured agent instance with tools bound
+    """
+    # Initialize the chat model
+    modelInstance = init_chat_model(
+        "gpt-4o-mini",
+        model_provider="openai"
+    )
+    
+    # Define tools list
+    toolsList = [SearchWeb, GetWeather, CalculateExpression]
+    
+    # Create agent with tools
+    agentInstance = create_agent(
+        modelInstance,
+        tools=toolsList,
+        system_prompt="You are a helpful assistant. Answer questions accurately and concisely."
+    )
+    
+    return agentInstance
+
+
+def GetUserInput() -> str:
+    """Get user query from command line input.
+    
+    Returns:
+        User's input query
+    """
+    print("\n" + "="*70)
+    userQuery = input("Enter your question (or 'quit' to exit): ").strip()
+    print("="*70)
+    return userQuery
+
+
+def CheckToolSelection(state: AgentState) -> dict:
+    """Display selected tools and ask for user approval.
+    
+    Args:
+        state: The current agent state containing messages
+    
+    Returns:
+        Updated state with toolsApproved flag
+    """
+    messages = state.get("messages", [])
+    
+    if not messages:
+        return {"toolsApproved": True}
+    
+    # Get the last AI message
+    lastMessage = messages[-1]
+    
+    # Check if there are tool calls
+    if hasattr(lastMessage, "tool_calls") and lastMessage.tool_calls:
+        print("\n" + "-"*70)
+        print("🔧 TOOLS TO BE USED:")
+        print("-"*70)
+        
+        for toolCall in lastMessage.tool_calls:
+            toolName = toolCall.get("name", "Unknown")
+            toolArgs = toolCall.get("args", {})
+            
+            print(f"\n  Tool: {toolName}")
+            print(f"  Arguments: {toolArgs}")
+        
+        print("\n" + "-"*70)
+        userApproval = input("Do you approve these tools? (yes/no): ").strip().lower()
+        
+        isApproved = userApproval in ["yes", "y"]
+        return {"toolsApproved": isApproved}
+    
+    return {"toolsApproved": True}
+
+
+def ShouldContinue(state: AgentState) -> str:
+    """Determine if we should continue to tool execution or end.
+    
+    Args:
+        state: The current agent state
+    
+    Returns:
+        'continue' if approved and tools exist, 'end' otherwise
+    """
+    messages = state.get("messages", [])
+    toolsApproved = state.get("toolsApproved", True)
+    
+    if not messages:
+        return "end"
+    
+    lastMessage = messages[-1]
+    
+    # Check if there are tool calls and if user approved
+    hasToolCalls = hasattr(lastMessage, "tool_calls") and lastMessage.tool_calls
+    
+    if hasToolCalls and toolsApproved:
+        return "continue"
+    elif hasToolCalls and not toolsApproved:
+        print("\n⚠️  Tool selection rejected by user. Please try a different question.")
+        return "end"
+    else:
+        return "end"
+
+
+def ExecuteAgent(state: AgentState, agent: Any) -> dict:
+    """Execute the agent to determine which tools to use.
+    
+    Args:
+        state: The current agent state
+        agent: The configured agent instance
+    
+    Returns:
+        Updated state with agent's response
+    """
+    print("\n🤔 Analyzing your question...")
+    
+    messages = state.get("messages", [])
+    result = agent.invoke({"messages": messages})
+    
+    return {"messages": [result["messages"][-1]]}
+
+
+def ExecuteTools(state: AgentState, agent: Any) -> dict:
+    """Execute the approved tools.
+    
+    Args:
+        state: The current agent state
+        agent: The configured agent instance
+    
+    Returns:
+        Updated state with tool results
+    """
+    print("\n✅ Tool selection approved!")
+    print("\n⚙️  Executing tools...")
+    
+    messages = state.get("messages", [])
+    result = agent.invoke({"messages": messages})
+    
+    # Get the tool results
+    toolResults = []
+    for msg in result["messages"]:
+        if isinstance(msg, ToolMessage):
+            toolResults.append(msg)
+    
+    return {"messages": toolResults}
+
+
+def StreamFinalResponse(state: AgentState, agent: Any) -> None:
+    """Stream the agent's final response.
+    
+    Args:
+        state: The current agent state
+        agent: The configured agent instance
+    """
+    print("\n" + "="*70)
+    print("📢 STREAMING RESPONSE:")
+    print("="*70 + "\n")
+    
+    messages = state.get("messages", [])
+    
+    try:
+        # Get final response from agent
+        result = agent.invoke({"messages": messages})
+        
+        # Find and print the final AI response
+        for msg in result["messages"]:
+            if isinstance(msg, AIMessage) and msg.content and not hasattr(msg, "tool_calls"):
+                print(msg.content, flush=True)
+        
+        print("\n")
+    except Exception as error:
+        print(f"❌ Error during response generation: {str(error)}")
+
+
+def CreateHumanInTheLoopGraph(agent: Any) -> Any:
+    """Create a LangGraph workflow with human-in-the-loop for tool approval.
+    
+    Args:
+        agent: The configured agent instance
+    
+    Returns:
+        Compiled graph workflow
+    """
+    # Create the graph
+    graph = StateGraph(AgentState)
+    
+    # Define nodes
+    def agentNode(state: AgentState) -> dict:
+        return ExecuteAgent(state, agent)
+    
+    def toolsNode(state: AgentState) -> dict:
+        return ExecuteTools(state, agent)
+    
+    def approvalNode(state: AgentState) -> dict:
+        return CheckToolSelection(state)
+    
+    # Add nodes to graph
+    graph.add_node("agent", agentNode)
+    graph.add_node("approval", approvalNode)
+    graph.add_node("tools", toolsNode)
+    
+    # Add edges
+    graph.add_edge(START, "agent")
+    graph.add_edge("agent", "approval")
+    graph.add_conditional_edges(
+        "approval",
+        ShouldContinue,
+        {
+            "continue": "tools",
+            "end": END
+        }
+    )
+    graph.add_edge("tools", END)
+    
+    # Compile the graph
+    compiledGraph = graph.compile()
+    
+    return compiledGraph
+
+
+def ProcessUserQuery(graph: Any, userQuery: str) -> None:
+    """Process a user query through the agent workflow.
+    
+    Args:
+        graph: The compiled LangGraph workflow
+        userQuery: The user's input query
+    """
+    try:
+        # Initialize state with user query
+        initialState = {
+            "messages": [HumanMessage(content=userQuery)],
+            "toolsApproved": False
+        }
+        
+        # Stream through the graph
+        for output in graph.stream(initialState):
+            # Output is a dict like {"node_name": state_update}
+            pass
+        
+        # Get final state
+        finalOutput = graph.invoke(initialState)
+        
+        # Print final response
+        print("\n" + "="*70)
+        print("📢 FINAL RESPONSE:")
+        print("="*70 + "\n")
+        
+        messages = finalOutput.get("messages", [])
+        for msg in messages:
+            if isinstance(msg, AIMessage) and msg.content and not hasattr(msg, "tool_calls"):
+                print(msg.content)
+        
+        print()
+    
+    except Exception as error:
+        print(f"❌ Error processing query: {str(error)}")
+
+
+def RunMain() -> None:
+    """Main function to run the agent interaction loop."""
+    print("\n" + "="*70)
+    print("🤖 LANGCHAIN AGENT WITH USER-APPROVED TOOLS")
+    print("="*70)
+    print("\nInitializing agent...")
+    
+    # Initialize agent
+    agent = InitializeAgent()
+    print("✅ Agent initialized successfully!")
+    
+    # Create human-in-the-loop graph
+    print("🔧 Setting up human-in-the-loop workflow...")
+    graph = CreateHumanInTheLoopGraph(agent)
+    print("✅ Workflow ready!\n")
+    
+    # Main interaction loop
+    while True:
+        # Get user input
+        userQuery = GetUserInput()
+        
+        # Check for exit command
+        if userQuery.lower() == "quit":
+            print("\n👋 Thank you for using the agent. Goodbye!")
+            break
+        
+        # Validate input
+        if not userQuery:
+            print("\n⚠️  Please enter a valid question.")
+            continue
+        
+        # Process the query
+        ProcessUserQuery(graph, userQuery)
+
+
+# ============================================================================
+# ENTRY POINT
+# ============================================================================
+
+if __name__ == "__main__":
+    RunMain()
+
+
