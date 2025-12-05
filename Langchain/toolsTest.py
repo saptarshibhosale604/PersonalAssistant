@@ -1,10 +1,10 @@
 from langchain.tools import tool
 
 # Define tools with @tool decorator (UpperCamelCase names)
-@tool("SearchWeb", description="Search the web for information.")
-def SearchWeb(query: str) -> str:
-    # Placeholder for an actual web search
-    return f"Simulated search results for: {query}"
+# @tool("SearchWeb", description="Search the web for information.")
+# def SearchWeb(query: str) -> str:
+#     # Placeholder for an actual web search
+#     return f"Simulated search results for: {query}"
 
 @tool("GetWeather", description="Get weather information for a location.")
 def GetWeather(location: str) -> str:
@@ -32,7 +32,8 @@ toolsIntermediate = []
 # toolsBasic = [toolYoutube, toolWebSearch, toolMyName]                  # No need for human in loop
 # toolsBasic = [toolYoutube, toolWebSearch]                  # No need for human in loop
 # toolsBasic = [toolWebSearch]                  # No need for human in loop
-toolsBasic = [SearchWeb, GetWeather, CalculateExpression, CreatePoem]
+# toolsBasic = [SearchWeb, GetWeather, CalculateExpression, CreatePoem]
+toolsBasic = [GetWeather, CalculateExpression, CreatePoem]
 
 tools = toolsAdvance + toolsIntermediate + toolsBasic
 

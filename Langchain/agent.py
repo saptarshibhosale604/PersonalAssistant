@@ -25,7 +25,7 @@ os.environ["TAVILY_API_KEY"] = RemoveSpaces(tavily_key)
 # Tools
 import Langchain.toolsTest as toolsTest
 import Langchain.toolsGeneral as toolsGeneral
-import Langchain.toolsMinimal as toolsMinimal
+import Langchain.toolsPii as toolsPii
 # import Langchain.toolsTravel as toolsTravel
 
 # tools = toolsTest.ToolsList()
@@ -57,7 +57,7 @@ def BuildAgent():
         "CalculateExpression": True,
         "CreatePoem": True,
 
-        # toolsMinimal
+        # toolsPii
         "toolMyName": True,
         "toolMyPetsName": True,
 
@@ -122,7 +122,8 @@ def UpdateLLM(modeLLM):
             # print(f"Agent tools: {tools}")
             # tools = toolsMinimal.ToolsList()
             # tools = toolsGeneral.ToolsList()
-            tools = toolsGeneral.ToolsList() + toolsTest.ToolsList()
+            # tools = toolsGeneral.ToolsList() + toolsTest.ToolsList()
+            tools = toolsGeneral.ToolsList() + toolsTest.ToolsList() + toolsPii.ToolsList()
         
         elif(modeLLM == "globalGemini"):
             # llm = GoogleGenerativeAI(model="models/text-bison-001", google_api_key='AIzaSyBwIrjcMjKA1V3XJ_hCLurJx33wh33NWdk')
@@ -130,29 +131,33 @@ def UpdateLLM(modeLLM):
         
         agent = BuildAgent()
 
-requestedToolsNumber = 0
-
+requestedToolsNumberPerUserInput = 0
+requestedToolsNumberPerAgentInterrupt = 0 
 def extract_stream_content(stream_mode, content):
     # stream_mode, content = token  # Unpack the tuple
-    global requestedToolsNumber
+    global requestedToolsNumberPerUserInput
     
     if stream_mode == "messages":
         # Extract AIMessageChunk content safely
         if isinstance(content, tuple) and len(content) >= 1:
             message_chunk = content[0]
             if hasattr(message_chunk, 'content'):
-                print("===============")
-                print(f"message_chunk.content: {message_chunk.content}")
-                print("===============")
+                # print("===============")
+                # print(f"message_chunk.content: {message_chunk.content}")
+                # print(f"{message_chunk.content}")
+                print(f"{message_chunk.content}", end="", flush=True)
+                # print(token.content_blocks[0]["text"], end="", flush=True)
+                # print("===============")
                 return message_chunk.content or ""
         
         # Extract metadata if needed
         elif isinstance(content, tuple) and len(content) == 2:
             message_chunk, metadata = content
             if hasattr(message_chunk, 'content'):
-                print("===============")
-                print(f"message_chunk.content02: {message_chunk.content}")
-                print("===============")
+                # print("===============")
+                # print(f"message_chunk.content02: {message_chunk.content}")
+                print(f"{message_chunk.content}", end="|", flush=True)
+                # print("===============")
                 return message_chunk.content or ""
     
     elif stream_mode == "updates":
@@ -163,17 +168,30 @@ def extract_stream_content(stream_mode, content):
             # Handle tuple of interrupts (common in LangGraph)
             first_interrupt = interrupts[0] if isinstance(interrupts, tuple) else interrupts[0]
             
-            # Extract action details
-            action = first_interrupt.value["action_requests"][0]
-            tool_name = action["name"]
-            args = action.get("args", action.get("arguments", {}))
-            
+            requestedToolsNumberPerUserInput += 1
+
+            global requestedToolsNumberPerAgentInterrupt
+            requestedToolsNumberPerAgentInterrupt = len(first_interrupt.value["action_requests"])
+
+            print(f"requestedToolsNumberPerAgentInterrupt: {requestedToolsNumberPerAgentInterrupt}")
+
+            for i in range(0, requestedToolsNumberPerAgentInterrupt):
+                # print(f"i value: {i}")
+                # Extract action details
+                action = first_interrupt.value["action_requests"][i]
+                tool_name = action["name"]
+                args = action.get("args", action.get("arguments", {}))
+                print(f"\n{'-'*60}")
+                # print(f"tool_name: {tool_name}, args: {args}")
+                print(f"tool_name: {tool_name},\nargs: {args},\nrequestedToolsNumberPerUserInput: {requestedToolsNumberPerUserInput}")
+                print(f"{'-'*60}")
+                input("Is this approved or rejected?(Default: approved): ")
+                
+
+            # input("humanInterrupt04")
             # print(f"Agent is requesting to call tool '{tool_name}' with args {args}")
-            requestedToolsNumber += 1
-            print("---------------")
-            # print(f"tool_name: {tool_name}, args: {args}")
-            print(f"tool_name: {tool_name}, args: {args}, requestedToolsNumber: {requestedToolsNumber}")
-            print("---------------")
+            # print("---------------")
+            # print("---------------")
              
     return ""
 
@@ -261,12 +279,12 @@ def Main(userInput, threadId, modeLLM):
             agentCallingCountPerUserInput = 0
 
             while True: 
-                global requestedToolsNumber
+                global requestedToolsNumberPerUserInput
                 agentCallingCountPerUserInput+= 1
                 print(f"while loop starting, agentCallingCountPerUserInput: {agentCallingCountPerUserInput}")
 
                 # First round
-                if agentCallingCountPerUserInput == 1 and requestedToolsNumber < 1:
+                if agentCallingCountPerUserInput == 1 and requestedToolsNumberPerUserInput < 1:
                     ## FOR LLM Streams
                     # for token, metadata in agent.stream(  
                     #     {"messages": [{"role": "user", "content": userInput}]},
@@ -311,23 +329,28 @@ def Main(userInput, threadId, modeLLM):
                     ## For combining togather
 
 
+                    print(f"\n{'='*60}")
+                    # print
                     for stream_mode, chunk in agent.stream(  
                         {"messages": [{"role": "user", "content": userInput}]},
                         # stream_mode="updates, messages",
                         stream_mode=["updates", "messages"],
                         config=configMemory
                     ):
-                        print(f"stream_mode: {stream_mode}")
-                        print(f"content: {chunk}")
-                        print("\n")
+                        # print(f"stream_mode: {stream_mode}")
+                        # print(f"content: {chunk}")
+                        # print("\n")
                         # if stream_mode == "messages":
                         chunk_text = extract_stream_content(stream_mode, chunk)
                         if chunk_text:
                             agentResponsePerUserInput += chunk_text
 
+                    print(f"\n{'='*60}")
+                    print()
 
-                # elif agentCallingCountPerUserInput == 2 or requestedToolsNumber >= 1:
-                elif requestedToolsNumber >= 1:
+
+                # elif agentCallingCountPerUserInput == 2 or requestedToolsNumberPerUserInput >= 1:
+                elif requestedToolsNumberPerUserInput >= 1:
                     # for token, metadata in agent.stream(  
                     #     Command(resume={"decisions": [{"type": "approve"}]}),
                     #     stream_mode="messages",
@@ -346,25 +369,40 @@ def Main(userInput, threadId, modeLLM):
                     #             agentResponsePerUserInput = agentResponsePerUserInput + token.content_blocks[0]["text"]
                     #
 
-                    requestedToolsNumber -= 1
+                    requestedToolsNumberPerUserInput -= 1
 
                     ## For combining togather
+                    global requestedToolsNumberPerAgentInterrupt
 
+                    print(f"\n{'='*60}")
+                    decisions = []
+                    for i in range(requestedToolsNumberPerAgentInterrupt):
+                        decisions.append({"type": "approve"})
+
+                    requestedToolsNumberPerAgentInterrupt = 0
+
+                    print(f"decistions: {decisions}")
                     for stream_mode, chunk in agent.stream(  
-                        Command(resume={"decisions": [{"type": "approve"}]}),
+                        Command(resume={"decisions": decisions}),
+                        # Command(resume={"decisions": [{"type": "approve"}]}),
+            #         # resume={"decisions": [{"type": "approve"}, {"type": "approve"} ]}  # or "edit", "reject"
                         # stream_mode="updates, messages",
                         stream_mode=["updates", "messages"],
                         config=configMemory
                     ):
-                        print(f"stream_mode: {stream_mode}")
-                        print(f"content: {chunk}")
-                        print("\n")
+                        # print(f"stream_mode: {stream_mode}")
+                        # print(f"content: {chunk}")
+                        # print("\n")
                         # if stream_mode == "messages":
                         chunk_text = extract_stream_content(stream_mode, chunk)
                         if chunk_text:
                             agentResponsePerUserInput += chunk_text
+
+                    print(f"\n{'='*60}")
+                    print()
+
                 else:
-                    print("else requestedToolsNumber == 0 AND agentCallingCountPerUserInput > 1")
+                    # print("else requestedToolsNumberPerUserInput == 0 AND agentCallingCountPerUserInput > 1")
 
                     return
 
@@ -406,63 +444,63 @@ def Main(userInput, threadId, modeLLM):
                 # print(f"agentResponsePerUserInput: {agentResponsePerUserInput}")
                 print(f"agentCallingCountPerUserInput: {agentCallingCountPerUserInput}, agentResponsePerUserInput: {agentResponsePerUserInput}")
                 agentResponsePerUserInput = ""
-                input("Human interrupt 03")
+                # input("Human interrupt 03")
 
-            result = agent.invoke({"messages": [{"role": "user", "content": userInput}]},config=configMemory)
-            pprint(f"result before human interrupt: {result}")
-
-            # Only show final answer content, not the full result
-            interrupts = result.get("__interrupt__", [])
-            if interrupts:
-                # There is a tool call awaiting approval
-                first_interrupt = interrupts[0]
-                action = first_interrupt.value["action_requests"][0]
-                tool_name = action["name"]
-                args = action.get("args", action.get("arguments", {}))
-                print(f"Agent is requesting to call tool '{tool_name}' with args {args}")
-                decision = input("Approve this tool call? (approve/reject): ")
-                if decision.strip().lower() == "reject":
-                    print("Tool call rejected. Aborting this run.")
-                    continue
-                else:
-                    # Approve and resume
-                    # resumed = agent.invoke(Command(resume={"decisions": [{"type": "approve"}]}))
-                    # working, but not streaming
-                    # resumed = agent.invoke(Command(resume={"decisions": [{"type": "approve"}]}), config=config)# Same thread ID to resume the paused conversation
-                    # answer = resumed["messages"][-1].content
-
-                    # Stream and print the final answer token-by-token
-                    print("\nAgent stream Anwer:", end=" ", flush=True)
-                    print("\n")
-                    # for token, metadata in agent.stream(
-                    #     {"messages": [{"role": "user", "content": userInput}]},
-                    #     stream_mode="messages"
-                    # ):
-                    for token, metadata in agent.stream(
-                        Command(resume={"decisions": [{"type": "approve"}]}),
-                        config=configMemory,
-                        stream_mode="messages"
-                    ):
-                        # Each token has content_blocks; we print the text
-                        # This loops until the final answer is complete
-                        if token.content_blocks:
-                            # print(f"After human approval: token.content_blocks: {token.content_blocks}")
-                            # print("--")
-                            # input("humanInterrupt02")
-                            print(token.content_blocks[0]["text"], end="", flush=True)
-                    print()  # new line after answer
-
-            else:
-                # No interrupt, just take the agent's answer
-                # answer = result["messages"][-1].content
-                answer02 = result["messages"][-1].content
-                print(f"Direct answer: {answer02}")
-
-            # print(answer02)
-            print("END")
-            break
-
-
+            # result = agent.invoke({"messages": [{"role": "user", "content": userInput}]},config=configMemory)
+            # pprint(f"result before human interrupt: {result}")
+            #
+            # # Only show final answer content, not the full result
+            # interrupts = result.get("__interrupt__", [])
+            # if interrupts:
+            #     # There is a tool call awaiting approval
+            #     first_interrupt = interrupts[0]
+            #     action = first_interrupt.value["action_requests"][0]
+            #     tool_name = action["name"]
+            #     args = action.get("args", action.get("arguments", {}))
+            #     print(f"Agent is requesting to call tool '{tool_name}' with args {args}")
+            #     decision = input("Approve this tool call? (approve/reject): ")
+            #     if decision.strip().lower() == "reject":
+            #         print("Tool call rejected. Aborting this run.")
+            #         continue
+            #     else:
+            #         # Approve and resume
+            #         # resumed = agent.invoke(Command(resume={"decisions": [{"type": "approve"}]}))
+            #         # working, but not streaming
+            #         # resumed = agent.invoke(Command(resume={"decisions": [{"type": "approve"}]}), config=config)# Same thread ID to resume the paused conversation
+            #         # answer = resumed["messages"][-1].content
+            #
+            #         # Stream and print the final answer token-by-token
+            #         print("\nAgent stream Anwer:", end=" ", flush=True)
+            #         print("\n")
+            #         # for token, metadata in agent.stream(
+            #         #     {"messages": [{"role": "user", "content": userInput}]},
+            #         #     stream_mode="messages"
+            #         # ):
+            #         for token, metadata in agent.stream(
+            #             Command(resume={"decisions": [{"type": "approve"}]}),
+            #             config=configMemory,
+            #             stream_mode="messages"
+            #         ):
+            #             # Each token has content_blocks; we print the text
+            #             # This loops until the final answer is complete
+            #             if token.content_blocks:
+            #                 # print(f"After human approval: token.content_blocks: {token.content_blocks}")
+            #                 # print("--")
+            #                 # input("humanInterrupt02")
+            #                 print(token.content_blocks[0]["text"], end="", flush=True)
+            #         print()  # new line after answer
+            #
+            # else:
+            #     # No interrupt, just take the agent's answer
+            #     # answer = result["messages"][-1].content
+            #     answer02 = result["messages"][-1].content
+            #     print(f"Direct answer: {answer02}")
+            #
+            # # print(answer02)
+            # print("END")
+            # break
+            #
+            #
 # if __name__ == "__main__":
 #     main()
 
@@ -492,3 +530,4 @@ def Main(userInput, threadId, modeLLM):
 # which are the top 5 smallest file / directory in my current working directory in my PC?
 
 # Generate a peom on money
+# whats my and my pets name?

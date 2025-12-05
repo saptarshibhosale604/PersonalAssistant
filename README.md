@@ -23,8 +23,7 @@ sudo docker rm ollamaLocal -f && \
 sudo docker run -d --rm -v ollama:/root/.ollama -v /home/ssbrpi/ProjectRpi:/root/ProjectRpi/ -p 11434:11434 --name ollamaLocal personal_assistant && \
 sudo docker exec -it ollamaLocal sh -c '. /root/.profile; exec sh -l'
 
-refreshDir 
-pythonCli 
+refreshDir && pythonCli 
 
 docker rm ollamaLocal -f
 docker run -d --rm -v ollama:/root/.ollama -v /home/ssbrpi/ProjectRpi:/root/ProjectRpi/ -p 11434:11434 --name ollamaLocal personal_assistant
@@ -160,18 +159,18 @@ mksession!
 - work on streaming input from global llm
 - work on streaming input form local llm
 - A, Improve, refresh .profile auto load with the docker exec
-
-# TODO 
 - A, BUG, if the agent want to go again in the second time for searching the answer it's giving this error:
     - print(token.content_blocks[0]["text"], end="", flush=True)
     - Cause may be this time its not content_block[0] 
     - Eg. which are the top 5 smallest file / directory in my current working directory except current working directory?
-- B, BUG, gemini llm integration is not working
+- B, BUG, list of tools != number of human approvals
+    - ValueError: Number of human decisions (1) does not match number of hanging tool ca
 - B, BUG, randomly tocket.content_blocks[0] dont have text value in it
     - print(token.content_blocks[0]["text"], end="", flush=True) ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^ KeyError: 'text'
     - Print the whole block with pprint 
-- B, BUG, list of tools != number of human approvals
-    - ValueError: Number of human decisions (1) does not match number of hanging tool ca
+
+# TODO 
+- B, BUG, gemini llm integration is not working
 - C, Improve, The log printing like this, logging.print this prints timestamp in the console pring 
     2025-12-05 05:49:12,491 - DEBUG - Initialized assistant.py
     2025-12-05 05:49:12,492 - INFO - WelcomeUser()
