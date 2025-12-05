@@ -395,7 +395,9 @@ def Input():
             logger.info("Paste your multiline input followed by Ctrl-D (Linux/macOS) or Ctrl-Z then Enter (Windows):")
             userInput = sys.stdin.read()
         else:
-            userInput = input("userInput: ")    # Text 
+            # userInput = input("userInput: ")    # Text 
+            # userInput = "Generate a poem on Donkey"
+            userInput = "which are the top 5 smallest file / directory in my current working directory except current working directory?"
     elif(modeInput == "speech"):
         userInput = STT.Main()          # Speech To Text
     else:

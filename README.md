@@ -12,10 +12,20 @@
 - can specify which tools to be interrupted and which tools dont need human in the loop
 - context remembering
 - Multi line user input
+- The modes are saved in ROM
 
 
 # CLI // WORKING
+
 docker build -t personal_assistant . 
+
+sudo docker rm ollamaLocal -f && \
+sudo docker run -d --rm -v ollama:/root/.ollama -v /home/ssbrpi/ProjectRpi:/root/ProjectRpi/ -p 11434:11434 --name ollamaLocal personal_assistant && \
+sudo docker exec -it ollamaLocal sh -c '. /root/.profile; exec sh -l'
+
+refreshDir 
+pythonCli 
+
 docker rm ollamaLocal -f
 docker run -d --rm -v ollama:/root/.ollama -v /home/ssbrpi/ProjectRpi:/root/ProjectRpi/ -p 11434:11434 --name ollamaLocal personal_assistant
 docker exec -it ollamaLocal /bin/sh
@@ -27,8 +37,9 @@ refresh
 python /App/UI/cli.py
 
 . /root/.profile # for applying the alias
-refresh && python /App/Langchain/agent02.py
-refresh && python /App/Langchain/agent.py
+refresh && python /App/UI/cli.py
+<!-- refresh && python /App/Langchain/agent02.py -->
+<!-- refresh && python /App/Langchain/agent.py -->
 
 what is the weather in PUN?
 
@@ -91,6 +102,20 @@ pip install -U duckduckgo-search // done
 apt update && apt install -y openssh-client
 
 # TEMP
+
+docker build -t personal_assistant . 
+
+sudo docker rm ollamaLocal -f && \
+sudo docker run -d --rm -v ollama:/root/.ollama -v /home/ssbrpi/ProjectRpi:/root/ProjectRpi/ -p 11434:11434 --name ollamaLocal personal_assistant && \
+sudo docker exec -it ollamaLocal sh -c '. /root/.profile; exec sh -l'
+
+sudo docker exec -it ollamaLocal sh -c '. /root/ProjectRpi/Rpi/PersonalAssistant/Bashrc/.profile; exec sh -l'
+
+sudo docker exec -it ollamaLocal /bin/sh  
+
+. /root/.profile # for applying the alias
+refresh && python /App/UI/cli.py
+
 pip install --upgrade langchain
 
 docker exec -it ollamaLocal /bin/sh . /root/.profile // not wokring
@@ -122,27 +147,38 @@ mksession!
 :<C-r><C-l> 
 
 
-# TODO 
-- refresh .profile auto load with the docker exec
-- gemini llm integration is not working
+
+# DONE
 - mode multiline input true is not working
-- logging.print this prints timestamp in the console pring 
+- remove tool calling for local llm
+- Need to start logging
+- work on mode context no for local llm
+- remember last help options
+- global mode not working for webapp
+- help function is not working here
+- work on context of local llm
+- work on streaming input from global llm
+- work on streaming input form local llm
+- A, Improve, refresh .profile auto load with the docker exec
+
+# TODO 
+- A, BUG, if the agent want to go again in the second time for searching the answer it's giving this error:
+    - print(token.content_blocks[0]["text"], end="", flush=True)
+    - Cause may be this time its not content_block[0] 
+    - Eg. which are the top 5 smallest file / directory in my current working directory except current working directory?
+- B, BUG, gemini llm integration is not working
 - B, BUG, randomly tocket.content_blocks[0] dont have text value in it
     - print(token.content_blocks[0]["text"], end="", flush=True) ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^ KeyError: 'text'
-    - Print the whole block with pprint
-
-
-done - remove tool calling for local llm
-done - Need to start logging
-done - work on mode context no for local llm
-done - remember last help options
-done - global mode not working for webapp
-done - help function is not working here
-Done - work on context of local llm
-done - work on streaming input from global llm
-done - work on streaming input form local llm
-
-notDone - tool calling man in the loop not working, global mode, web app; not continuing the web app
-- The agent is using local llm and calls the tools
-	- But the model llama3.2:1b is not smart enough to use the tools
-- The agent is working with google gemini llm with tools
+    - Print the whole block with pprint 
+- B, BUG, list of tools != number of human approvals
+    - ValueError: Number of human decisions (1) does not match number of hanging tool ca
+- C, Improve, The log printing like this, logging.print this prints timestamp in the console pring 
+    2025-12-05 05:49:12,491 - DEBUG - Initialized assistant.py
+    2025-12-05 05:49:12,492 - INFO - WelcomeUser()
+    - I want only text visible in print, no timestamp values
+- C, Improve, log saving with timestamp + log
+- C, Improve, log saving with output
+- Extra
+    - The agent is using local llm and calls the tools
+        - But the model llama3.2:1b is not smart enough to use the tools
+    - The agent is working with google gemini llm with tools
