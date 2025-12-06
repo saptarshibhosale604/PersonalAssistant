@@ -9,38 +9,8 @@ import Langchain.agent as Agent
 
 
 
-import logging
-
-# Create a custom logger
-logger = logging.getLogger('my_logger')
-logger.setLevel(logging.DEBUG)  # Set global required log level
-
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-
-# File handler
-# file_handler = logging.FileHandler('/tmp/personalAssistant.log')
-file_handler = logging.FileHandler('/root/ProjectRpi/Rpi/PersonalAssistant/Log/log.log')
-file_handler.setLevel(logging.DEBUG)
-file_handler.setFormatter(formatter)
-
-# Console (stream) handler
-console_handler = logging.StreamHandler()
-# console_handler.setLevel(logging.INFO)
-console_handler.setLevel(logging.DEBUG)
-console_handler.setFormatter(formatter)
-
-# Add both handlers to the logger
-logger.addHandler(file_handler)
-logger.addHandler(console_handler)
-
-# # Logging examples
-# logger.info("start logging")
-# logger.debug('This is a debug message')
-# logger.info('This is an info message')
-# logger.warning('This is a warning message')
-# logger.error('This is an error message')
-# logger.info("stop logging")
-
+# import Log.custom_logger.logger as logger
+from Log.custom_logger import logger
 
 # input("Human interrupt")
 logger.debug("Initialized assistant.py")
@@ -74,7 +44,7 @@ User Input = """
 # ~ who is the presedent of india
 
 threadId = 0    # Memory Id for agent graph
-mainLoopCnt = 0 # counting looping of Main()
+UserInputCount = 0 # counting looping of Main()
 
 # def InitializingLogging():
 #     global logger
@@ -213,7 +183,7 @@ def BasicCmds(userInput):
 
 
     if parts[0] == "help":
-        logger.info('Help:')
+        logger.debug('Help:')
 
     # Check if user input matches the pattern: mode <mode-name> <mode-value>
     elif len(parts) == 3 and parts[0] == 'mode':
@@ -234,9 +204,9 @@ def BasicCmds(userInput):
         return False
 
     for key, details in mode_config_load.items():
-        logger.info(f"{key}: {details['current']}")
+        logger.debug(f"{key}: {details['current']}")
         for option, desc in details['allowed'].items():
-            logger.info(f"  {option}: {desc}")
+            logger.debug(f"  {option}: {desc}")
         # logger.info()
 
     return True
@@ -511,7 +481,7 @@ def Output(assistantOutput):
     global logger
     # global modeOutput
 
-    logger.info(f"assistantOutput: {assistantOutput}")  # Text 
+    logger.debug(f"assistantOutput: {assistantOutput}")  # Text 
     
     if (GetModeValue("mode-output") == "text"):
         return
@@ -532,12 +502,12 @@ import sys
 #@app.route('/')
 def Main():
     global logger
-    global mainLoopCnt
+    global UserInputCount
     #return "this is from ui app"
 
 
-    mainLoopCnt += 1
-    logger.debug(f"mainLoopCnt: {mainLoopCnt}")
+    UserInputCount += 1
+    logger.debug(f"UserInputCount: {UserInputCount}")
 
     # userInput = ""
     # userInput = "Give me list of 3 fruits"
@@ -559,10 +529,10 @@ def Main():
 
 def WelcomeUser():
     global logger
-    logger.info("WelcomeUser()")
+    logger.debug("WelcomeUser()")
     
     logger.info("Welcome to Personal Assistant CLI")
-    logger.info("Type 'help' for list of commands")
+    logger.debug("Type 'help' for list of commands")
     
     assistantOutput = Processing("help")
 

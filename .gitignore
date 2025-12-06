@@ -8,3 +8,5 @@ Session.vim
 
 __pycache__
 Log/*
+
+!Log/custom_logger.py

@@ -171,6 +171,9 @@ mksession!
 
 # TODO 
 - B, BUG, gemini llm integration is not working
+- C, Improve, The role set for the local llm is hullucinating toooo much, 
+    - Need some prompt engg
+    - {"role": "system", "content": "You are an assistance like a JARVIS from Iron Man. Your name is RPI. Your master name is SSB"},
 - C, Improve, The log printing like this, logging.print this prints timestamp in the console pring 
     2025-12-05 05:49:12,491 - DEBUG - Initialized assistant.py
     2025-12-05 05:49:12,492 - INFO - WelcomeUser()

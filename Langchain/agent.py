@@ -200,13 +200,13 @@ def Main(userInput, threadId, modeLLM):
     # modeContext = modeContextValue
     UpdateLLM(modeLLM)
     # agent = BuildAgent()
-    print("LangChain agent is ready. Type a question (or 'quit' to exit).")
+    # print("LangChain agent is ready. Type a question (or 'quit' to exit).")
     while True:
         print("Agent Main Entering the while loop ...")
         # userInput = input("\nUser: ")
-        if not userInput or userInput.lower() == "quit":
-            print("Goodbye!")
-            break
+        # if not userInput or userInput.lower() == "quit":
+        #     print("Goodbye!")
+        #     break
 
         thread_id ="thread-" + str(threadId)
         # memory
@@ -219,28 +219,54 @@ def Main(userInput, threadId, modeLLM):
         # for token, metadata in agent.stream( {"messages": [{"role": "user", "content": userInput}]},config=configMemory):
         # result = ""
 
+        agentResponsePerUserInput = ""
+
         if "local" in modeLLM:
-            print("agent while loop, LOCAL in the modeLLM")
+            print(f"\n{'='*60}")
+            # print
+            for stream_mode, chunk in agent.stream(  
+                {"messages": [
+                    {"role": "system", "content": "You are an assistance like a JARVIS from Iron Man. Your name is RPI. Your master name is SSB"},
+                    {"role": "user", "content": userInput}
+                ]},
+                # stream_mode="updates, messages",
+                stream_mode=["updates", "messages"],
+                config=configMemory
+            ):
+                # print(f"stream_mode: {stream_mode}")
+                # print(f"content: {chunk}")
+                # print("\n")
+                # if stream_mode == "messages":
+                chunk_text = extract_stream_content(stream_mode, chunk)
+                if chunk_text:
+                    agentResponsePerUserInput += chunk_text
 
-            print("Direct Anwer:")
-            # Working piece
-            for token, metadata in agent.stream(
-                        {"messages": [{"role": "user", "content": userInput}]},
-                        stream_mode="messages",
-                        config=configMemory
-                    ):
-                # stream_mode="messages",
-                # Each token has content_blocks; we print the text
-                # This loops until the final answer is complete
-                if token.content_blocks:
-                    # result += (token.content_blocks[0]["text"])
-                    print(token.content_blocks[0]["text"], end="", flush=True)
+            print(f"\n{'='*60}")
+            print()
 
-            print()
-            print()
-            break
+            return agentResponsePerUserInput
+        #     print("agent while loop, LOCAL in the modeLLM")
+        #
+        #     print("Direct Anwer:")
+        #     # Working piece
+        #     for token, metadata in agent.stream(
+        #                 {"messages": [{"role": "user", "content": userInput}]},
+        #                 stream_mode="messages",
+        #                 config=configMemory
+        #             ):
+        #         # stream_mode="messages",
+        #         # Each token has content_blocks; we print the text
+        #         # This loops until the final answer is complete
+        #         if token.content_blocks:
+        #             # result += (token.content_blocks[0]["text"])
+        #             print(token.content_blocks[0]["text"], end="", flush=True)
+        #
+        #     print()
+        #     print()
+        #     break
 
         elif "global" in modeLLM:
+        # if True:
 
             print("agent while loop, GLOBAL in the modeLLM")
 
@@ -275,7 +301,6 @@ def Main(userInput, threadId, modeLLM):
 
             # generate a poem on Shoes
 
-            agentResponsePerUserInput = ""
             agentCallingCountPerUserInput = 0
 
             while True: 
