@@ -1,3 +1,17 @@
+## IMPORT ##
+# # # # # # # # # # # # # # # # # # # # # 
+#    ___ __  __ ____   ___  ____ ___:_    #
+#   |_ _|  \/  |  _ \ / _ \|  _ \_   _|   #
+#    | || |\/| | |_) | | | | |_) || |     #
+#    | || |  | |  __/| |_| |  _ < | |     #
+#   |___|_|  |_|_|    \___/|_| \_\|_|     #
+#                                         #
+#                                         #
+# # # # # # # # # # # # # # # # # # # # # 
+
+import sys
+import subprocess
+import readline
 import TextToSpeech.textToSpeechOnline02 as TTS
 #import SpeechToText.speechToTextOnline as STT
 #import LLM.llm as LLM
@@ -7,104 +21,45 @@ import Langchain.agent as Agent
 #from flask import Flask, request
 #import requests
 
-
-
 # import Log.custom_logger.logger as logger
 from Log.custom_logger import logger
 
 # input("Human interrupt")
+# logger.debug("Initialized assistant.py")
 logger.debug("Initialized assistant.py")
 
+import json
+import os
 
-# modeLLM = "globalGemini" # local: Model running locally 
-#             # global: Model running on cloud / chatgpt
-# modeConversation = "wakeUp"     # sleep: Go to Hibernate
-#                         # wakeUp: Goint to answer the user input
-# modeInput = "text" # text / speech
-# modeOutput = "text" # text / speech
-# modeContext = "no" # no: no context in conversation
-#             # yes: the conversation understand the context
-# modeCommunication = "langchain" # langchain: use langchain agent
-#                                 # fabric: use fabric    
-# modeMultilineInput = False      # False: user input is in single line
-#                                 # True: user input is in muliple lines
+## VARIABLES ##
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+#   __     ___    ____  ___    _    ____  _     _____ ____     #
+#   \ \   / / \  |  _ \|_ _|  / \  | __ )| |   | ____/ ___|    #
+#    \ \ / / _ \ | |_) || |  / _ \ |  _ \| |   |  _| \___ \    #
+#     \ V / ___ \|  _ < | | / ___ \| |_) | |___| |___ ___) |   #
+#      \_/_/   \_\_| \_\___/_/   \_\____/|_____|_____|____/    #
+#                                                              #
+#                                                              #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
 
 listWakeUpCalls = ["hey there", "hi there", "hey rpi"]
 listSleepCalls = ["sleep now", "go to sleep", "we are done", "got it"]
 
-roleDefining = f"""For the 'User Input' given below
-answer as you are a 'JARVIS' from the 'Iron Man' movie
-User Input = """
-
-# ~ roleDefining = f"""For the 'User Input' given below
-# ~ answer as you are a 'JARVIS' from the 'Iron Man' movie
-# ~ User Input = """
-
-
-# ~ who is the presedent of india
-
 threadId = 0    # Memory Id for agent graph
 UserInputCount = 0 # counting looping of Main()
 
-# def InitializingLogging():
-#     global logger
-#
-#     # Create a log file handler
-#     # file_handler_log = logging.FileHandler("Logs/log.log")
-#     file_handler_log = logging.FileHandler("/tmp/PersonalAssistant/log.log")
-#     file_handler_log.setLevel(logging.DEBUG)
-#     # file_handler_log.setLevel(logging.INFO)
-#
-#     # Create a chat file handler
-#     # file_handler_chat = logging.FileHandler("Logs/chat.log")
-#     # file_handler_chat.setLevel(logging.INFO)
-#     # file_handler_log.setLevel(logging.INFO)
-#
-#     # Create a console handler
-#     console_handler = logging.StreamHandler()
-#     # console_handler.setLevel(logging.DEBUG)
-#     console_handler.setLevel(logging.INFO)
-#
-#     # Create a formatter and set it for both handlers
-#     formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
-#     file_handler_log.setFormatter(formatter)
-#     file_handler_chat.setFormatter(formatter)
-#     console_handler.setFormatter(formatter)
-#
-#     # Add the handlers to the logger
-#     logger.addHandler(file_handler_log)
-#     logger.addHandler(file_handler_chat)
-#     logger.addHandler(console_handler)
-#
-#
-#     # ~ logging.basicConfig(
-#         # ~ level=logging.DEBUG,
-#         # ~ format="%(asctime)s %(levelname)s %(message)s",
-#         # ~ datefmt="%Y-%m-%d %H:%M:%S",
-#         # ~ filename="Logs/basic.log")
-#
-#     logger.debug("InitializingLogging()")
-#     # ~ logging.debug("This is a debug message.")
-#     # ~ logging.info("This is an info message.")
-#     # ~ logging.warning("This is a warning message.")
-#     # ~ logging.error("This is an error message.")
-#     # ~ logging.critical("This is a critical message.")
 
-#InitializingLogging()
-
-# mode_config_file = '/tmp/mode_config_file.json'
-mode_config_file = '/root/ProjectRpi/Rpi/PersonalAssistant/Log/mode_config_file.json'
+modeConfigFilePath = '/root/ProjectRpi/Rpi/PersonalAssistant/Log/modeConfigFilePath.json'
+userInputFile = '/root/ProjectRpi/Rpi/PersonalAssistant/Log/userInput.txt'
 
 # Define full mode configuration with current value and allowed options with descriptions
-mode_config_initialization = {
+modeConfigInitializationJson = {
     'mode-llm': {
         'current': 'local',
         'allowed': {
             'local': 'Model running locally',
-            'global': 'Model running on cloud / chatgpt',
-            'local01': 'test',
-            'local-01': 'test',
-            '0001local-01': 'test'
+            'global': 'Model running on cloud / chatgpt'
         }
     },
     'mode-conversation': {
@@ -118,7 +73,8 @@ mode_config_initialization = {
         'current': 'text',
         'allowed': {
             'text': 'Text input mode',
-            'speech': 'Speech input mode'
+            'speech': 'Speech input mode',
+            'file': 'Read for the userInput.txt file'
         }
     },
     'mode-output': {
@@ -151,39 +107,55 @@ mode_config_initialization = {
     }
 }
 
+COMMANDS = ['mode', 'input', 'text', 'speech', 'output', 'context', 'yes', 'no', 'llm', 'local', 'global', 'globalgemini', 'communication', 'langchain', 'fabric', 'multilineInput', 'True', 'False']
+
+## FUNCTIONS ##
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+#    _____ _   _ _   _  ____ _____ ___ ___  _   _ ____     #
+#   |  ___| | | | \ | |/ ___|_   _|_ _/ _ \| \ | / ___|    #
+#   | |_  | | | |  \| | |     | |  | | | | |  \| \___ \    #
+#   |  _| | |_| | |\  | |___  | |  | | |_| | |\  |___) |   #
+#   |_|    \___/|_| \_|\____| |_| |___\___/|_| \_|____/    #
+#                                                          #
+#                                                          #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 
 
-import json
-import os
 
-
+# Save modes to the config file
 def save_modes(mode_config):
-    with open(mode_config_file, 'w') as f:
+    with open(modeConfigFilePath, 'w') as f:
         json.dump(mode_config, f, indent=4)
 
+# Load modes from the config file
 def load_modes():
-    if os.path.exists(mode_config_file):
+    if os.path.exists(modeConfigFilePath):
         logger.debug("load modes: getting current mode config file")
-        with open(mode_config_file, 'r') as f:
+        with open(modeConfigFilePath, 'r') as f:
             return json.load(f)
-    else: # Initialize the MODE_CONFIG_FILE
+    else: # Initialize the modeConfigFilePath
         logger.debug("load modes: initiaizing the mode config file")
-        with open(mode_config_file, 'w') as f:
-            json.dump(mode_config_initialization, f, indent=4)
-        with open(mode_config_file, 'r') as f:
+        with open(modeConfigFilePath, 'w') as f:
+            json.dump(modeConfigInitializationJson, f, indent=4)
+        with open(modeConfigFilePath, 'r') as f:
             return json.load(f)
     # return mode_config
 
+# Get a specific mode value
+def GetModeValue(mode_name):
+    mode_config = load_modes()
+    return mode_config[mode_name]['current']
 
+# Check for the basic cmds like help, mode change
 def BasicCmds(userInput):
-    # global mode_config
     mode_config_load = load_modes()
 
     parts = userInput.lower().split()
 
 
     if parts[0] == "help":
-        logger.debug('Help:')
+        FormatMessageTypes("SystemMessage")
+        logger.info('Help:')
 
     # Check if user input matches the pattern: mode <mode-name> <mode-value>
     elif len(parts) == 3 and parts[0] == 'mode':
@@ -201,146 +173,22 @@ def BasicCmds(userInput):
     
     else:
         # logger.info("Invalid mode. Use 'help' to see available modes.")
+
         return False
 
     for key, details in mode_config_load.items():
-        logger.debug(f"{key}: {details['current']}")
+        key = key.replace("-", " ", 1) # replace - in front of the mode
+        # print(f"key: {key}")
+        logger.info(f"{key}: {details['current']}")
         for option, desc in details['allowed'].items():
-            logger.debug(f"  {option}: {desc}")
-        # logger.info()
+            logger.info(f"  {option}: {desc}")
 
+    FormatMessageTypes("")
+    print()
     return True
 
-    # if userInput.lower() == 'help':
-    #     logger.info('Help:')
-    #
-    # # Example to change modeInput
-    # elif userInput.lower() == 'mode input blah':
-    #     mode_config['modeInput']['current'] = 'blah'
-    #     logger.info("Input mode set to blah")
-    #
-    # save_modes()
-    #
-    # # logger.info the values
-    # for key, details in mode_config.items():
-    #     logger.info(f"{key}: {details['current']}")
-    #     for option, desc in details['allowed'].items():
-    #         logger.info(f"  {option}: {desc}")
-    #     logger.info()
 
-
-# checkpoint
-# save_modes()
-# userInput02 = input("testing: ") 
-# BasicCmds(userInput02)
-# # return 
-# # exit
-# sys.exit()
-# logger.info("still here")
-
-# def BasicCmds(userInput):
-#     global logger
-#     global modeConversation
-#     global modeInput
-#     global modeOutput
-#     global modeContext
-#     global modeLLM
-#     global modeCommunication
-#     global modeMultilineInput
-#
-#     logger.infoData = ""
-#
-#     if (userInput.lower() == "help"):
-#         print("Help:")
-#         # printData += "CurrentStatus:: modeInput:", modeInput, ":modeOutput:" , modeOutput, ":modeConversation:" , modeConversation, ":modeContext:", modeContext, ":##"
-#         # print(printData)
-#         # return printData
-#
-#     # Checking for input mode
-#     elif (userInput.lower() == "mode input text"):
-#         modeInput = "text"
-#
-#
-#     elif (userInput.lower() == "mode input speech"):
-#         modeInput = "speech"
-#
-#
-#     # Checking for output mode
-#     elif (userInput.lower() == "mode output text"):
-#         modeOutput = "text"
-#
-#
-#     elif (userInput.lower() == "mode output speech"):
-#         modeOutput = "speech"
-#
-#
-#     # Checking for wake up call
-#     elif any(call in userInput.lower() for call in listWakeUpCalls):
-#         modeConversation = "wakeUp"
-#
-#
-#     # Checking for sleep call
-#     elif any(call in userInput.lower() for call in listSleepCalls):
-#         modeConversation = "sleep"
-#
-#
-#     # checking for mode context 
-#     elif (userInput.lower() == "mode context yes"):
-#         modeContext = "yes"
-#
-#
-#     elif (userInput.lower() == "mode context no"):
-#         modeContext = "no"
-#
-#
-#     # checking for mode LLM
-#     elif (userInput.lower() == "mode llm local"):
-#         modeLLM = "local"
-#
-#
-#     elif (userInput.lower() == "mode llm global"):
-#         modeLLM = "global"
-#         modeContext = "no"
-#
-#     elif (userInput.lower() == "mode llm globalgemini"):
-#         modeLLM = "globalGemini"
-#         modeContext = "no"
-#
-#     elif (userInput.lower() == "mode communication langchain"):
-#         modeCommunication = "langchain"
-#
-#     elif (userInput.lower() == "mode communication fabric"):
-#         modeCommunication = "fabric"
-#
-#     elif (userInput.lower() == "mode multilineinput true"):
-#         modeMultilineInput = True
-#
-#     elif (userInput.lower() == "mode multilineinput false"):
-#         modeMultilineInput = False
-#
-#     else:
-#         return False
-#
-#     # print("## modeInput:", modeInput, ":modeOutput:" , modeOutput, ":modeConversation:" , modeConversation, ":modeContext:", modeContext, ":modeLLM:", modeLLM, ":##")
-#     printData = "mode [options]: current mode\n"
-#     printData += f"mode input [text/speech]: {modeInput}\n"
-#     printData += f"mode output [text/speech]: {modeOutput}\n"
-#     printData += f"mode conversation [awake/sleep]: {modeConversation}\n"
-#     printData += f"mode context [yes/no]: {modeContext}\n"
-#     printData += f"mode llm [local/global/globalGemini]: {modeLLM}\n"
-#     printData += f"mode communication [langchain/fabric]: {modeCommunication}\n"
-#     printData += f"mode multilineinput [true/false]: {modeMultilineInput}\n"
-#
-#     print(printData)
-#     return True
-#
-
-import readline
-
-# COMMANDS = ['hello', 'help', 'exit', 'weather', 'time']
-
-COMMANDS = ['mode', 'input', 'text', 'speech', 'output', 'context', 'yes', 'no', 'llm', 'local', 'global', 'globalgemini', 'communication', 'langchain', 'fabric', 'multilineInput', 'True', 'False']
-
+# Auto completion feature after pressing Tab
 def completer(text, state):
     options = [i for i in COMMANDS if i.startswith(text)]
     if state < len(options):
@@ -351,53 +199,62 @@ readline.set_completer(completer)
 readline.parse_and_bind("tab: complete")
 
 
+# Format the AI, Human, Tool message types
+def FormatMessageTypes(text):
+    total_width = 60
+    # total_width = 61
+    text_length = len(text)
+    padding = (total_width - text_length - 4) // 2
+    print("=" * padding + " " + text + " " + "=" * padding)
+
+# Read userInput.txt file
+def ReadUserInputFile():
+    if os.path.exists(userInputFile):
+        # logger.debug("load modes: getting current mode config file")
+        with open(userInputFile, 'r') as f:
+            return f.read()
+    else:
+        print("The userInput File do not exist")
+
+# Get user input
 def Input():    
     global logger
-    # global modeInput
     global modeMultilineInput
 
-    ## ## Input ## ##
-    # Getting user input
-    # userInput = "Hey there how its going on?" # sample 
-    if (GetModeValue("mode-input") == "text"):
-        # print(f"cli input GetModeValue(mode-multiline-input): {GetModeValue("mode-multiline-input")}")
+    FormatMessageTypes("HumanMessage")
+    modeInput = GetModeValue("mode-input")
+    if (modeInput == "text"):
         if ((GetModeValue("mode-multiline-input")) == "true"):
-            logger.info("Paste your multiline input followed by Ctrl-D (Linux/macOS) or Ctrl-Z then Enter (Windows):")
+            logger.info("Paste your multiline input followed by Ctrl-D (Linux/macOS) or Ctrl-Z (Windows) then Enter:")
             userInput = sys.stdin.read()
         else:
-            userInput = input("userInput: ")    # Text 
+            # userInput = input("userInput: ")    # Text 
+            userInput = input("")    # Text 
             # userInput = "whats my and my pets name?"
-            # userInput = "which are the top 5 smallest file / directory in my current working directory except current working directory?"
+    elif(modeInput == "file"):
+        # print("cli input file")
+        userInput = ReadUserInputFile()
+        print(userInput)
+        userChoice = input("Change mode input text (N/y): ")
+        if userChoice == "y":
+            userInput = "mode input text"
     elif(modeInput == "speech"):
         userInput = STT.Main()          # Speech To Text
     else:
         logger.info("Error: Invalid modeInput:", modeInput)
 
-    # ~ logger.info("userInput:",userInput)   
-    logger.info(f"userInput: {userInput}")
+    logger.debug(f"userInput: {userInput}")
+    FormatMessageTypes("")
     return userInput
 
-import subprocess
-
-def GetModeValue(mode_name):
-    mode_config = load_modes()
-    return mode_config[mode_name]['current']
-
-# logger.info(GetModeValue("mode-conversation"))
-# hahahah
-
+# Process user input
 def Processing(userInput):
     global logger
-    # global modeConversation
     
     basicCmdReturn = BasicCmds(userInput)
-    # logger.info(f"Processing basicCmdReturn: {basicCmdReturn} : type: {type(basicCmdReturn)} ")
 
     if(basicCmdReturn):
-        # logger.info("Processing: UserInput is in BasicCmds")
         return
-    # else: 
-    #     logger.info("Processing: UserInput is NOT in BasicCmds")
     
     # for debug only conversation mode only wake up
     # ~ modeConversation = "wakeUp"
@@ -443,9 +300,6 @@ def Processing(userInput):
             #agentResponce = "Na"   
             # agentResponce = Agent.Main(userInput, threadId, GetModeValue("mode-llm"), GetModeValue("mode-context"))
             agentResponce = Agent.Main(userInput, threadId, GetModeValue("mode-llm"))
-            #userInput = "who is the PM of India?"
-            #agentResponse = requests.get(f"http://agent_langchain:5011/?userInput={userInput}&threadId={threadId}")
-            #logger.info(":agentResp:", agentResponce)
             return agentResponce
 
         # elif(modeCommunication == "fabric"):
@@ -477,6 +331,7 @@ def Processing(userInput):
                 logger.info("Script failed with error:")
                 logger.info(e.stderr)
 
+# Output the assistant output
 def Output(assistantOutput):
     global logger
     # global modeOutput
@@ -489,17 +344,23 @@ def Output(assistantOutput):
         TTS.Main(assistantOutput)           # Text to speech
     else:
         logger.info("Error: Invalid modeOutput:", modeOutput)
-            
 
-## ## FLASK APP INITIALIZATION ## ##
+# welcoming the user with some help
+def WelcomeUser():
+    global logger
+    logger.debug("WelcomeUser()")
+    
+    logger.info("Welcome to Personal Assistant CLI")
+    logger.info("Type 'help' for list of commands")
+    
+    assistantOutput = Processing("help")
 
-#app = Flask(__name__)
-# Set debug mode to True
-#app.debug = True
-
-import sys
-
-#@app.route('/')
+    if (assistantOutput is not None):
+        #logger.info("final:", assistantOutput)
+        # return
+        Output(assistantOutput)
+        
+# Main function
 def Main():
     global logger
     global UserInputCount
@@ -527,27 +388,22 @@ def Main():
             # return
             Output(assistantOutput)
 
-def WelcomeUser():
-    global logger
-    logger.debug("WelcomeUser()")
-    
-    logger.info("Welcome to Personal Assistant CLI")
-    logger.debug("Type 'help' for list of commands")
-    
-    assistantOutput = Processing("help")
-
-    if (assistantOutput is not None):
-        #logger.info("final:", assistantOutput)
-        # return
-        Output(assistantOutput)
-
-#if __name__ == '__main__':
-#   app.run(host='0.0.0.0', port=5010)
-# Welcome User script
+# call Welcome User script
 WelcomeUser()
 
 while(True):
     Main()
+
+## OTHER ##
+# # # # # # # # # # # # # # # # # # # 
+#     ___ _____ _   _ _____ ____     #
+#    / _ \_   _| | | | ____|  _ \    #
+#   | | | || | | |_| |  _| | |_) |   #
+#   | |_| || | |  _  | |___|  _ <    #
+#    \___/ |_| |_| |_|_____|_| \_\   #
+#                                    #
+#                                    #
+# # # # # # # # # # # # # # # # # # # 
 
 # userInput = "The current Prime Minister of India is Narendra Modi. He has been in office since 2014 and is serving his third term as Prime Minister."
 # Output(userInput)
@@ -557,3 +413,7 @@ while(True):
 # ~ Do 1 step at a time. step 1 get 2 youtube video links of valorant game, step 2 draft a mail to my brother ved with these links
 # ~ Do 1 step at a time. step 1 find top 3 music artist, step 2 get 2 youtube video links of each artist from the 3 artist, step 3 draft a mail to my brother ved with these links
 
+# which are the top 5 smallest file / directory in my current working directory except current working directory?
+# which are the top 5 smallest file / directory in my current working directory in my PC?
+# Generate a peom on money
+# whats my and my pets name?

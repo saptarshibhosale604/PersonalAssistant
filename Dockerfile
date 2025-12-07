@@ -71,6 +71,7 @@ RUN pip install --upgrade langchain
 RUN echo 'alias refreshDir="rm /App/* -rf && cp /root/ProjectRpi/Rpi/PersonalAssistant/* /App/ -r"' >> /root/.profile
 RUN echo 'alias echoTxt="echo Hi there"' >> /root/.profile
 RUN echo 'alias pythonCli="python /App/UI/cli.py"' >> /root/.profile
+RUN echo 'alias cli="refreshDir && pythonCli"' >> /root/.profile
 # alias refreshApp="rm /App/* -rf && cp /root/ProjectRpi/Rpi/PersonalAssistant/* /App/ -r"
 # . /root/.profile --  to apply the .profile to current terminal
 

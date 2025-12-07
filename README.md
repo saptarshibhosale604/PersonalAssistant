@@ -16,6 +16,8 @@
 
 
 # CLI // WORKING
+cli
+refreshDir && pythonCli 
 
 docker build -t personal_assistant . 
 
@@ -23,7 +25,6 @@ sudo docker rm ollamaLocal -f && \
 sudo docker run -d --rm -v ollama:/root/.ollama -v /home/ssbrpi/ProjectRpi:/root/ProjectRpi/ -p 11434:11434 --name ollamaLocal personal_assistant && \
 sudo docker exec -it ollamaLocal sh -c '. /root/.profile; exec sh -l'
 
-refreshDir && pythonCli 
 
 docker rm ollamaLocal -f
 docker run -d --rm -v ollama:/root/.ollama -v /home/ssbrpi/ProjectRpi:/root/ProjectRpi/ -p 11434:11434 --name ollamaLocal personal_assistant
@@ -102,6 +103,9 @@ apt update && apt install -y openssh-client
 
 # TEMP
 
+
+/home/ssbrpi/ProjectRpi/Rpi/PersonalAssistant/PySpark
+
 docker build -t personal_assistant . 
 
 sudo docker rm ollamaLocal -f && \
@@ -168,19 +172,27 @@ mksession!
 - B, BUG, randomly tocket.content_blocks[0] dont have text value in it
     - print(token.content_blocks[0]["text"], end="", flush=True) ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^ KeyError: 'text'
     - Print the whole block with pprint 
-
-# TODO 
-- B, BUG, gemini llm integration is not working
-- C, Improve, The role set for the local llm is hullucinating toooo much, 
-    - Need some prompt engg
-    - {"role": "system", "content": "You are an assistance like a JARVIS from Iron Man. Your name is RPI. Your master name is SSB"},
 - C, Improve, The log printing like this, logging.print this prints timestamp in the console pring 
     2025-12-05 05:49:12,491 - DEBUG - Initialized assistant.py
     2025-12-05 05:49:12,492 - INFO - WelcomeUser()
     - I want only text visible in print, no timestamp values
 - C, Improve, log saving with timestamp + log
 - C, Improve, log saving with output
-- Extra
-    - The agent is using local llm and calls the tools
-        - But the model llama3.2:1b is not smart enough to use the tools
-    - The agent is working with google gemini llm with tools
+
+# TODO 
+- B, Improve, start next thread from the userInput
+- A, <leader>sts error
+    -    Error  11:51:29 msg_show.emsg E5108: Error executing lua: vim/_editor.lua:0: nvim_exec2(), line 1: Vim(wall):E141: No file name for buffer 670
+    stack traceback:
+	[C]: in function 'nvim_exec2'
+	vim/_editor.lua: in function 'cmd'
+	/home/ssbrpi/Dotfiles/Nvim/init.lua:660: in function </home/ssbrpi/Dotfiles/Nvim/init.lua:657>
+- B, Improve, gp, git push
+- B, Improve, gp, add git authentication
+    - crate a sh file with git authentication cmds
+- B, BUG, gemini llm integration is not working
+- C, Improve, The role set for the local llm is hullucinating toooo much, 
+    - Need some prompt engg
+    - {"role": "system", "content": "You are an assistance like a JARVIS from Iron Man. Your name is RPI. Your master name is SSB"},
+- B, Immprove, Completer + mode_config_initialization
+- B, Improve, UserContext
