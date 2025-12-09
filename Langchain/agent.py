@@ -38,6 +38,7 @@ from Log.custom_logger import logger
 import Langchain.Tools.toolsTest as toolsTest
 import Langchain.Tools.toolsGeneral as toolsGeneral
 import Langchain.Tools.toolsPii as toolsPii
+import Langchain.Tools.toolsDataAnalysis as toolsDataAnalysis
 # import Langchain.toolsTravel as toolsTravel
 
 ## VARIABLES ##
@@ -101,7 +102,11 @@ def BuildAgent():
         "toolShell": True,
         # "toolShell": False,
         "toolSetCronRemainder": True,
-        "toolWebSearch": True
+        "toolWebSearch": True,
+
+        #toolsDataAnalysis
+        "execute_pyspark_code": True,
+        "analyze_csv_data": True
     }
     middleware = [
         HumanInTheLoopMiddleware(
@@ -143,7 +148,8 @@ def UpdateAgent(modeLLM):
         elif(modeLLM == "global"):
             # llm = ChatOpenAI(model="gpt-3.5-turbo", max_tokens=500, temperature=0, max_retries=1)
             llm = ChatOpenAI(model="gpt-3.5-turbo", streaming=True, max_tokens=500, temperature=0, max_retries=1)
-            tools = toolsGeneral.ToolsList() + toolsTest.ToolsList() + toolsPii.ToolsList()
+            # tools = toolsGeneral.ToolsList() + toolsTest.ToolsList() + toolsPii.ToolsList()
+            tools = toolsGeneral.ToolsList() + toolsTest.ToolsList() + toolsPii.ToolsList() + toolsDataAnalysis.ToolsList()
         
         elif(modeLLM == "globalGemini"):
             # llm = GoogleGenerativeAI(model="models/text-bison-001", google_api_key='AIzaSyBwIrjcMjKA1V3XJ_hCLurJx33wh33NWdk')

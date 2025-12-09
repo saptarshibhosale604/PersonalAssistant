@@ -17,6 +17,7 @@ import TextToSpeech.textToSpeechOnline02 as TTS
 #import LLM.llm as LLM
 #import userInputToScriptInvocation as UITSI
 import Langchain.agent as Agent
+import Fabric.manager as Fabric
 
 #from flask import Flask, request
 #import requests
@@ -107,7 +108,7 @@ modeConfigInitializationJson = {
     }
 }
 
-COMMANDS = ['mode', 'input', 'text', 'speech', 'output', 'context', 'yes', 'no', 'llm', 'local', 'global', 'globalgemini', 'communication', 'langchain', 'fabric', 'multilineInput', 'True', 'False']
+COMMANDS = ['mode', 'input', 'text', 'speech', 'output', 'context', 'yes', 'no', 'llm', 'local', 'global', 'globalgemini', 'communication', 'langchain', 'fabric', 'multiline-input', 'True', 'False']
 
 ## FUNCTIONS ##
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
@@ -284,7 +285,9 @@ def Processing(userInput):
         # logger.debug(f"userInputWithDefinedRole: {userInput}")
         
         # if(modeCommunication == "langchain"):
-        if (GetModeValue("mode-communication") == "langchain"):
+        modeCommunication = GetModeValue("mode-communication")
+        # if (GetModeValue("mode-communication") == "langchain"):
+        if (modeCommunication == "langchain"):
             # Getting responce from LLM model
             # llmResponce = LLM.Main(userInput)
             
@@ -302,34 +305,37 @@ def Processing(userInput):
             agentResponce = Agent.Main(userInput, threadId, GetModeValue("mode-llm"))
             return agentResponce
 
-        # elif(modeCommunication == "fabric"):
-        if (GetModeValue("mode-communication") == "langchain"):
+        elif (modeCommunication == "fabric"):
+        # if (GetModeValue("mode-communication") == "langchain"):
             logger.info("modeCommunication: fabric")
+            
+            # agentResponce = Fabric.Main(userInput, threadId, GetModeValue("mode-llm"))
+            agentResponce = Fabric.Main(userInput, GetModeValue("mode-llm"))
             # /home/ssbrpi/Project/Fabric/fabricPattern.sh <pattern_name>
             # Fabric pattern calling
             # script_path = "/home/ssbrpi/Project/Fabric/fabricPattern.sh"
             # script_path = "/root/Project/Fabric/fabricPattern.sh"
-            script_path = "/root/Project/Fabric/fabric"
-
-            # pattern_name = userInput.strip().replace(" ", "_").lower()
-
-            # logger.info("Running:: ", script_path, " --version")
-            logger.info("Running:: ", script_path, userInput)
-
-            try:
-                result = subprocess.run(
-                    [script_path, userInput],
-                    # [script_path, "--version"],
-                    check=True,
-                    text=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE
-                )
-                logger.info("Script output:")
-                logger.info(result.stdout)
-            except subprocess.CalledProcessError as e:
-                logger.info("Script failed with error:")
-                logger.info(e.stderr)
+            # script_path = "/root/Project/Fabric/fabric"
+            #
+            # # pattern_name = userInput.strip().replace(" ", "_").lower()
+            #
+            # # logger.info("Running:: ", script_path, " --version")
+            # logger.info("Running:: ", script_path, userInput)
+            #
+            # try:
+            #     result = subprocess.run(
+            #         [script_path, userInput],
+            #         # [script_path, "--version"],
+            #         check=True,
+            #         text=True,
+            #         stdout=subprocess.PIPE,
+            #         stderr=subprocess.PIPE
+            #     )
+            #     logger.info("Script output:")
+            #     logger.info(result.stdout)
+            # except subprocess.CalledProcessError as e:
+            #     logger.info("Script failed with error:")
+            #     logger.info(e.stderr)
 
 # Output the assistant output
 def Output(assistantOutput):

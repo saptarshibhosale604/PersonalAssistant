@@ -1,0 +1,239 @@
+# README.md
+# The tool is able to create a output.csv file on given user input
+# - userInput: create a sample csv file of customers table with 3 fields and 3 rows
+ 
+
+
+from langchain_core.tools import tool
+
+import os
+import subprocess
+import tempfile
+from pathlib import Path
+from typing import Optional
+from pydantic import BaseModel, Field
+from langchain.tools import tool
+from langchain.agents import create_agent
+# from langchain_anthropic import ChatAnthropic
+
+from datetime import datetime
+import os
+
+# Configuration
+# DEFAULT_WORKING_DIR = "/tmp/pyspark_jobs"  # Change this to your desired path
+# /home/ssbrpi/ProjectRpi/Python/PySpark/Sandbox
+# /root/ProjectRpi/Python/PySpark/Sandbox
+defaultWorkingDirDocker = "/root/ProjectRpi/Python/PySpark/Sandbox"  # Change this to your desired path
+OUTPUT_FILE = "output.csv"
+
+# date_str = datetime.now().strftime("%Y-%m-%d")   # yyyy-mm-dd [web:6][web:12]
+# OUTPUT_FILE = f"{date_str}_output.csv"
+# Create a custom logger
+
+
+
+
+from langchain_openai import ChatOpenAI
+
+# BaseModel = ChatOpenAI(model="gpt-3.5-turbo", streaming=True, max_tokens=500, temperature=0, max_retries=1)
+
+class PySparKCodeInput(BaseModel):
+    """Input schema for PySpark code generation and execution."""
+    
+    user_request: str = Field(
+        description="Natural language description of what PySpark operation to perform"
+    )
+    workingDirectoryDocker: Optional[str] = Field(
+        default=defaultWorkingDirDocker,
+        description="Directory path where the code will be executed and output saved"
+    )
+
+
+@tool(args_schema=PySparKCodeInput)
+def execute_pyspark_code(user_request: str, workingDirectoryDocker: str = defaultWorkingDirDocker) -> str:
+    """
+    convert user input to pyspark code, execute it, and save results to csv.
+    
+    this tool:
+    1. converts natural language requests to pyspark code
+    2. changes to the specified working directory
+    3. executes the pyspark code in a shell
+    4. saves the output to output.csv
+    
+    args:
+        user_request: description of the pyspark operation needed
+        workingDirectoryDocker: path where code executes and results are saved
+    
+    Returns:
+        Status message with execution result or error details
+    """
+    
+    try:
+        # Step 1: Generate PySpark code from user request
+        print("Step 01")
+        pyspark_code = _generate_pyspark_code(user_request)
+        pyspark_code = f"# userInput: {user_request}\n\n{pyspark_code}"
+        print(f"pyspark_code: {pyspark_code}")
+        input("HumanInterupt")
+
+        # /tmp/pyspark_jobs/pyspark_script.py
+        # Step 2: Create working directory if it doesn't exist
+        print("Step 02")
+        Path(workingDirectoryDocker).mkdir(parents=True, exist_ok=True)
+        print(f"workingDirectoryDocker: {workingDirectoryDocker}")
+        input("HumanInterupt")
+
+        # Step 3: Create a temporary Python script file
+        print("Step 03")
+        scriptFileDockerPath = os.path.join(workingDirectoryDocker, "pyspark_script.py")
+        print(f"scriptFileDockerPath: {scriptFileDockerPath}")
+        input("HumanInterupt")
+
+        with open(scriptFileDockerPath, 'w') as f:
+            f.write(pyspark_code)
+        
+        # Step 4: Execute the script in the working directory
+        print("Step 04")
+
+        # convert the docker file path => Rpi file path
+        # workingDirRpi = workingDirectoryDocker
+        scriptFileRpiPath = scriptFileDockerPath.replace("/root", "/home/ssbrpi")
+        workingDirRpi = workingDirectoryDocker.replace("/root", "/home/ssbrpi")
+        print(f"scriptFileRpiPath: {scriptFileRpiPath}")
+        print(f"workingDirRpi: {workingDirRpi}")
+
+        result = _execute_script(scriptFileRpiPath, workingDirRpi)
+        # result = _execute_script()
+        print(f"result: {result}")
+        input("HumanInterupt")
+        
+        if result['success']:
+            output_path = os.path.join(workingDirectoryDocker, OUTPUT_FILE)
+            return f"✓ PySpark code executed successfully!\n\nOutput saved to: {output_path}\n\nExecution details:\n{result['message']}"
+        else:
+            return f"✗ Execution failed:\n{result['message']}"
+    
+    except Exception as e:
+        return f"✗ Error: {str(e)}"
+
+
+def _generate_pyspark_code(user_request: str) -> str:
+    """
+    Generate PySpark code from natural language input using Claude.
+    
+    Args:
+        user_request: Natural language description of the operation
+    
+    Returns:
+        Generated PySpark Python code as string
+    """
+    
+    prompt = f"""You are a PySpark code expert. Generate production-ready PySpark code based on this request:
+
+Request: {user_request}
+
+Requirements:
+1. The code must be standalone and executable
+2. Include necessary imports (pyspark.sql, etc.)
+3. Initialize SparkSession with: spark = SparkSession.builder.appName("DataProcessor").getOrCreate()
+4. Save the final result to a CSV file at "output.csv" using: df.write.mode("overwrite").option("header", "true").csv("output.csv")
+5. Include proper error handling and data validation
+6. Add comments explaining each step
+7. Use local mode: spark = SparkSession.builder.master("local[*]").appName("DataProcessor").getOrCreate()
+
+Generate ONLY the Python code, no explanations or markdown formatting. The code will be executed directly."""
+    
+    try:
+        # model = ChatAnthropic(model="claude-opus-4-1-20250805")
+        model = ChatOpenAI(model="gpt-3.5-turbo", streaming=True, max_tokens=500, temperature=0, max_retries=1)
+        response = model.invoke(prompt)
+        
+        # Extract code from response
+        code = response.content
+        if "```python" in code:
+            code = code.split("```python")[1].split("```")[0].strip()
+        elif "```" in code:
+            code = code.split("```")[1].split("```")[0].strip()
+        
+        return code
+    
+    except Exception as e:
+        # Fallback: return a basic template if generation fails
+        print(f"Warning: Code generation failed ({str(e)}). Using template.")
+        # return _get_fallback_template(user_request)
+        return "Code Gen failed"
+
+# def _execute_script(script_path: str, workingDirectoryRpi: str) -> dict:
+def _execute_script(scriptFileRpiPath: str, workingDirectoryRpi: str) -> dict:
+# def _execute_script(scriptFileRpiPath: str) -> dict:
+# def _execute_script() -> dict:
+    """
+    Execute a Python script in a shell with cd to working directory.
+    
+    Args:
+        scriptFileRpiPath: Path to the Python script to execute
+        workingDirectoryRpi: Directory to cd into before execution
+    
+    Returns:
+        Dictionary with keys: 'success' (bool) and 'message' (str)
+    """
+    
+    try:
+        # Create shell command that changes directory and runs the script
+        # shell_command = f"cd {workingDirectoryRpi} && python {scriptFileRpiPath}"
+        shell_command = f'ssh ssbrpi@172.17.0.1 "cd {workingDirectoryRpi}; python {scriptFileRpiPath}"'
+        # shell_command = f"ssh ssbrpi@172.17.0.1 java -version"
+        # ssh ssbrpi@172.17.0.1 java -version     
+        # workingDirectoryRpi = "/tmp/pyspark_jobs"
+        # Execute with timeout and capture output
+        result = subprocess.run(
+            shell_command,
+            shell=True,
+            capture_output=True,
+            text=True,
+            timeout=300  # 5 minute timeout
+            # cwd=workingDirectoryRpi
+        )
+        
+        # Check if execution was successful
+        if result.returncode == 0:
+            return {
+                'success': True,
+                'message': f"Script executed in: {workingDirectoryRpi}\n\nStdout:\n{result.stdout}\n\nStderr:\n{result.stderr}"
+                # 'message': f"Script executed in: \n\nStdout:\n{result.stdout}\n\nStderr:\n{result.stderr}"
+            }
+        else:
+            return {
+                'success': False,
+                'message': f"Script failed with return code {result.returncode}\n\nStdout:\n{result.stdout}\n\nStderr:\n{result.stderr}"
+            }
+    
+    except subprocess.TimeoutExpired:
+        return {
+            'success': False,
+            'message': "Script execution timeout (exceeded 300 seconds)"
+        }
+    except Exception as e:
+        return {
+            'success': False,
+            'message': f"Execution error: {str(e)}"
+        }
+
+
+
+
+# toolsAdvance =  [toolShell]             	# Need for human in loop
+toolsIntermediate = [execute_pyspark_code]
+# toolsBasic = [toolMyName, toolMyPetsName]                  # No need for human in loop
+# toolsBasic = [toolMyName]                  # No need for human in loop
+# toolsBasic = [toolMyName, toolMyPetsName]                  # No need for human in loop
+
+tools = toolsIntermediate
+
+# ~ humanBreak = input("humanBreak:")
+
+def ToolsList():
+    global tools
+    return tools
+
+# create a sample csv file of customers

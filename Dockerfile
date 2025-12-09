@@ -75,6 +75,7 @@ RUN echo 'alias cli="refreshDir && pythonCli"' >> /root/.profile
 # alias refreshApp="rm /App/* -rf && cp /root/ProjectRpi/Rpi/PersonalAssistant/* /App/ -r"
 # . /root/.profile --  to apply the .profile to current terminal
 
+RUN apk add openssh  #take this one up later
 # Fabric
 
 # Install dependencies for curl and give execution permission
