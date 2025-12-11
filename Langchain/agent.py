@@ -39,7 +39,7 @@ import Langchain.Tools.toolsTest as toolsTest
 import Langchain.Tools.toolsGeneral as toolsGeneral
 import Langchain.Tools.toolsPii as toolsPii
 import Langchain.Tools.toolsDataAnalysis as toolsDataAnalysis
-# import Langchain.toolsTravel as toolsTravel
+import Langchain.Tools.ToolsFinanceAssist.toolsFinanceAssist as toolsFinanceAssist
 
 ## VARIABLES ##
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
@@ -106,7 +106,12 @@ def BuildAgent():
 
         #toolsDataAnalysis
         "execute_pyspark_code": True,
-        "analyze_csv_data": True
+        "analyze_csv_data": True,
+
+        #toolsFinanceAssist
+        "ToolReadFinanceData": True,
+        "ToolWriteFinanceData": True
+
     }
     middleware = [
         HumanInTheLoopMiddleware(
@@ -148,9 +153,18 @@ def UpdateAgent(modeLLM):
         elif(modeLLM == "global"):
             # llm = ChatOpenAI(model="gpt-3.5-turbo", max_tokens=500, temperature=0, max_retries=1)
             llm = ChatOpenAI(model="gpt-3.5-turbo", streaming=True, max_tokens=500, temperature=0, max_retries=1)
-            # tools = toolsGeneral.ToolsList() + toolsTest.ToolsList() + toolsPii.ToolsList()
-            tools = toolsGeneral.ToolsList() + toolsTest.ToolsList() + toolsPii.ToolsList() + toolsDataAnalysis.ToolsList()
-        
+            # tools = toolsGeneral.ToolsList() 
+            tools = ( toolsGeneral.ToolsList()
+                + toolsTest.ToolsList() 
+                + toolsPii.ToolsList() 
+                # + # toolsDataAnalysis.ToolsList()
+                + toolsFinanceAssist.ToolsList() )
+            # tools = toolsGeneral.ToolsList() +
+            #     toolsTest.ToolsList() + 
+            #     toolsPii.ToolsList() + 
+            #     # toolsDataAnalysis.ToolsList() +
+            #     toolsFinanceAssist.ToolsList() 
+
         elif(modeLLM == "globalGemini"):
             # llm = GoogleGenerativeAI(model="models/text-bison-001", google_api_key='AIzaSyBwIrjcMjKA1V3XJ_hCLurJx33wh33NWdk')
             llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key='AIzaSyBPH-0Dd5e2Heu8lFs1rCci8ZdGxnr_ZvE')
