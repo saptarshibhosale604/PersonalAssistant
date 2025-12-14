@@ -1,0 +1,7 @@
+{
+    "toolsGeneral": true,
+    "toolsTest": true,
+    "toolsPii": true,
+    "toolsDataAnalysis": false,
+    "toolsFinanceAssist": false
+}

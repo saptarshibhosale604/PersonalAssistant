@@ -9,12 +9,6 @@
 #                                              #
 # # # # # # # # # # # # # # # # # # # # # # # # 
 
-# # Original Data
-# 9,FD,2200,2400,200              
-# # Added row by the Tool, The amt should be in INT
-# 10,FD,"6,400.00 Rs","7,200.00 Rs",800.00 Rs
-
-## drop row is not working
 
 """
 LangChain Tools for Personal Finance Tracking
@@ -35,11 +29,16 @@ Handles reading and writing finance data from/to CSV file
 
 import csv
 import os
+import time
 from typing import Dict, List, Any
 from pathlib import Path
 from pydantic import BaseModel, Field
 from langchain.tools import tool
 
+from queue import Queue
+import threading
+# import pandas as pd
+from datetime import datetime
 
 
 ## VARIABLES ##
@@ -69,6 +68,8 @@ CSV_COLUMNS = ["SrNo", "Name", "InvestedAmount", "CurrentAmount", "Profit"]
 #                                                          #
 #                                                          #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+
 # ============================================================================
 # PYDANTIC SCHEMAS FOR TOOL INPUTS
 # ============================================================================
@@ -148,17 +149,90 @@ def ReadAllFinanceData() -> list[dict]:
     return financeData
 
 
-def WriteFinanceData(financeData: list[dict]) -> None:
+import uuid
+
+def GenerateUUID():
+    """
+    Generates a random UUID.
+    
+    Returns:
+        str: A random UUID.
+    """
+
+    # Generate a random UUID using the uuid4 function from the uuid module
+    random_uuid = uuid.uuid4()
+    # input(f"random_uuid: {random_uuid}")
+
+    # Convert the UUID to a string in the format 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx xxxx'
+    # id_str = f"{random_uuid.x} {random_uuid.y} {random_uuid.z} {random_uuid.w} {random_uuid.e} {random_uuid.d}"
+
+    return random_uuid
+
+# GenerateUUID()
+
+def WriteFinanceData(financeData: list[dict], writeMode) -> None:
     """Write data to finance.csv"""
+    global financeQueue
     try:
         # backup the current finance.csv file as <timestamp>_finance.csv.bak
         # TODO
-        input("WriteFinanceData")
+        input("TODO B backup the current finance.csv file as <timestamp>_finance.csv.bak")
+        input(f"writeMode: {writeMode}")
+        if writeMode == "append":
 
-        with open(FINANCE_CSV_PATH, 'w', newline='', encoding='utf-8') as csvFile:
-            writer = csv.DictWriter(csvFile, fieldnames=CSV_COLUMNS)
-            writer.writeheader()
-            writer.writerows(financeData)
+            nextRowNumber = GetNextRowNumber()
+            # input(f"WriteFinanceData() nextRowNumber: {nextRowNumber}\n")
+            #
+            print(f"financeData before: {financeData}")
+            for i, data in enumerate(financeData):
+                data['SrNo'] = nextRowNumber  # Replace with your desired SrNo value
+            # newRow["SrNo"] = nextRowNumber
+            # financeData["SrNo"] = nextRowNumber
+            print(f"financeData after: {financeData}")
+
+            # input(f"WriteFinanceData() nextRowNumber: {nextRowNumber}\n")
+
+
+            #
+            with open(FINANCE_CSV_PATH, 'a', newline='', encoding='utf-8') as csvFile:
+                writer = csv.DictWriter(csvFile, fieldnames=CSV_COLUMNS)
+                # input(f"writer: {writer}")
+                # writer.writeheader()
+                # input(f"writer: {writer}")
+                writer.writerows(financeData)
+                # input(f"writer: {writer}")
+
+            input(f"Data has been written")
+
+        elif writeMode == "write":
+
+            nextRowNumber = GetNextRowNumber()
+            input(f"WriteFinanceData() nextRowNumber: {nextRowNumber}\n")
+
+            # Generate tentative ID (will be reconciled later)
+            # nextId = GetTentativeId()
+            # nextId = GetTentativeId()
+            # queueEntry = {'operation': operation, 'data': {...}, 'timestamp': datetime.now()}
+            # financeQueue.put(queueEntry)
+            # return f"Queued row {nextId}: {investmentName}"
+
+            #
+            # print(f"financeData before: {financeData}")
+            # for i, data in enumerate(financeData):
+            #     data['SrNo'] = nextRowNumber  # Replace with your desired SrNo value
+            # # newRow["SrNo"] = nextRowNumber
+            # # financeData["SrNo"] = nextRowNumber
+            # print(f"financeData after: {financeData}")
+            #
+            # input(f"WriteFinanceData() nextRowNumber: {nextRowNumber}\n")
+            #
+            # with open(FINANCE_CSV_PATH, 'w', newline='', encoding='utf-8') as csvFile:
+            #     writer = csv.DictWriter(csvFile, fieldnames=CSV_COLUMNS)
+            #     # input(f"writer: {writer}")
+            #     writer.writeheader()
+            #     # input(f"writer: {writer}")
+            #     writer.writerows(financeData)
+            #     # input(f"writer: {writer}")
     except Exception as e:
         raise Exception(f"Error writing to CSV: {str(e)}")
 
@@ -173,6 +247,46 @@ def GetNextRowNumber() -> int:
     print(f"GetNextRowNumber() maxRowNumber: {maxRowNumber}")
     return maxRowNumber + 1
 
+
+# ============================================================================
+# Queue
+# ============================================================================
+
+
+# Global shared queue (thread-safe)
+financeQueue = Queue()
+csvWriterThread = None
+
+def StartCsvWriter():
+    global csvWriterThread
+    print(f"StartCsvWriter started ")
+    csvWriterThread = threading.Thread(target=ProcessQueue, daemon=True)
+    csvWriterThread.start()
+
+# def ToolWriteFinanceData(operation, investmentName, ...):
+#     # Generate tentative ID (will be reconciled later)
+#     nextId = GetTentativeId()
+#     queueEntry = {'operation': operation, 'data': {...}, 'timestamp': datetime.now()}
+#     financeQueue.put(queueEntry)
+#     return f"Queued row {nextId}: {investmentName}"
+
+def ProcessQueue():
+    batch = []
+    # batch = None
+    print("ProcessQueue starts")
+    while True:
+        print("ProcessQueue while loop")
+        if not financeQueue.empty():
+            batch.append(financeQueue.get())
+            # Process batch every 5 seconds or 10 items
+            input(f"batch: {batch}")
+            if len(batch) >= 10 or ...:
+                # finance_data = batch['data']
+                finance_data = batch[0]['data']
+                print(f"In ProcessQueue: finance_data: {finance_data}")
+                WriteFinanceData(finance_data, "append")
+                batch = []
+        time.sleep(3)
 
 # ============================================================================
 # LANGCHAIN TOOLS
@@ -203,8 +317,8 @@ def ToolReadFinanceData(
         
         # Filter data based on user request
         filteredData = allFinanceData
-        print(f"filteredData: {filteredData}")
-        input("Human02")
+        # print(f"filteredData: {filteredData}")
+        # input("Human02")
         
         if filterBy == "investment_name" and filterValue:
             filteredData = [
@@ -295,7 +409,8 @@ def ToolWriteFinanceData(
     try:
         financeData = ReadAllFinanceData()
         print(f"financeData: {financeData}")
-        input("Human01")
+
+        input(f"operation: {operation}")
 
         if operation.lower() == "add":
             if not investmentName:
@@ -304,16 +419,33 @@ def ToolWriteFinanceData(
             nextRowNumber = GetNextRowNumber()
             profitValue = CalculateProfit(investedAmount, currentAmount)
             
+            input(f"ToolWriteFinanceData() nextRowNumber: {nextRowNumber}\n")
             newRow = {
                 "SrNo": str(nextRowNumber),
                 "Name": investmentName,
-                "InvestedAmount": FormatCurrency(investedAmount),
-                "CurrentAmount": FormatCurrency(currentAmount),
-                "Profit": FormatCurrency(profitValue)
+                "InvestedAmount": investedAmount,
+                "CurrentAmount": currentAmount,
+                "Profit": profitValue
             }
-            
+            financeData = [] # wipe the financeData
             financeData.append(newRow)
-            WriteFinanceData(financeData)
+            # WriteFinanceData(financeData, "append")
+            nextId = GenerateUUID()
+            input(f"nextId: {nextId}")
+
+            print(f"financeData: {financeData}")
+            queueEntry = {'operation': 'append', 'data': financeData, 'timestamp': datetime.now()}
+            finance_data02 = queueEntry.get('data')
+            print(f"finance_data02: {finance_data02}")
+            input(f"queueEntry: {queueEntry}")
+
+            financeQueue.put(queueEntry)
+            input(f"financeQueue: {financeQueue}")
+
+            # return f"Queued row {nextId}: {queueEntry}"
+            print(f"Queued row {nextId}: {queueEntry}")
+
+            # WriteFinanceData(newRow, "append")
             
             return (
                 f"✅ Successfully added new investment:\n"
@@ -343,9 +475,12 @@ def ToolWriteFinanceData(
             financeData[foundIndex] = {
                 "SrNo": str(rowNumber),
                 "Name": investmentName or oldRow.get("Name"),
-                "InvestedAmount": FormatCurrency(investedAmount) if investedAmount > 0 else oldRow.get("InvestedAmount"),
-                "CurrentAmount": FormatCurrency(currentAmount) if currentAmount > 0 else oldRow.get("CurrentAmount"),
-                "Profit": FormatCurrency(profitValue)
+                "InvestedAmount": investedAmount if investedAmount > 0 else oldRow.get("InvestedAmount"),
+                "CurrentAmount": currentAmount if currentAmount > 0 else oldRow.get("CurrentAmount"),
+                "Profit": profitValue
+                # "InvestedAmount": FormatCurrency(investedAmount) if investedAmount > 0 else oldRow.get("InvestedAmount"),
+                # "CurrentAmount": FormatCurrency(currentAmount) if currentAmount > 0 else oldRow.get("CurrentAmount"),
+                # "Profit": FormatCurrency(profitValue)
             }
             
             WriteFinanceData(financeData)
@@ -359,10 +494,15 @@ def ToolWriteFinanceData(
             )
         
         elif operation.lower() == "delete":
+            input("delete")
+
             if not rowNumber:
                 return "Error: rowNumber is required for 'delete' operation"
             
+            input(f"rowNumber: {rowNumber}")
+
             foundIndex = None
+            
             for idx, row in enumerate(financeData):
                 if row.get("SrNo") == str(rowNumber):
                     foundIndex = idx
@@ -371,9 +511,12 @@ def ToolWriteFinanceData(
             if foundIndex is None:
                 return f"Error: No investment found with Sr No {rowNumber}"
             
+            input(f"foundIndex: {foundIndex}")
+
             deletedRow = financeData.pop(foundIndex)
             WriteFinanceData(financeData)
             
+
             return (
                 f"✅ Successfully deleted investment:\n"
                 f"   Sr No: {rowNumber}\n"
@@ -386,7 +529,7 @@ def ToolWriteFinanceData(
     except Exception as e:
         return f"Error writing finance data: {str(e)}"
 
-
+StartCsvWriter()
 
 # ============================================================================
 # RETURN

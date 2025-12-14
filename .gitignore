@@ -10,3 +10,7 @@ __pycache__
 Log/*
 
 !Log/custom_logger.py
+
+Temp/*
+
+!Temp/llmTemplateScriptGeneration.txt

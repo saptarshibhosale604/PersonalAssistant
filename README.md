@@ -192,9 +192,8 @@ mksession!
     - I want only text visible in print, no timestamp values
 - C, Improve, log saving with timestamp + log
 - C, Improve, log saving with output
-
-# TODO 
-- B, Improve, start next thread from the userInput
+- B, Improve, Turn on / off tools in mode cli
+    - Tools manager
 - A, <leader>sts error
     -    Error  11:51:29 msg_show.emsg E5108: Error executing lua: vim/_editor.lua:0: nvim_exec2(), line 1: Vim(wall):E141: No file name for buffer 670
     stack traceback:
@@ -204,6 +203,11 @@ mksession!
 - B, Improve, gp, git push
 - B, Improve, gp, add git authentication
     - crate a sh file with git authentication cmds
+- B, Imorve, mode reset : reset modes to default
+
+# TODO 
+- B, Improve, start next thread from the userInput mode
+- B, Bug, Sandbox not working as expected
 - B, BUG, gemini llm integration is not working
 - C, Improve, The role set for the local llm is hullucinating toooo much, 
     - Need some prompt engg
@@ -215,6 +219,5 @@ mksession!
 - B, Improve, Multiple cli instances are reading the same mode file
     - So not able to have 1 instance with mode llm local AND other with mode llm global
 - B, Improve, Need context on the file/ dir name when calling the toolShell
-- B, Imorve, mode reset : reset modes to default
-- B, Improve, Turn on / off tools in mode cli
-    - Tools manager
+- TODO B backup the current finance.csv file as <timestamp>_finance.csv.bak
+- B, Bug, Sandbox not working as expected

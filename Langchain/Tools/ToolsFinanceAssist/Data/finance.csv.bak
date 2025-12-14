@@ -1,0 +1,13 @@
+SrNo,Name,InvestedAmount,CurrentAmount,Profit
+1,Physical,1000,1200,200
+2,Stocks,5000,6000,1000
+3,MF,3000,3500,500
+5,Saving,1500,1600,100
+6,Physical,1200,1400,200
+7,Stocks,6000,7000,1000
+9,FD,2200,2400,200
+10,FD,"6,400.00 Rs","7,200.00 Rs",800.00 Rs
+11,FD,"10,600.00 Rs","11,800.00 Rs","1,200.00 Rs"
+12,Savings,100.00 Rs,200.00 Rs,100.00 Rs
+13,Physical Investment,1000.0,2000.0,1000.0
+14,Total MF Investment,6500.0,7500.0,1000.0

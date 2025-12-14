@@ -35,11 +35,13 @@ from pprint import pprint
 from Log.custom_logger import logger
 
 ## Tools
-import Langchain.Tools.toolsTest as toolsTest
-import Langchain.Tools.toolsGeneral as toolsGeneral
-import Langchain.Tools.toolsPii as toolsPii
-import Langchain.Tools.toolsDataAnalysis as toolsDataAnalysis
-import Langchain.Tools.ToolsFinanceAssist.toolsFinanceAssist as toolsFinanceAssist
+# import Langchain.Tools.toolsTest as toolsTest
+# import Langchain.Tools.toolsGeneral as toolsGeneral
+# import Langchain.Tools.toolsPii as toolsPii
+# import Langchain.Tools.toolsDataAnalysis as toolsDataAnalysis
+# import Langchain.Tools.ToolsFinanceAssist.toolsFinanceAssist as toolsFinanceAssist
+
+import Langchain.Tools.toolsManager as toolsManager
 
 ## VARIABLES ##
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
@@ -154,11 +156,14 @@ def UpdateAgent(modeLLM):
             # llm = ChatOpenAI(model="gpt-3.5-turbo", max_tokens=500, temperature=0, max_retries=1)
             llm = ChatOpenAI(model="gpt-3.5-turbo", streaming=True, max_tokens=500, temperature=0, max_retries=1)
             # tools = toolsGeneral.ToolsList() 
-            tools = ( toolsGeneral.ToolsList()
-                + toolsTest.ToolsList() 
-                + toolsPii.ToolsList() 
-                # + # toolsDataAnalysis.ToolsList()
-                + toolsFinanceAssist.ToolsList() )
+            tools = toolsManager.Main("get") # "get" : Get tools list
+            # print(f"toolsManager tools: {tools}")
+            # input("Human01")
+            # tools = ( toolsGeneral.ToolsList()
+            #     + toolsTest.ToolsList() 
+            #     + toolsPii.ToolsList() 
+            #     # + # toolsDataAnalysis.ToolsList()
+            #     + toolsFinanceAssist.ToolsList() )
             # tools = toolsGeneral.ToolsList() +
             #     toolsTest.ToolsList() + 
             #     toolsPii.ToolsList() + 
@@ -268,13 +273,15 @@ def ExtractStreamContent(stream_mode, content):
 def Main(userInput, threadId, modeLLM):
     UpdateAgent(modeLLM)
 
+
     while True:
         # print("Agent Main Entering the while loop ...")
 
         # memory
         thread_id ="thread-" + str(threadId)
         configMemory = {"configurable": {"thread_id": thread_id}}
-        print(f"configMemory: {configMemory}")
+        # print(f"configMemory: {configMemory}")
+        print(f"thread_id: {thread_id}")
 
         agentResponsePerUserInput = ""
     

@@ -1,0 +1,11 @@
+{
+  "mode-llm": "local",
+  "mode-conversation": "wakeUp",
+  "mode-input": "multiline",
+  "mode-output": "text",
+  "mode-context": "yes",
+  "mode-framework": "langchain",
+  "mode-sandbox": "false",
+  "mode-tools": "update",
+  "mode-reset": "now"
+}

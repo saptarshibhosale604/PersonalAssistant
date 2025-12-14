@@ -1,0 +1,145 @@
+############## V02 ##############
+You are an expert Python developer. Write a complete, production-ready Python script for the following task.
+
+## Task
+Create a python script which acts like a Terminal User Interface(TUI)
+
+
+## Detail
+
+Variable:
+
+modeConfigInitializationJson = {
+    'mode-llm': {
+        'current': 'local',
+        'allowed': {
+            'local': 'Model running locally',
+            'global': 'Model running on cloud / chatgpt'
+        }
+    },
+    'mode-conversation': {
+        'current': 'wakeUp',
+        'allowed': {
+            'sleep': 'Go to Hibernate',
+            'wakeUp': 'Goint to answer the user input'
+        }
+    },
+    'mode-input': {
+        'current': 'text',
+        'allowed': {
+            'text': 'Text input mode',
+            'speech': 'Speech input mode',
+            'file': 'Read for the userInput.txt file',
+            'multiline': 'Text input mode multiline'
+        }
+    },
+    'mode-output': {
+        'current': 'text',
+        'allowed': {
+            'text': 'Text output mode',
+            'speech': 'Speech output mode'
+        }
+    },
+    'mode-context': {
+        'current': 'yes',
+        'allowed': {
+            'no': 'No context in conversation',
+            'yes': 'The conversation understands the context'
+        }
+    },
+    'mode-framework': {
+        'current': 'langchain',
+        'allowed': {
+            'langchain': 'Use langchain agent',
+            'fabric': 'Use fabric'
+        }
+    },
+    'mode-tools': {
+        'current': 'update',
+        'allowed': {
+            'get': 'get list of tools',
+            'update': 'update the list of tools'
+        }
+    },
+    'mode-reset': {
+        'current': 'now',
+        'allowed': {
+            'now': 'mode reset now',
+        }
+    }
+}
+
+
+Input: User calls the function
+Processing: 
+- The script will iterate through each Option
+- If the user enters then keep the Current SubOption choice as it is.
+- Else if the user press 'c' for change
+	- The script will iterate though subOptions
+
+Output: Returns Options and Suboption
+
+Note that here Options are:
+mode-llm, mode-conversation, mode-input, 
+
+And SubOptions for the Option mode-input are: 
+'text': 'Text input mode',
+'speech': 'Speech input mode',
+'file': 'Read for the userInput.txt file',
+'multiline': 'Text input mode multiline'
+
+## Requirements
+- Name of the script tui.py
+- Handle errors gracefully with try-except blocks
+- Include docstrings and comments
+- Use PascalCase for Functions
+- Use camelCase for Variables
+- Only create 1 file, do not create readme file or any other file
+
+## Examples
+Input: {example_input}
+Expected Output:
+############## V01 ##############
+You are an expert Python developer. Write a complete, production-ready Python script for the following task.
+
+## Task
+Create a python script which return a list of tools
+
+
+## Detail
+
+This is a python snipped of the tools list:
+
+import Langchain.Tools.toolsTest as toolsTest
+import Langchain.Tools.toolsGeneral as toolsGeneral
+import Langchain.Tools.toolsPii as toolsPii
+import Langchain.Tools.toolsDataAnalysis as toolsDataAnalysis
+import Langchain.Tools.ToolsFinanceAssist.toolsFinanceAssist as toolsFinanceAssist
+
+return ( toolsGeneral.ToolsList()
+	+ toolsTest.ToolsList() 
+	+ toolsPii.ToolsList() 
+	# toolsDataAnalysis.ToolsList()
+	+ toolsFinanceAssist.ToolsList() )
+
+Create a script which have 2 functions:
+Function 01:
+Input: Give the tools
+Output: Give the list of tools which can be return depend upon the tools return status data
+
+Input: Change the tools return value
+Processing: List out each tool to user and ask if the tool need to be return or not and save that tools return status data
+Output: Return okay
+
+## Requirements
+- Name of the script toolsManager.py
+- Output: return list of tools
+- Handle errors gracefully with try-except blocks
+- Include docstrings and comments
+- Use PascalCase for Functions
+- Use camelCase for Variables
+- Only create 1 file, do not create readme file
+
+## Examples
+Input: {example_input}
+Expected Output:
