@@ -1,0 +1,144 @@
+import json
+import os
+import sys
+
+"""
+userContext.py
+
+This script serves as a foundational component for a personal assistant system.
+Its primary responsibility is to gather user-specific information through 
+interactive inputs and persist this data into a structured 'user context file'.
+This file acts as a persistent persona/character profile that can be loaded 
+by an AI assistant to personalize future interactions.
+"""
+
+def GatherUserInput():
+    """
+    PascalCase: GatherUserInput
+    Prompts the user for biographical and preferential information.
+    Returns a dictionary structured as a user persona.
+    """
+    try:
+        print("--- Persona Initialization ---")
+        
+        # Gathering basic identity information
+        userName = input("What is your name? ")
+        userRole = input("What is your professional role or primary occupation? ")
+        
+        # Gathering preferences and behavioral context
+        userInterests = input("What topics are you most interested in (comma-separated)? ")
+        preferredTone = input("How should your assistant speak to you (e.g., Professional, Casual, Academic)? ")
+        technicalExpertise = input("On a scale of 1-10, what is your technical expertise? ")
+        
+        # Processing the comma-separated interests into a list
+        interestList = [item.strip() for item in userInterests.split(",") if item.strip()]
+        
+        # camelCase: contextPayload
+        contextPayload = {
+            "identity": {
+                "name": userName,
+                "role": userRole
+            },
+            "preferences": {
+                "interests": interestList,
+                "tone": preferredTone,
+                "expertiseLevel": technicalExpertise
+            },
+            "system": {
+                "version": "1.0",
+                "initialized": True
+            }
+        }
+        
+        return contextPayload
+        
+    except EOFError:
+        print("\nInput stream closed unexpectedly.")
+        return None
+    except Exception as e:
+        print(f"An unexpected error occurred during input gathering: {e}")
+        return None
+
+def CreateContextFile(contextData):
+    """
+    PascalCase: CreateContextFile
+    Writes the gathered persona data into a JSON file.
+    Only creates the file if valid data is provided.
+    """
+    # camelCase: fileName
+    fileName = "userContext.json"
+    
+    if not contextData:
+        print("Invalid context data. File creation aborted.")
+        return False
+        
+    try:
+        # Using 'with' for safe file handling and ensuring utf-8 encoding
+        with open(fileName, 'w', encoding='utf-8') as outFile:
+            json.dump(contextData, outFile, indent=4)
+        
+        print(f"\nSUCCESS: User context has been persisted to {fileName}")
+        return True
+        
+    except IOError as e:
+        print(f"File system error occurred while writing {fileName}: {e}")
+        return False
+    except Exception as e:
+        print(f"An unexpected error occurred during file creation: {e}")
+        return False
+
+def DisplayUpdateSummary(contextData):
+    """
+    PascalCase: DisplayUpdateSummary
+    Provides feedback to the user regarding what was saved in their persona file.
+    """
+    try:
+        print("\n--- Summary of Information Added to Context File ---")
+        
+        # Accessing nested dictionary values
+        # camelCase: savedIdentity
+        savedIdentity = contextData.get("identity", {})
+        savedPreferences = contextData.get("preferences", {})
+        
+        print(f"Name: {savedIdentity.get('name')}")
+        print(f"Role: {savedIdentity.get('role')}")
+        print(f"Interests: {', '.join(savedPreferences.get('interests',))}")
+        print(f"Assistant Tone: {savedPreferences.get('tone')}")
+        print(f"Expertise Level: {savedPreferences.get('expertiseLevel')}")
+        print("----------------------------------------------------\n")
+        
+    except Exception as e:
+        print(f"Error while displaying summary: {e}")
+
+def Main():
+    """
+    PascalCase: Main
+    The entry point of the script that orchestrates the workflow.
+    """
+    try:
+        # Step 1: Gather information from the user
+        # camelCase: finalContext
+        finalContext = GatherUserInput()
+        
+        if finalContext:
+            # Step 2: Persist information to the context file
+            # camelCase: isSuccess
+            isSuccess = CreateContextFile(finalContext)
+            
+            if isSuccess:
+                # Step 3: Provide feedback on the operation
+                DisplayUpdateSummary(finalContext)
+        else:
+            print("Failed to gather sufficient data for persona creation.")
+            sys.exit(1)
+            
+    except KeyboardInterrupt:
+        print("\nOperation cancelled by user. Exiting...")
+        sys.exit(0)
+    except Exception as e:
+        print(f"Critical script failure: {e}")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    Main()
+

@@ -1,0 +1,505 @@
+{
+  "user_profile": {
+    "interactions_count": 83,
+    "last_interaction": "2026-06-21T18:04:04.137090",
+    "common_topics": [
+      "personal",
+      "technical"
+    ],
+    "preferences": {}
+  },
+  "interaction_history": [
+    {
+      "timestamp": "2026-06-21T18:04:04.137090",
+      "input_length": 140,
+      "intent_categories": [
+        "personal"
+      ],
+      "keywords": [
+        "read",
+        "file",
+        "temp03",
+        "then",
+        "find"
+      ]
+    },
+    {
+      "timestamp": "2026-06-21T18:01:49.591067",
+      "input_length": 24,
+      "intent_categories": [],
+      "keywords": [
+        "read",
+        "file",
+        "temp03"
+      ]
+    },
+    {
+      "timestamp": "2026-06-21T17:35:16.945454",
+      "input_length": 52,
+      "intent_categories": [
+        "personal"
+      ],
+      "keywords": [
+        "give",
+        "news",
+        "related",
+        "india",
+        "today"
+      ]
+    },
+    {
+      "timestamp": "2026-06-21T17:18:19.725175",
+      "input_length": 83,
+      "intent_categories": [],
+      "keywords": [
+        "read",
+        "file",
+        "temp01",
+        "then",
+        "analyze"
+      ]
+    },
+    {
+      "timestamp": "2026-06-21T16:50:25.739401",
+      "input_length": 66,
+      "intent_categories": [
+        "personal"
+      ],
+      "keywords": [
+        "create",
+        "file",
+        "named",
+        "song",
+        "write"
+      ]
+    },
+    {
+      "timestamp": "2026-06-21T15:55:33.356219",
+      "input_length": 139,
+      "intent_categories": [
+        "technical",
+        "personal"
+      ],
+      "keywords": [
+        "create",
+        "python",
+        "file",
+        "which",
+        "will"
+      ]
+    },
+    {
+      "timestamp": "2026-06-15T05:57:30.945664",
+      "input_length": 62,
+      "intent_categories": [
+        "personal"
+      ],
+      "keywords": [
+        "give",
+        "some",
+        "some",
+        "other",
+        "info"
+      ]
+    },
+    {
+      "timestamp": "2026-06-15T05:45:00.916103",
+      "input_length": 30,
+      "intent_categories": [
+        "personal"
+      ],
+      "keywords": [
+        "give",
+        "list",
+        "files"
+      ]
+    },
+    {
+      "timestamp": "2026-06-14T21:11:01.133812",
+      "input_length": 21,
+      "intent_categories": [
+        "personal"
+      ],
+      "keywords": [
+        "give",
+        "list",
+        "tools"
+      ]
+    },
+    {
+      "timestamp": "2026-06-14T21:06:51.915453",
+      "input_length": 63,
+      "intent_categories": [
+        "personal"
+      ],
+      "keywords": [
+        "could",
+        "give",
+        "list",
+        "tools",
+        "have"
+      ]
+    },
+    {
+      "timestamp": "2026-06-14T20:59:26.658397",
+      "input_length": 14,
+      "intent_categories": [
+        "personal"
+      ],
+      "keywords": [
+        "whats",
+        "name"
+      ]
+    },
+    {
+      "timestamp": "2026-06-14T20:57:53.563230",
+      "input_length": 3,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-06-14T20:51:28.686830",
+      "input_length": 15,
+      "intent_categories": [
+        "personal"
+      ],
+      "keywords": [
+        "what",
+        "name"
+      ]
+    },
+    {
+      "timestamp": "2026-06-14T20:51:03.013983",
+      "input_length": 3,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-06-14T20:49:48.384294",
+      "input_length": 4,
+      "intent_categories": [],
+      "keywords": [
+        "hiii"
+      ]
+    },
+    {
+      "timestamp": "2026-06-14T20:49:17.930697",
+      "input_length": 14,
+      "intent_categories": [
+        "personal"
+      ],
+      "keywords": [
+        "whats",
+        "name"
+      ]
+    },
+    {
+      "timestamp": "2026-06-14T20:44:53.310991",
+      "input_length": 45,
+      "intent_categories": [
+        "personal"
+      ],
+      "keywords": [
+        "give",
+        "list",
+        "files",
+        "root"
+      ]
+    },
+    {
+      "timestamp": "2026-06-14T20:44:14.619828",
+      "input_length": 3,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-06-14T20:42:49.311228",
+      "input_length": 4,
+      "intent_categories": [],
+      "keywords": [
+        "hiii"
+      ]
+    },
+    {
+      "timestamp": "2026-06-14T20:41:52.748412",
+      "input_length": 4,
+      "intent_categories": [],
+      "keywords": [
+        "hiii"
+      ]
+    },
+    {
+      "timestamp": "2026-06-14T13:43:59.321175",
+      "input_length": 4,
+      "intent_categories": [],
+      "keywords": [
+        "hiii"
+      ]
+    },
+    {
+      "timestamp": "2026-06-14T13:43:19.340315",
+      "input_length": 5,
+      "intent_categories": [],
+      "keywords": [
+        "hiiii"
+      ]
+    },
+    {
+      "timestamp": "2026-06-14T13:35:56.867527",
+      "input_length": 5,
+      "intent_categories": [],
+      "keywords": [
+        "hiiii"
+      ]
+    },
+    {
+      "timestamp": "2026-06-14T13:35:32.639823",
+      "input_length": 3,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-06-14T13:32:15.550485",
+      "input_length": 3,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-06-14T13:29:52.214921",
+      "input_length": 3,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-06-14T13:24:10.068924",
+      "input_length": 30,
+      "intent_categories": [
+        "personal"
+      ],
+      "keywords": [
+        "give",
+        "list",
+        "files"
+      ]
+    },
+    {
+      "timestamp": "2026-06-14T13:20:09.234018",
+      "input_length": 4,
+      "intent_categories": [],
+      "keywords": [
+        "hiii"
+      ]
+    },
+    {
+      "timestamp": "2026-06-14T13:18:45.341216",
+      "input_length": 4,
+      "intent_categories": [],
+      "keywords": [
+        "hiii"
+      ]
+    },
+    {
+      "timestamp": "2026-06-14T13:17:18.494043",
+      "input_length": 5,
+      "intent_categories": [],
+      "keywords": [
+        "hiiii"
+      ]
+    },
+    {
+      "timestamp": "2026-06-14T13:14:41.907413",
+      "input_length": 4,
+      "intent_categories": [],
+      "keywords": [
+        "hiii"
+      ]
+    },
+    {
+      "timestamp": "2026-06-14T13:12:27.261476",
+      "input_length": 5,
+      "intent_categories": [],
+      "keywords": [
+        "hihii"
+      ]
+    },
+    {
+      "timestamp": "2026-06-14T13:09:42.551892",
+      "input_length": 4,
+      "intent_categories": [],
+      "keywords": [
+        "hiii"
+      ]
+    },
+    {
+      "timestamp": "2026-06-14T12:59:06.920403",
+      "input_length": 3,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-06-14T12:49:49.842658",
+      "input_length": 26,
+      "intent_categories": [
+        "personal"
+      ],
+      "keywords": [
+        "give",
+        "list",
+        "file",
+        "names"
+      ]
+    },
+    {
+      "timestamp": "2026-06-14T12:48:50.807273",
+      "input_length": 17,
+      "intent_categories": [],
+      "keywords": [
+        "update",
+        "mode",
+        "tools"
+      ]
+    },
+    {
+      "timestamp": "2026-06-14T12:47:56.895994",
+      "input_length": 15,
+      "intent_categories": [
+        "personal"
+      ],
+      "keywords": [
+        "what",
+        "name"
+      ]
+    },
+    {
+      "timestamp": "2026-06-14T12:46:27.495803",
+      "input_length": 4,
+      "intent_categories": [],
+      "keywords": [
+        "hiii"
+      ]
+    },
+    {
+      "timestamp": "2026-02-13T18:55:05.608022",
+      "input_length": 26,
+      "intent_categories": [],
+      "keywords": [
+        "cant",
+        "tqlk",
+        "about"
+      ]
+    },
+    {
+      "timestamp": "2026-02-13T18:54:00.796573",
+      "input_length": 75,
+      "intent_categories": [
+        "personal"
+      ],
+      "keywords": [
+        "what",
+        "thing",
+        "about",
+        "with",
+        "girl"
+      ]
+    },
+    {
+      "timestamp": "2026-02-13T18:51:11.915099",
+      "input_length": 40,
+      "intent_categories": [
+        "personal"
+      ],
+      "keywords": [
+        "tell",
+        "specification"
+      ]
+    },
+    {
+      "timestamp": "2026-02-13T18:49:39.887942",
+      "input_length": 6,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-02-13T18:47:09.341982",
+      "input_length": 12,
+      "intent_categories": [],
+      "keywords": [
+        "hole"
+      ]
+    },
+    {
+      "timestamp": "2026-02-13T18:45:48.215712",
+      "input_length": 9,
+      "intent_categories": [],
+      "keywords": [
+        "there"
+      ]
+    },
+    {
+      "timestamp": "2026-02-05T16:41:36.985829",
+      "input_length": 34,
+      "intent_categories": [],
+      "keywords": [
+        "hiiiii",
+        "there",
+        "create",
+        "peom",
+        "love"
+      ]
+    },
+    {
+      "timestamp": "2026-02-05T16:41:01.604947",
+      "input_length": 37,
+      "intent_categories": [],
+      "keywords": [
+        "hiiiii",
+        "there",
+        "create",
+        "peom",
+        "wedding"
+      ]
+    },
+    {
+      "timestamp": "2026-02-05T16:34:37.839066",
+      "input_length": 21,
+      "intent_categories": [],
+      "keywords": [
+        "create",
+        "peom",
+        "love"
+      ]
+    },
+    {
+      "timestamp": "2026-02-05T16:33:50.841637",
+      "input_length": 10,
+      "intent_categories": [],
+      "keywords": [
+        "hiii",
+        "there"
+      ]
+    },
+    {
+      "timestamp": "2026-02-05T16:25:50.778548",
+      "input_length": 11,
+      "intent_categories": [],
+      "keywords": [
+        "hiiii",
+        "there"
+      ]
+    },
+    {
+      "timestamp": "2025-12-30T15:12:44.514115",
+      "input_length": 48,
+      "intent_categories": [
+        "personal"
+      ],
+      "keywords": [
+        "whats",
+        "meaning",
+        "uncensored",
+        "terms"
+      ]
+    }
+  ],
+  "session_info": {}
+}

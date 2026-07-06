@@ -575,49 +575,12 @@ def ToolWriteFinanceData(
 
 # StartCsvWriter()
 
-
-# ============================================================================
-# SQL TOOLS
-# ============================================================================
-import os
-from langchain_community.utilities import SQLDatabase
-from langchain_community.agent_toolkits import SQLDatabaseToolkit
-from langchain_openai import ChatOpenAI
-
-def RemoveSpaces(input_string):
-    # Remove spaces from the input string
-    return input_string.replace(" ", "")
-
-openai_key = "sk-proj-zP6XLa1m5gtlBcXJCaHZGmAvXEvUrP 5ATJSPBfLRdEuF-vSroLAG4V0zBdpwPz9PTXe9rM0-CgT3BlbkFJ83 AZyS7Zds5OT4G7S7MJslTok1O8P7ftX6Zz_IvdtMsy_CnjJeBoOv-o-G5t13-1Yw20ei_BwA" # myTestKey08, saptarshibhosale604@gmail.com
-tavily_key = "tvly-kX76LCz C36oih0u9COcf6oa 53A47MX0g"
-
-os.environ["OPENAI_API_KEY"] = RemoveSpaces(openai_key)
-os.environ["TAVILY_API_KEY"] = RemoveSpaces(tavily_key)
-
-
-# db = SQLDatabase.from_uri("sqlite:///Data/Chinook.db")
-db = SQLDatabase.from_uri("sqlite:///Langchain/Tools/ToolsFinanceAssist/Data/Assets.db")
-
-model = ChatOpenAI(model="gpt-3.5-turbo", streaming=True, max_tokens=500, temperature=0, max_retries=1)
-
-toolkit = SQLDatabaseToolkit(db=db, llm=model)
-
-ToolSQL = toolkit.get_tools()
-
-
-# tools = toolkit.get_tools()
-#
-# for tool in tools:
-#     print(f"{tool.name}: {tool.description}\n")
-
-
 # ============================================================================
 # RETURN
 # ============================================================================
 
 toolsAdvance =  []             	# Need for human in loop
-# toolsIntermediate = [ToolSQL]
-toolsIntermediate = ToolSQL
+toolsIntermediate = [ToolReadFinanceData, ToolWriteFinanceData]
 toolsBasic = []                  # No need for human in loop
 
 tools = toolsAdvance + toolsIntermediate + toolsBasic
@@ -636,22 +599,5 @@ def ToolsList():
 #                                #
 #                                #
 # # # # # # # # # # # # # # # # # 
-
-# print(f"Dialect: {db.dialect}")
-# print(f"Available tables: {db.get_usable_table_names()}")
-# print(f'Sample output: {db.run("SELECT * FROM Artist LIMIT 5;")}')
-
-# from langchain_openai import ChatOpenAI
-#
-# model = ChatOpenAI(model="gpt-3.5-turbo", streaming=True, max_tokens=500, temperature=0, max_retries=1)
-
-
-# toolkit = SQLDatabaseToolkit(db=db, llm=model)
-#
-# tools = toolkit.get_tools()
-#
-# for tool in tools:
-#     print(f"{tool.name}: {tool.description}\n")
-
 
 # get add the FD rows, create a single FD row with all the investment and current value combined, drop the old FD rows

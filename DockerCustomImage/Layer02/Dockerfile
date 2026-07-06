@@ -1,7 +1,9 @@
 # First build Layer01
 
 # FROM ollama-python39 
-FROM alpine-ollama-python39
+# FROM alpine-ollama-python39
+FROM alpine-ollama-python3
+# docker build -t ollama-python3 .
 
 # Set the working directory in the container
 # WORKDIR /App
@@ -74,6 +76,8 @@ RUN pip install -r requirements.txt
 # CMD ["serve"]
 
 # Save this image
+# docker build -t alpine-ollama-python3-02 .
+
 # docker build -t ollama-python39-02 .
 # docker build -t alpine-ollama-python39-02 .
 # alpine-ollama-python39

@@ -1,5 +1,5 @@
 {
-  "mode-llm": "local",
+  "mode-llm": "local-4b",
   "mode-conversation": "wakeUp",
   "mode-input": "text",
   "mode-output": "text",

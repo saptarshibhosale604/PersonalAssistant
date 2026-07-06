@@ -8,14 +8,14 @@ langchain_google_community
 langchain-experimental
 langchain_ollama
 langchain_google_genai 
-nest_asyncio
+# nest_asyncio
 
 #TextToSpeech
-gtts
-paramiko
+# gtts
+# paramiko
 
 #UI/WebApp
-flask
+# flask
 
 #UI
 ollama

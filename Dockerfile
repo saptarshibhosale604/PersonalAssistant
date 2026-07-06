@@ -1,7 +1,8 @@
 # First build Layer02
 
 # FROM ollama-python39-02
-FROM alpine-ollama-python39-02
+# FROM alpine-ollama-python39-02
+FROM alpine-ollama-python3-02
 
 # Set the working directory in the container
 WORKDIR /App
@@ -37,7 +38,7 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 #Upgrade the langchain
-RUN pip install --upgrade langchain
+# RUN pip install --upgrade langchain
 
 # NO use of cache
 #RUN pip install --no-cache-dir -r requirements.txt 
@@ -75,7 +76,7 @@ RUN echo 'alias cli="refreshDir && pythonCli"' >> /root/.profile
 # alias refreshApp="rm /App/* -rf && cp /root/ProjectRpi/Rpi/PersonalAssistant/* /App/ -r"
 # . /root/.profile --  to apply the .profile to current terminal
 
-RUN apk add openssh  #take this one up later
+# RUN apk add openssh  #take this one up later
 # Fabric
 
 # Install dependencies for curl and give execution permission

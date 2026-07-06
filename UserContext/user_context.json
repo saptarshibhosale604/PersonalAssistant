@@ -1,0 +1,46 @@
+{
+  "user_profile": {
+    "interactions_count": 3,
+    "last_interaction": "2025-12-18T20:12:24.206789",
+    "common_topics": [
+      "fitness",
+      "personal"
+    ],
+    "preferences": {}
+  },
+  "interaction_history": [
+    {
+      "timestamp": "2025-12-18T20:12:24.206789",
+      "input_length": 36,
+      "intent_categories": [
+        "fitness",
+        "personal"
+      ],
+      "keywords": [
+        "like",
+        "workout",
+        "home"
+      ]
+    },
+    {
+      "timestamp": "2025-12-18T20:07:33.715666",
+      "input_length": 12,
+      "intent_categories": [],
+      "keywords": [
+        "like",
+        "pizza"
+      ]
+    },
+    {
+      "timestamp": "2025-12-18T20:06:58.309033",
+      "input_length": 32,
+      "intent_categories": [],
+      "keywords": [
+        "what",
+        "think",
+        "about"
+      ]
+    }
+  ],
+  "session_info": {}
+}

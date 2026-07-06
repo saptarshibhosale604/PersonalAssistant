@@ -54,16 +54,18 @@ import Langchain.Tools.toolsManager as toolsManager
 #                                                              #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 
-llm = ChatOllama(model="llama3.2:1b", max_tokens=500, temperature=0, max_retries=1) # Default
-# llm = ChatOpenAI(model="gpt-3.5-turbo", streaming=True, max_tokens=500, temperature=0, max_retries=1) # only for test
-
+requestedToolsNumberPerUserInput = 0
 
 modeCurrentLLM = "na" # save mode current llm, for detecting changes in the mode
 
 tools = [] # Default no tools
 
-requestedToolsNumberPerUserInput = 0
 requestedToolsNumberPerAgentInterrupt = 0 
+
+# llm = ChatOllama(model="llama3.2:1b", max_tokens=500, temperature=0, max_retries=1) # Default
+# llm = ChatOllama(model="qwen3.5:4b", streaming=True, max_tokens=500, temperature=0, max_retries=1)
+llm = ChatOllama(model="qwen3.5:4b", streaming=True, max_tokens=500, temperature=0, max_retries=1, reasoning=False)
+# llm = ChatOpenAI(model="gpt-3.5-turbo", streaming=True, max_tokens=500, temperature=0, max_retries=1) # only for test
 
 ## FUNCTIONS ##
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
@@ -89,6 +91,8 @@ def BuildAgent():
     """Create the LangChain agent with OpenAI and our tools, plus HITL middleware."""
     # print("Agent BuildAgent new instance")
     model = llm
+    
+    print(f"Agent BuildAgent llm: {llm}")
     # Require human approval for each tool call
     interrupt_policy = {
         # toolsTest
@@ -110,10 +114,15 @@ def BuildAgent():
         "execute_pyspark_code": True,
         "analyze_csv_data": True,
 
-        #toolsFinanceAssist
+        #toolsFinanceAssist V01
         "ToolReadFinanceData": True,
-        "ToolWriteFinanceData": True
+        "ToolWriteFinanceData": True,
 
+        #toolsFinanceAssist V02
+        "sql_db_query": True,
+        "sql_db_schema": True,
+        "sql_db_list_tables": True,
+        "sql_db_query_checker": True
     }
     middleware = [
         HumanInTheLoopMiddleware(
@@ -123,7 +132,8 @@ def BuildAgent():
     ]
 
     # Create the agent with model, tools, and middleware
-    agent = create_agent(model=model, tools=tools, middleware=middleware, checkpointer=InMemorySaver())
+    # agent = create_agent(model=model, tools=tools, middleware=middleware, checkpointer=InMemorySaver())
+    agent = create_agent(model=model, tools=tools, middleware=middleware, checkpointer=InMemorySaver(), debug=True)
     return agent
 
 agent = BuildAgent()
@@ -136,21 +146,35 @@ def UpdateAgent(modeLLM):
     global tools
     global logger
 
-    # print(f"Agent UpdateAgent: modeLLM: {modeLLM}, modeCurrentLLM: {modeCurrentLLM}")
+    print(f"Agent UpdateAgent: modeLLM: {modeLLM}, modeCurrentLLM: {modeCurrentLLM}")
     if(modeLLM != modeCurrentLLM):
         # print("Changing the LLM")
         logger.debug(f"Agent UpdateAgent Changing LLM: modeLLM: {modeLLM}, modeCurrentLLM: {modeCurrentLLM}")
         modeCurrentLLM = modeLLM
         # print(f"agent UpdateAgent02: modeLLM: {modeLLM} :: modeCurrentLLM: {modeCurrentLLM}")
 
-        if(modeLLM == "local"):
+        if(modeLLM == "local-1b"):
             llm = ChatOllama(model="llama3.2:1b", streaming=True, max_tokens=500, temperature=0, max_retries=1)
             # llm = ChatOllama(model="llama3.2:1b", temperature=0, verbose=True)
             tools = []
 
         elif(modeLLM == "local-3b"):
             llm = ChatOllama(model="llama3.2", streaming=True, max_tokens=500, temperature=0, max_retries=1)
-            # llm = ChatOllama(model="llama3.2:1b", temperature=0, verbose=True)
+
+        elif(modeLLM == "local-4b"):
+            print("here 05")
+            # llm = ChatOllama(model="qwen3.5:4b", streaming=True, max_tokens=500, temperature=0, max_retries=1, think=False)
+            # llm = ChatOllama(model="qwen3.5:4b", streaming=True, max_tokens=500, temperature=0, max_retries=1)
+            llm = ChatOllama(model="qwen3.5:4b", streaming=True, max_tokens=500, temperature=0, max_retries=1, reasoning=False)
+            tools = toolsManager.Main("get") # "get" : Get tools list
+            
+            # print(f"tools: {tools}")
+
+        elif(modeLLM == "local-7b-raw"):
+            llm = ChatOllama(model="llama2-uncensored:7b", streaming=True, max_tokens=500, temperature=0, max_retries=1)
+
+        elif(modeLLM == "local-7b-vision"):
+            llm = ChatOllama(model="llava:7b", streaming=True, max_tokens=500, temperature=0, max_retries=1)
 
         elif(modeLLM == "global"):
             # llm = ChatOpenAI(model="gpt-3.5-turbo", max_tokens=500, temperature=0, max_retries=1)
@@ -180,6 +204,8 @@ def UpdateAgent(modeLLM):
 # Extracting interrupts, tools to be called, llm streamed chunks from the streamed data
 def ExtractStreamContent(stream_mode, content):
     global requestedToolsNumberPerUserInput
+    
+    # print(f"stream_mode: {stream_mode}, content: {content}")
     
     # content is related to the chunks generated from llm
     if stream_mode == "messages":
@@ -267,6 +293,9 @@ def ExtractStreamContent(stream_mode, content):
                 print(f"{'-'*60}")
                 input("Is this approved or rejected?(Default: approved): ")
                 
+    else:
+        print(f"else stream_mode: {stream_mode}")
+
     return ""
 
 # Main function
@@ -276,6 +305,8 @@ def Main(userInput, threadId, modeLLM):
 
     while True:
         # print("Agent Main Entering the while loop ...")
+        print(f"agent.py Main : userInput {userInput}, threadId: {threadId}, modeLLM: {modeLLM}")
+        # print(f"agent.py Main : modeLLM {modeLLM}")
 
         # memory
         thread_id ="thread-" + str(threadId)
@@ -286,7 +317,9 @@ def Main(userInput, threadId, modeLLM):
         agentResponsePerUserInput = ""
     
         # Agent.stream handling for local llm
-        if "local" in modeLLM:
+        # if "local" in modeLLM:
+        if modeLLM == "local":
+            # local-buddy
             FormatMessageTypes("AIMessage")
             # print(f"\n{'='*60}")
             # print
@@ -312,6 +345,113 @@ def Main(userInput, threadId, modeLLM):
 
             return agentResponsePerUserInput
 
+        elif modeLLM == "local-buddy":
+            # local-buddy
+            FormatMessageTypes("AIMessage")
+            # print(f"\n{'='*60}")
+            # print
+            for stream_mode, chunk in agent.stream(  
+                {"messages": [
+                    {"role": "system", "content": "You are a chearful, intelligent, naughty, best friend, sarcastic character. Your name is RPI. The user name is SSB, who is your best buddy"},
+                    {"role": "user", "content": userInput}
+                ]},
+                stream_mode=["updates", "messages"],
+                config=configMemory
+            ):
+                # print(f"stream_mode: {stream_mode}")
+                # print(f"content: {chunk}")
+                # print("\n")
+                chunk_text = ExtractStreamContent(stream_mode, chunk)
+                if chunk_text:
+                    agentResponsePerUserInput += chunk_text
+
+            # print(f"\n{'='*60}")
+            print()
+            FormatMessageTypes("")
+            print()
+
+            return agentResponsePerUserInput
+
+        # Agent.stream handling for local-4b llm
+        # elif "local-4b" in modeLLM:
+        elif modeLLM == "local-4b":
+            global requestedToolsNumberPerUserInput
+
+            # print("agent while loop, GLOBAL in the modeLLM")
+            agentCallingCountPerUserInput = 0
+            input("HumanInterrupt01")
+
+            while True: 
+                agentCallingCountPerUserInput+= 1
+                # print(f"while loop starting, agentCallingCountPerUserInput: {agentCallingCountPerUserInput}")
+
+                # First time calling the Agent, and no interrupted tools request pending
+                if agentCallingCountPerUserInput == 1 and requestedToolsNumberPerUserInput < 1:
+                    FormatMessageTypes("AIMessage")
+                    # print(f"\n{'='*60}")
+                    
+                    print(f"agent.py main agent: {agent}")
+                    # print
+                    for stream_mode, chunk in agent.stream(  
+                        {"messages": [{"role": "user", "content": userInput}]},
+                        # stream_mode="updates, messages",
+                        stream_mode=["updates", "messages"],
+                        config=configMemory
+                    ):
+                        # print(f"01 stream_mode: {stream_mode}")
+                        # print(f"content: {chunk}")
+                        # print("\n")
+                        chunk_text = ExtractStreamContent(stream_mode, chunk)
+                        if chunk_text:
+                            agentResponsePerUserInput += chunk_text
+
+                    # print(f"\n{'='*60}")
+                    print()
+                    FormatMessageTypes("")
+                    print()
+
+
+                # Not the first time calling the Agent, OR Interrupted tools requests are pending
+                elif requestedToolsNumberPerUserInput >= 1:
+                    global requestedToolsNumberPerAgentInterrupt
+                    requestedToolsNumberPerUserInput -= 1
+
+                    # print(f"\n{'='*60}")
+                    FormatMessageTypes("AIMessage")
+
+                    # combine the decisions of all the interrupt requests togather
+                    decisions = []
+                    for i in range(requestedToolsNumberPerAgentInterrupt):
+                        decisions.append({"type": "approve"})
+
+                    requestedToolsNumberPerAgentInterrupt = 0
+
+                    # print(f"decisions: {decisions}")
+                    for stream_mode, chunk in agent.stream(  
+                        Command(resume={"decisions": decisions}),
+                        # Command(resume={"decisions": [{"type": "approve"}]}),
+                        stream_mode=["updates", "messages"],
+                        config=configMemory
+                    ):
+                        # print(f"02 stream_mode: {stream_mode}")
+                        # print(f"content: {chunk}")
+                        # print("\n")
+                        chunk_text = ExtractStreamContent(stream_mode, chunk)
+                        if chunk_text:
+                            agentResponsePerUserInput += chunk_text
+
+                    # print(f"\n{'='*60}")
+                    print()
+                    FormatMessageTypes("")
+                    print()
+
+                else:
+
+                    return agentResponsePerUserInput
+
+                logger.debug(f"agentCallingCountPerUserInput: {agentCallingCountPerUserInput}")
+                # print(f"agentCallingCountPerUserInput: {agentCallingCountPerUserInput}, agentResponsePerUserInput: {agentResponsePerUserInput}")
+                agentResponsePerUserInput = ""
         # Agent.stream handling for global llm
         elif "global" in modeLLM:
 
@@ -319,7 +459,6 @@ def Main(userInput, threadId, modeLLM):
             agentCallingCountPerUserInput = 0
 
             while True: 
-                global requestedToolsNumberPerUserInput
                 agentCallingCountPerUserInput+= 1
                 # print(f"while loop starting, agentCallingCountPerUserInput: {agentCallingCountPerUserInput}")
 
@@ -349,7 +488,6 @@ def Main(userInput, threadId, modeLLM):
 
                 # Not the first time calling the Agent, OR Interrupted tools requests are pending
                 elif requestedToolsNumberPerUserInput >= 1:
-                    global requestedToolsNumberPerAgentInterrupt
                     requestedToolsNumberPerUserInput -= 1
 
                     # print(f"\n{'='*60}")

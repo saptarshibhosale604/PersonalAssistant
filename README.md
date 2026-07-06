@@ -58,6 +58,8 @@ docker exec -it ollamaLocal python /App/UI/WebApp/app.py
  
 
 # TESTING
+refreshDir && cd . && python test04.py
+
 docker build -t personal_assistant .
 docker rm ollamaLocal -f
 docker run -d --rm -v ollama:/root/.ollama -v /home/ssbrpi/Project:/root/Project/ -p 11434:11434 --name ollamaLocal personal_assistant
@@ -116,6 +118,11 @@ pip install -U duckduckgo-search // done
 apt update && apt install -y openssh-client
 
 # TEMP
+vcgencmd pmic_read_adc EXT5V_V
+vcgencmd measure_clock arm
+vcgencmd measure_temp
+vcgencmd measure_volts core
+watch
 
 
 /home/ssbrpi/ProjectRpi/Rpi/PersonalAssistant/PySpark
@@ -206,6 +213,8 @@ mksession!
 - B, Imorve, mode reset : reset modes to default
 
 # TODO 
+- A, Bug, with qwen3.5:4b as llm model agent is not giving any output
+    - create a smallest code to check this llm model, agent
 - B, Improve, start next thread from the userInput mode
 - B, Bug, Sandbox not working as expected
 - B, BUG, gemini llm integration is not working

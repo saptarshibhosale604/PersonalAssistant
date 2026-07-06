@@ -1,3 +1,28 @@
+############## V03 ##############
+You are an expert Python developer. Write a complete, production-ready Python script for the following task.
+
+## Task
+Create a python script which acts like a personal assistant
+
+
+## Detail
+- Create an agent, which will call the tools based on user query
+- use langchain as framework
+- use local ollama llm "qwen3.5:4b"
+- create and use 2 very simple custom made tools
+- use 2 default tools 
+- make the ui very simple and basic
+
+## Requirements
+- Name of the script main.py
+- Make the logic and script very simple
+- Handle errors gracefully with try-except blocks
+- Include docstrings and comments
+- Use PascalCase for Functions
+- Use camelCase for Variables
+- Only create 1 file, do not create readme file or any other file
+- Also add a README.md text at the top of the file in multiline commments
+
 ############## V02 ##############
 You are an expert Python developer. Write a complete, production-ready Python script for the following task.
 
@@ -7,94 +32,16 @@ Create a python script which acts like a Terminal User Interface(TUI)
 
 ## Detail
 
-Variable:
-
-modeConfigInitializationJson = {
-    'mode-llm': {
-        'current': 'local',
-        'allowed': {
-            'local': 'Model running locally',
-            'global': 'Model running on cloud / chatgpt'
-        }
-    },
-    'mode-conversation': {
-        'current': 'wakeUp',
-        'allowed': {
-            'sleep': 'Go to Hibernate',
-            'wakeUp': 'Goint to answer the user input'
-        }
-    },
-    'mode-input': {
-        'current': 'text',
-        'allowed': {
-            'text': 'Text input mode',
-            'speech': 'Speech input mode',
-            'file': 'Read for the userInput.txt file',
-            'multiline': 'Text input mode multiline'
-        }
-    },
-    'mode-output': {
-        'current': 'text',
-        'allowed': {
-            'text': 'Text output mode',
-            'speech': 'Speech output mode'
-        }
-    },
-    'mode-context': {
-        'current': 'yes',
-        'allowed': {
-            'no': 'No context in conversation',
-            'yes': 'The conversation understands the context'
-        }
-    },
-    'mode-framework': {
-        'current': 'langchain',
-        'allowed': {
-            'langchain': 'Use langchain agent',
-            'fabric': 'Use fabric'
-        }
-    },
-    'mode-tools': {
-        'current': 'update',
-        'allowed': {
-            'get': 'get list of tools',
-            'update': 'update the list of tools'
-        }
-    },
-    'mode-reset': {
-        'current': 'now',
-        'allowed': {
-            'now': 'mode reset now',
-        }
-    }
-}
-
-
-Input: User calls the function
-Processing: 
-- The script will iterate through each Option
-- If the user enters then keep the Current SubOption choice as it is.
-- Else if the user press 'c' for change
-	- The script will iterate though subOptions
-
-Output: Returns Options and Suboption
-
-Note that here Options are:
-mode-llm, mode-conversation, mode-input, 
-
-And SubOptions for the Option mode-input are: 
-'text': 'Text input mode',
-'speech': 'Speech input mode',
-'file': 'Read for the userInput.txt file',
-'multiline': 'Text input mode multiline'
 
 ## Requirements
 - Name of the script tui.py
+- Make the logic and script very simple
 - Handle errors gracefully with try-except blocks
 - Include docstrings and comments
 - Use PascalCase for Functions
 - Use camelCase for Variables
 - Only create 1 file, do not create readme file or any other file
+- Also add a README.md text at the top of the file in multiline commments
 
 ## Examples
 Input: {example_input}

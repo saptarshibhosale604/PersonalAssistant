@@ -12,12 +12,13 @@
 import sys
 import subprocess
 import readline
-import TextToSpeech.textToSpeechOnline02 as TTS
+# import TextToSpeech.textToSpeechOnline02 as TTS
 from typing import Any, Iterable
 #import SpeechToText.speechToTextOnline as STT
 #import LLM.llm as LLM
 #import userInputToScriptInvocation as UITSI
 import Langchain.agent as Agent
+import UserContext.userContext as UserContext
 import Fabric.manager as Fabric
 
 #from flask import Flask, request
@@ -280,7 +281,8 @@ def BasicCmds(userInput):
         if len(parts) > 2 and parts[2]:
             mode_value = parts[2]
 
-        print(f"BasicCmds mode_value: {mode_value}")
+        print(f"BasicCmds {mode_name} ==> {mode_value}")
+
         # if mode_name in mode_config_load:
         #     if mode_value in mode_config_load[mode_name]['allowed']:
         #         mode_config_load[mode_name]['current'] = mode_value
@@ -292,6 +294,10 @@ def BasicCmds(userInput):
         # else:
         #     logger.info(f"Invalid mode '{mode_name}'. Use 'help' to see available modes.")
         if mode_name == "mode-input":
+            UpdateModeValue(mode_name, mode_value)
+            return True
+
+        elif mode_name == "mode-llm":
             UpdateModeValue(mode_name, mode_value)
             return True
     
@@ -312,6 +318,7 @@ def BasicCmds(userInput):
         elif mode_name == "mode-sandbox":
             modeSandbox = mode_value
             modesTUI.LoadConfigurationFromFile(modeSandbox = modeSandbox)
+            GetAllModeValues()
             return True
 
         elif mode_name == "mode-tools":
@@ -468,6 +475,7 @@ def Processing(userInput):
             
             #agentResponce = "Na"   
             # agentResponce = Agent.Main(userInput, threadId, GetModeValue("mode-llm"), GetModeValue("mode-context"))
+            UserContext.Main(userInput)
             agentResponce = Agent.Main(userInput, threadId, GetModeValue("mode-llm"))
             return agentResponce
 

@@ -29,7 +29,7 @@ modeConfigSandboxFilePath = "/root/ProjectRpi/Rpi/PersonalAssistant/UI/modesConf
 modeSandboxLocal = "false"
 # Create file with default configuration
 defaultConfig = {
-    'mode-llm': 'local',
+    'mode-llm': 'local-1b',
     'mode-conversation': 'wakeUp',
     'mode-input': 'text',
     'mode-output': 'text',
@@ -44,7 +44,19 @@ modeConfigInitializationJson = {
     'mode-llm': {
         'current': 'local',
         'allowed': {
-            'local': 'Model running locally',
+            'local': 'Model running locally, Jarvis like personality',
+#             "local-1b" :
+#             "llama3.2:1b" :
+#             "local-3b" :
+#             "local-7b-raw" :
+#             "local-7b-vision" :
+#                 llava:7b                8dd30f6b0cb1    4.7 GB    10 days ago     
+# gemma3:4b               a2af6cc3eb7f    3.3 GB    10 days ago     
+# llama2-uncensored:7b    44040b922233    3.8 GB    10 days ago     
+# llama3.2:latest         a80c4f17acd5    2.0 GB    2 months ago    
+# llama3.2:1b             baf6a787fdff    1.3 GB    2 months ago    
+#
+            'local-buddy': 'Model running locally with Best bud personality',
             'global': 'Model running on cloud / chatgpt'
         }
     },
@@ -88,8 +100,8 @@ modeConfigInitializationJson = {
     'mode-sandbox': {
         'current': 'false',
         'allowed': {
-            'true': 'follow the global mode config file',
-            'false': 'follow the local/ sandbox mode config file'
+            'true': 'follow the local/sandbox mode config file',
+            'false': 'follow the global mode config file'
         }
     },
     'mode-tools': {
