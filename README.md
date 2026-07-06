@@ -118,6 +118,9 @@ pip install -U duckduckgo-search // done
 apt update && apt install -y openssh-client
 
 # TEMP
+
+
+k
 vcgencmd pmic_read_adc EXT5V_V
 vcgencmd measure_clock arm
 vcgencmd measure_temp
@@ -170,7 +173,9 @@ mksession!
 - put current line to cmd line
 :<C-r><C-l> 
 
-
+# Windows
+python .\ui\cli.py  
+python -m UI.cli
 
 # DONE
 - mode multiline input true is not working

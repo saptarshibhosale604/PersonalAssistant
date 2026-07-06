@@ -24,8 +24,10 @@ from typing import Dict, List, Any, Optional
 # modeConfigFilePath = "/root/ProjectRpi/Rpi/PersonalAssistant/Langchain/Tools/toolsConfig.json"
 # modeConfigFilePath = "/root/ProjectRpi/Rpi/PersonalAssistant/Langchain/Tools/modesConfig.json"
 # modeConfigFilePath = "/home/ssbrpi/ProjectRpi/Rpi/PersonalAssistant/Langchain/Tools/modesConfig.json"
-modeConfigFilePath = "/root/ProjectRpi/Rpi/PersonalAssistant/UI/modesConfig.json"
-modeConfigSandboxFilePath = "/root/ProjectRpi/Rpi/PersonalAssistant/UI/modesConfigSandbox.json"
+modeConfigFilePath = "./UI/modesConfig.json"
+modeConfigSandboxFilePath = "./UI/modesConfigSandbox.json"
+# modeConfigFilePath = "/root/ProjectRpi/Rpi/PersonalAssistant/UI/modesConfig.json"
+# modeConfigSandboxFilePath = "/root/ProjectRpi/Rpi/PersonalAssistant/UI/modesConfigSandbox.json"
 modeSandboxLocal = "false"
 # Create file with default configuration
 defaultConfig = {

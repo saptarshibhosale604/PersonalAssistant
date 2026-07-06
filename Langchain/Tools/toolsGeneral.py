@@ -17,11 +17,11 @@ from langchain_community.tools import ShellTool, YouTubeSearchTool
 from langchain_community.tools.tavily_search import TavilySearchResults
 
 
-from langchain_google_community import GmailToolkit
-from langchain_google_community.gmail.utils import (
-    build_resource_service,
-    get_gmail_credentials,
-)
+# from langchain_google_community import GmailToolkit
+# from langchain_google_community.gmail.utils import (
+#     build_resource_service,
+#     get_gmail_credentials,
+# )
 
 ## ## INITIALIZING TOOLS ## ## 
 

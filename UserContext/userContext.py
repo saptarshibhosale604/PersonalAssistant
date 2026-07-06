@@ -14,7 +14,8 @@ import re
 from datetime import datetime
 from typing import Dict, Any, List
 
-userContextFile = "/root/ProjectRpi/Rpi/PersonalAssistant/UserContext/userContext.json"
+# userContextFile = "/root/ProjectRpi/Rpi/PersonalAssistant/UserContext/userContext.json"
+userContextFile = "./UserContext/userContext.json"
 
 def ExtractUserContextFromInput(userInput: str) -> Dict[str, Any]:
     """

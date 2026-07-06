@@ -8,10 +8,10 @@
 #                                         #
 #                                         #
 # # # # # # # # # # # # # # # # # # # # # 
-
 import sys
+# print(sys.path)
 import subprocess
-import readline
+# import readline
 # import TextToSpeech.textToSpeechOnline02 as TTS
 from typing import Any, Iterable
 #import SpeechToText.speechToTextOnline as STT
@@ -61,9 +61,13 @@ UserInputCount = 0 # counting looping of Main()
 # modeConfigFilePath = '/root/ProjectRpi/Rpi/PersonalAssistant/Log/modeConfigFilePath.json'
 # modeConfigFilePath = "/root/ProjectRpi/Rpi/PersonalAssistant/Langchain/Tools/toolsConfig.json"
 # modeConfigFilePath = "/root/ProjectRpi/Rpi/PersonalAssistant/Langchain/Tools/modesConfig.json"
-modeConfigFilePath = "/root/ProjectRpi/Rpi/PersonalAssistant/UI/modesConfig.json"
-modeConfigSandboxFilePath = "/root/ProjectRpi/Rpi/PersonalAssistant/UI/modesConfigSandbox.json"
-userInputFile = '/root/ProjectRpi/Rpi/PersonalAssistant/Log/userInput.txt'
+modeConfigFilePath = "./UI/modesConfig.json"
+modeConfigSandboxFilePath = "./UI/modesConfigSandbox.json"
+userInputFile = './Log/userInput.txt'
+# root\/ProjectRpi\/Rpi\/PersonalAssistant
+# modeConfigFilePath = "/root/ProjectRpi/Rpi/PersonalAssistant/UI/modesConfig.json"
+# modeConfigSandboxFilePath = "/root/ProjectRpi/Rpi/PersonalAssistant/UI/modesConfigSandbox.json"
+# userInputFile = '/root/ProjectRpi/Rpi/PersonalAssistant/Log/userInput.txt'
 modeSandbox = "false"
 
 
@@ -152,6 +156,7 @@ def load_modes():
     global modeConfigSandboxFilePath
     global modeConfigFilePath
     global modeSandbox
+    # print("load_modes...")
 
     # print(f"load_modes: modeSandbox: {modeSandbox}")
     if modeSandbox == "true":
@@ -161,10 +166,12 @@ def load_modes():
 
     if os.path.exists(modeConfigFilePath):
         logger.debug("load modes: getting current mode config file")
+        # print("load modes: getting current mode config file")
         with open(modeConfigFilePath, 'r') as f:
             return json.load(f)
     else: # Initialize the modeConfigFilePath
         logger.debug("load modes: initiaizing the mode config file")
+        # print("load modes: initiaizing the mode config file")
         # print("load modes: initiaizing the mode config file")
         # modesTUI.LoadConfigurationFromFile(modeSandbox)        # with open(modeConfigFilePath, 'w') as f:
         modesTUI.LoadConfigurationFromFile(modeSandbox = modeSandbox)        # with open(modeConfigFilePath, 'w') as f:
@@ -363,8 +370,8 @@ def completer(text, state):
         return options[state]
     return None
 
-readline.set_completer(completer)
-readline.parse_and_bind("tab: complete")
+# readline.set_completer(completer)
+# readline.parse_and_bind("tab: complete")
 
 
 # Format the AI, Human, Tool message types

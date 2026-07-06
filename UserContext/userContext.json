@@ -1,7 +1,7 @@
 {
   "user_profile": {
-    "interactions_count": 83,
-    "last_interaction": "2026-06-21T18:04:04.137090",
+    "interactions_count": 92,
+    "last_interaction": "2026-07-06T23:48:00.337551",
     "common_topics": [
       "personal",
       "technical"
@@ -9,6 +9,91 @@
     "preferences": {}
   },
   "interaction_history": [
+    {
+      "timestamp": "2026-07-06T23:48:00.337551",
+      "input_length": 10,
+      "intent_categories": [],
+      "keywords": [
+        "hiii",
+        "there"
+      ]
+    },
+    {
+      "timestamp": "2026-07-06T23:47:11.583473",
+      "input_length": 3,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-07-06T23:46:28.731911",
+      "input_length": 22,
+      "intent_categories": [],
+      "keywords": [
+        "update",
+        "mode",
+        "global"
+      ]
+    },
+    {
+      "timestamp": "2026-07-06T23:42:46.926650",
+      "input_length": 34,
+      "intent_categories": [
+        "personal"
+      ],
+      "keywords": [
+        "give",
+        "list",
+        "files"
+      ]
+    },
+    {
+      "timestamp": "2026-07-06T23:41:34.832695",
+      "input_length": 25,
+      "intent_categories": [
+        "personal"
+      ],
+      "keywords": [
+        "give",
+        "list",
+        "files"
+      ]
+    },
+    {
+      "timestamp": "2026-07-06T23:40:36.400118",
+      "input_length": 25,
+      "intent_categories": [
+        "personal"
+      ],
+      "keywords": [
+        "give",
+        "list",
+        "files"
+      ]
+    },
+    {
+      "timestamp": "2026-07-06T23:37:19.302248",
+      "input_length": 25,
+      "intent_categories": [
+        "personal"
+      ],
+      "keywords": [
+        "give",
+        "list",
+        "files"
+      ]
+    },
+    {
+      "timestamp": "2026-07-06T23:36:35.576663",
+      "input_length": 12,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-07-06T23:34:43.372140",
+      "input_length": 3,
+      "intent_categories": [],
+      "keywords": []
+    },
     {
       "timestamp": "2026-06-21T18:04:04.137090",
       "input_length": 140,
@@ -411,93 +496,6 @@
       "keywords": [
         "tell",
         "specification"
-      ]
-    },
-    {
-      "timestamp": "2026-02-13T18:49:39.887942",
-      "input_length": 6,
-      "intent_categories": [],
-      "keywords": []
-    },
-    {
-      "timestamp": "2026-02-13T18:47:09.341982",
-      "input_length": 12,
-      "intent_categories": [],
-      "keywords": [
-        "hole"
-      ]
-    },
-    {
-      "timestamp": "2026-02-13T18:45:48.215712",
-      "input_length": 9,
-      "intent_categories": [],
-      "keywords": [
-        "there"
-      ]
-    },
-    {
-      "timestamp": "2026-02-05T16:41:36.985829",
-      "input_length": 34,
-      "intent_categories": [],
-      "keywords": [
-        "hiiiii",
-        "there",
-        "create",
-        "peom",
-        "love"
-      ]
-    },
-    {
-      "timestamp": "2026-02-05T16:41:01.604947",
-      "input_length": 37,
-      "intent_categories": [],
-      "keywords": [
-        "hiiiii",
-        "there",
-        "create",
-        "peom",
-        "wedding"
-      ]
-    },
-    {
-      "timestamp": "2026-02-05T16:34:37.839066",
-      "input_length": 21,
-      "intent_categories": [],
-      "keywords": [
-        "create",
-        "peom",
-        "love"
-      ]
-    },
-    {
-      "timestamp": "2026-02-05T16:33:50.841637",
-      "input_length": 10,
-      "intent_categories": [],
-      "keywords": [
-        "hiii",
-        "there"
-      ]
-    },
-    {
-      "timestamp": "2026-02-05T16:25:50.778548",
-      "input_length": 11,
-      "intent_categories": [],
-      "keywords": [
-        "hiiii",
-        "there"
-      ]
-    },
-    {
-      "timestamp": "2025-12-30T15:12:44.514115",
-      "input_length": 48,
-      "intent_categories": [
-        "personal"
-      ],
-      "keywords": [
-        "whats",
-        "meaning",
-        "uncensored",
-        "terms"
       ]
     }
   ],
