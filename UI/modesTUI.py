@@ -32,6 +32,7 @@ modeSandboxLocal = "false"
 # Create file with default configuration
 defaultConfig = {
     'mode-llm': 'local-1b',
+    'mode-stream': 'false',
     'mode-conversation': 'wakeUp',
     'mode-input': 'text',
     'mode-output': 'text',
@@ -60,6 +61,13 @@ modeConfigInitializationJson = {
 #
             'local-buddy': 'Model running locally with Best bud personality',
             'global': 'Model running on cloud / chatgpt'
+        }
+    },
+    'mode-stream': {
+        'current': 'false',
+        'allowed': {
+            'false': 'llm streaming mode off',
+            'true': 'llm streaming mode on',
         }
     },
     'mode-conversation': {

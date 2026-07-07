@@ -89,7 +89,7 @@ def FormatMessageTypes(text):
 # Build Langchain agent
 def BuildAgent():
     """Create the LangChain agent with OpenAI and our tools, plus HITL middleware."""
-    # print("Agent BuildAgent new instance")
+    print("Agent BuildAgent new instance")
     model = llm
     
     print(f"Agent BuildAgent llm: {llm}")
@@ -132,8 +132,8 @@ def BuildAgent():
     ]
 
     # Create the agent with model, tools, and middleware
-    # agent = create_agent(model=model, tools=tools, middleware=middleware, checkpointer=InMemorySaver())
-    agent = create_agent(model=model, tools=tools, middleware=middleware, checkpointer=InMemorySaver(), debug=True)
+    agent = create_agent(model=model, tools=tools, middleware=middleware, checkpointer=InMemorySaver())
+    # agent = create_agent(model=model, tools=tools, middleware=middleware, checkpointer=InMemorySaver(), debug=True)
     return agent
 
 agent = BuildAgent()
@@ -299,13 +299,14 @@ def ExtractStreamContent(stream_mode, content):
     return ""
 
 # Main function
-def Main(userInput, threadId, modeLLM):
+def Main(userInput, threadId, modeLLM, modeStream):
     UpdateAgent(modeLLM)
 
 
     while True:
         # print("Agent Main Entering the while loop ...")
-        print(f"agent.py Main : userInput {userInput}, threadId: {threadId}, modeLLM: {modeLLM}")
+        print(f"agent.py Main : userInput {userInput}, threadId: {threadId}, modeLLM: {modeLLM}, modeStream: {modeStream}")
+        # print(f"agent.py Main : userInput {userInput}, threadId: {threadId}, modeLLM: {modeLLM}")
         # print(f"agent.py Main : modeLLM {modeLLM}")
 
         # memory
@@ -374,7 +375,85 @@ def Main(userInput, threadId, modeLLM):
 
         # Agent.stream handling for local-4b llm
         # elif "local-4b" in modeLLM:
-        elif modeLLM == "local-4b":
+        # elif modeLLM == "local-4b":
+        elif modeLLM == "local-4b" and modeStream == "false":
+            global requestedToolsNumberPerUserInput
+
+            # print("agent while loop, GLOBAL in the modeLLM")
+            agentCallingCountPerUserInput = 0
+            input("HumanInterrupt02")
+            result = agent.invoke(
+
+                {"messages": [{"role": "user", "content": userInput}]},
+                config=configMemory,
+            )
+            print(f"01 result:{result}")
+            # --- START OF YOUR REQUESTED PRINTING LOGIC ---
+            
+            # 1. Access the last message from the result (not necessarily from state, though they are similar here)
+            messages = result["messages"]
+            last_message = messages[-1] 
+            
+            print("-" * 60)
+            print("LLM Metrics Extraction:")
+            print(f"Input Tokens: {last_message.usage_metadata.get('input_tokens', 'N/A')}")
+            print(f"Output Tokens: {last_message.usage_metadata.get('output_tokens', 'N/A')}")
+            print(f"Total Duration (ms): {last_message.response_metadata.get('total_duration', 'N/A') / 1000:.2f} seconds") # Convert ms to sec
+            
+            # Optional: Print other useful metadata if available in response_metadata or usage_metadata
+            prompt_eval_count = last_message.usage_metadata.get('prompt_eval_count', 'N/A')
+            eval_count = last_message.usage_metadata.get('eval_count', 'N/A')
+            
+            print(f"Prompt Eval Count (tokens): {prompt_eval_count}")
+            print(f"Evaluation Count: {eval_count}")
+
+            
+            while True: 
+                print("agiain in started the while loop")
+
+                state = agent.get_state(configMemory)
+
+                print(f"02 state:{state}")
+                #
+                # Finished?
+                #
+                if not state.interrupts:
+                    messages = result["messages"]
+                    last = messages[-1]
+                    # print(f"03 last.content:{last.content}")
+                    # print(last.content)
+                    return last.content
+
+                #
+                # Human approval required
+                #
+                interrupt = state.interrupts[0]
+                actions = interrupt.value["action_requests"]
+                decisions = []
+                for action in actions:
+                    print("-" * 60)
+                    print("Tool :", action["name"])
+                    print("Args :", action["args"])
+                    choice = input("Approve? [Y/n] : ")
+
+                    if choice.lower() == "n":
+                        decisions.append({"type": "reject"})
+                    else:
+                        decisions.append({"type": "approve"})
+
+                result = agent.invoke(
+                    Command(
+                        resume={
+                            "decisions": decisions
+                        }
+                    ),
+                    config=configMemory,
+                )
+                print(f"03 result:{result}")
+                # return result
+
+        # elif modeLLM == "local-4b02":
+        elif modeLLM == "local-4b" and modeStream == "true":
             global requestedToolsNumberPerUserInput
 
             # print("agent while loop, GLOBAL in the modeLLM")
@@ -404,6 +483,18 @@ def Main(userInput, threadId, modeLLM):
                         chunk_text = ExtractStreamContent(stream_mode, chunk)
                         if chunk_text:
                             agentResponsePerUserInput += chunk_text
+                    # result = agent.invoke(
+                    #     {"messages": [{"role": "user", "content": userInput}]},
+                    #     config=configMemory,
+                    # )
+                    # messages = result["messages"]
+
+                    # last_message = messages[-1]
+
+                    # print("result agent.invoke")
+                    # print(last_message.content)
+
+                    # agentResponsePerUserInput = last_message.content
 
                     # print(f"\n{'='*60}")
                     print()
@@ -426,20 +517,24 @@ def Main(userInput, threadId, modeLLM):
 
                     requestedToolsNumberPerAgentInterrupt = 0
 
-                    # print(f"decisions: {decisions}")
-                    for stream_mode, chunk in agent.stream(  
-                        Command(resume={"decisions": decisions}),
-                        # Command(resume={"decisions": [{"type": "approve"}]}),
-                        stream_mode=["updates", "messages"],
-                        config=configMemory
-                    ):
-                        # print(f"02 stream_mode: {stream_mode}")
-                        # print(f"content: {chunk}")
-                        # print("\n")
-                        chunk_text = ExtractStreamContent(stream_mode, chunk)
-                        if chunk_text:
-                            agentResponsePerUserInput += chunk_text
+                    # # print(f"decisions: {decisions}")
+                    # for stream_mode, chunk in agent.stream(  
+                    #     Command(resume={"decisions": decisions}),
+                    #     # Command(resume={"decisions": [{"type": "approve"}]}),
+                    #     stream_mode=["updates", "messages"],
+                    #     config=configMemory
+                    # ):
+                    #     # print(f"02 stream_mode: {stream_mode}")
+                    #     # print(f"content: {chunk}")
+                    #     # print("\n")
+                    #     chunk_text = ExtractStreamContent(stream_mode, chunk)
+                    #     if chunk_text:
+                    #         agentResponsePerUserInput += chunk_text
 
+                    result = agent.invoke(
+                        Command(resume={"decisions": decisions}),
+                        config=configMemory,
+                    )
                     # print(f"\n{'='*60}")
                     print()
                     FormatMessageTypes("")

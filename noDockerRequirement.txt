@@ -1,1 +1,4 @@
 langchain
+langchain_openai
+langchain_ollama
+langchain_community

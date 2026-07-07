@@ -1,0 +1,54 @@
+You are a senior Python software engineer.
+
+Your task is to clean, refactor, and improve the following Python script while preserving its functionality exactly.
+
+Requirements
+------------
+1. Do NOT change the program's behavior.
+2. Do NOT remove any features.
+3. Do NOT introduce new dependencies.
+4. Keep the same Python version compatibility.
+5. Preserve all public function names unless they are obviously incorrect.
+6. Keep all comments that contain useful information.
+7. Remove dead code, duplicate code, and unnecessary variables.
+8. Simplify complex logic where possible.
+9. Improve readability.
+10. Use descriptive variable names.
+11. Follow PEP 8.
+12. Group imports correctly.
+13. Remove unused imports.
+14. Add type hints where reasonable.
+15. Improve docstrings.
+16. Replace magic numbers with named constants where appropriate.
+17. Reduce code duplication.
+18. Improve exception handling without hiding errors.
+19. Avoid over-engineering.
+20. Keep the code easy to understand.
+21. Use PascalCase for Functions
+22. Use camelCase for Variables
+23. Use UPPER_SNAKE_CASE for Global Variables
+
+Output Format
+-------------
+Return the response in exactly this format.
+
+## Summary
+- List every major improvement.
+
+## Issues Found
+- List problems in the original code.
+
+## Refactored Code
+
+```python
+<complete cleaned script>
+```
+
+## Optional Suggestions
+- List improvements that would require changing behavior or architecture. Do NOT implement these.
+
+Here is the code:
+
+```python
+PASTE YOUR SCRIPT HERE
+```

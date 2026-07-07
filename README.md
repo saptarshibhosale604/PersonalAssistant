@@ -216,8 +216,12 @@ python -m UI.cli
 - B, Improve, gp, add git authentication
     - crate a sh file with git authentication cmds
 - B, Imorve, mode reset : reset modes to default
+- A, bug, streaming is not wokring in local-4b and stream mode on
 
 # TODO 
+- A, improve, clean the code
+- B, improve, change the mode-vars from true, false to on, off
+- A, bug, mode context no not working
 - A, Bug, with qwen3.5:4b as llm model agent is not giving any output
     - create a smallest code to check this llm model, agent
 - B, Improve, start next thread from the userInput mode

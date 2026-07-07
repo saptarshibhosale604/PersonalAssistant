@@ -1,7 +1,8 @@
 {
   "mode-llm": "local-4b",
+  "mode-stream": "false",
   "mode-conversation": "wakeUp",
-  "mode-input": "text",
+  "mode-input": "file",
   "mode-output": "text",
   "mode-context": "yes",
   "mode-framework": "langchain",
