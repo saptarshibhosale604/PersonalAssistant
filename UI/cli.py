@@ -15,7 +15,7 @@ from typing import Any, Iterable, Optional
 import Fabric.manager as Fabric
 import Langchain.agent as Agent
 import Langchain.Tools.toolsManager as toolsManager
-import UI.modesTUI as modesTUI
+import UI.modesManager as modesManager
 import UserContext.userContext as UserContext
 from Log.custom_logger import logger
 from Log.log_utils import PrintFunctionName
@@ -75,7 +75,7 @@ def LoadModes() -> Optional[dict]:
             return json.load(configFile)
 
     logger.debug("[Debug] LoadModes: initializing the mode config file")
-    modesTUI.LoadConfigurationFromFile(modeSandbox=MODE_SANDBOX)
+    modesManager.LoadConfigurationFromFile(modeSandbox=MODE_SANDBOX)
     return None
 
 
@@ -100,6 +100,7 @@ def GetAllModeValues() -> None:
     modeConfig = LoadModes()
     counter = 1
     for key, value in modeConfig.items():
+        key = key.replace('-', ' ')
         # print(f"  {key:<27} → {value}")
         print(f"{counter}.  {key:<20} [{value}]")
         counter += 1
@@ -154,7 +155,7 @@ def FormatToolsPrinting(tools: Iterable[Any]) -> None:
         description = description or "(no description available)"
         description = description.split("\n")[0].rstrip()  # first line only, no trailing whitespace
 
-        print(f"{name}: {description}")
+        print(f"{name}: {description:20}")
 
 
 @PrintFunctionName
@@ -193,21 +194,22 @@ def BasicCmds(userInput: str) -> bool:
 
         elif modeName == "mode-update":
             if MODE_SANDBOX == "true":
-                modesTUI.Main(MODE_SANDBOX)
+                modesManager.Main(MODE_SANDBOX)
             else:
-                modesTUI.Main()
+                modesManager.Main()
             return True
 
         elif modeName == "mode-sandbox":
             MODE_SANDBOX = modeValue
-            modesTUI.LoadConfigurationFromFile(modeSandbox=MODE_SANDBOX)
+            modesManager.LoadConfigurationFromFile(modeSandbox=MODE_SANDBOX)
             GetAllModeValues()
             return True
 
         elif modeName == "mode-tools":
             # modeValue is either "update" or "get"
             tools = toolsManager.Main(modeValue)
-            FormatToolsPrinting(tools)
+            print("toolsManager: Goodbye!")
+            # FormatToolsPrinting(tools)
             return True
 
         elif modeName == "mode-reset":
@@ -309,7 +311,7 @@ def Processing(userInput: str) -> Any:
             if GetModeValue("mode-context") == "no":
                 THREAD_ID += 1  # Always changing memory variable
 
-            UserContext.Main(userInput)
+            # UserContext.Main(userInput)
             # return Agent.Main(userInput, THREAD_ID, GetModeValue("mode-llm"))
             return Agent.Main(userInput, THREAD_ID, GetModeValue("mode-llm"), GetModeValue("mode-stream"))
 
@@ -359,9 +361,10 @@ def Main() -> None:
     logger.debug(f"UserInputCount: {USER_INPUT_COUNT}")
 
     userInput = Input()
-    print(f"userInput after input: {userInput}")
-    if userInput is not None:
-        print(f"userInput before procesing: {userInput}")
+    # print(f"userInput after input: {userInput}")
+    # if userInput is not None or userInput != "":
+    if userInput and len(userInput.strip()) > 0: 
+        # print(f"userInput before procesing: {userInput}")
         assistantOutput = Processing(userInput)
         if assistantOutput is not None:
             Output(assistantOutput)

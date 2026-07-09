@@ -1,7 +1,7 @@
 {
   "user_profile": {
-    "interactions_count": 165,
-    "last_interaction": "2026-07-09T01:45:42.988572",
+    "interactions_count": 188,
+    "last_interaction": "2026-07-10T00:30:06.615299",
     "common_topics": [
       "personal",
       "technical"
@@ -9,6 +9,266 @@
     "preferences": {}
   },
   "interaction_history": [
+    {
+      "timestamp": "2026-07-10T00:30:06.615299",
+      "input_length": 9,
+      "intent_categories": [],
+      "keywords": [
+        "there"
+      ]
+    },
+    {
+      "timestamp": "2026-07-10T00:28:15.510542",
+      "input_length": 4,
+      "intent_categories": [],
+      "keywords": [
+        "hiii"
+      ]
+    },
+    {
+      "timestamp": "2026-07-10T00:27:34.587937",
+      "input_length": 2,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-07-10T00:26:45.972723",
+      "input_length": 2,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-07-10T00:24:57.734629",
+      "input_length": 2,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-07-10T00:18:20.840794",
+      "input_length": 3,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-07-10T00:09:52.511137",
+      "input_length": 338,
+      "intent_categories": [
+        "technical"
+      ],
+      "keywords": [
+        "code",
+        "print",
+        "userinput",
+        "after",
+        "input"
+      ]
+    },
+    {
+      "timestamp": "2026-07-10T00:07:36.785736",
+      "input_length": 338,
+      "intent_categories": [
+        "technical"
+      ],
+      "keywords": [
+        "code",
+        "print",
+        "userinput",
+        "after",
+        "input"
+      ]
+    },
+    {
+      "timestamp": "2026-07-10T00:05:42.570344",
+      "input_length": 338,
+      "intent_categories": [
+        "technical"
+      ],
+      "keywords": [
+        "code",
+        "print",
+        "userinput",
+        "after",
+        "input"
+      ]
+    },
+    {
+      "timestamp": "2026-07-10T00:05:40.247170",
+      "input_length": 338,
+      "intent_categories": [
+        "technical"
+      ],
+      "keywords": [
+        "code",
+        "print",
+        "userinput",
+        "after",
+        "input"
+      ]
+    },
+    {
+      "timestamp": "2026-07-09T23:59:28.655596",
+      "input_length": 338,
+      "intent_categories": [
+        "technical"
+      ],
+      "keywords": [
+        "code",
+        "print",
+        "userinput",
+        "after",
+        "input"
+      ]
+    },
+    {
+      "timestamp": "2026-07-09T23:53:22.058350",
+      "input_length": 226,
+      "intent_categories": [
+        "technical"
+      ],
+      "keywords": [
+        "code",
+        "print",
+        "userinput",
+        "after",
+        "input"
+      ]
+    },
+    {
+      "timestamp": "2026-07-09T23:51:01.995529",
+      "input_length": 2,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-07-09T23:39:36.840281",
+      "input_length": 1361,
+      "intent_categories": [
+        "technical",
+        "personal"
+      ],
+      "keywords": [
+        "code",
+        "importmodule",
+        "modulepath",
+        "dynamically",
+        "import"
+      ]
+    },
+    {
+      "timestamp": "2026-07-09T23:38:17.535698",
+      "input_length": 1361,
+      "intent_categories": [
+        "technical",
+        "personal"
+      ],
+      "keywords": [
+        "code",
+        "importmodule",
+        "modulepath",
+        "dynamically",
+        "import"
+      ]
+    },
+    {
+      "timestamp": "2026-07-09T23:34:14.464062",
+      "input_length": 1361,
+      "intent_categories": [
+        "technical",
+        "personal"
+      ],
+      "keywords": [
+        "code",
+        "importmodule",
+        "modulepath",
+        "dynamically",
+        "import"
+      ]
+    },
+    {
+      "timestamp": "2026-07-09T22:51:35.849115",
+      "input_length": 3,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-07-09T22:49:38.485357",
+      "input_length": 106,
+      "intent_categories": [
+        "technical",
+        "personal"
+      ],
+      "keywords": [
+        "payload",
+        "mode",
+        "print",
+        "payload",
+        "like"
+      ]
+    },
+    {
+      "timestamp": "2026-07-09T22:45:49.507176",
+      "input_length": 58,
+      "intent_categories": [
+        "technical"
+      ],
+      "keywords": [
+        "explain",
+        "substituation",
+        "with",
+        "python",
+        "code"
+      ]
+    },
+    {
+      "timestamp": "2026-07-09T22:44:50.139316",
+      "input_length": 19,
+      "intent_categories": [],
+      "keywords": [
+        "explain",
+        "concept"
+      ]
+    },
+    {
+      "timestamp": "2026-07-09T22:44:19.023354",
+      "input_length": 67,
+      "intent_categories": [],
+      "keywords": [
+        "substitube",
+        "with",
+        "then",
+        "print",
+        "payload"
+      ]
+    },
+    {
+      "timestamp": "2026-07-09T22:42:37.239026",
+      "input_length": 96,
+      "intent_categories": [
+        "technical",
+        "personal"
+      ],
+      "keywords": [
+        "payload",
+        "mode",
+        "print",
+        "payload",
+        "mode"
+      ]
+    },
+    {
+      "timestamp": "2026-07-09T22:40:28.297954",
+      "input_length": 67,
+      "intent_categories": [
+        "technical"
+      ],
+      "keywords": [
+        "payload",
+        "mode",
+        "print",
+        "payload",
+        "mode"
+      ]
+    },
     {
       "timestamp": "2026-07-09T01:45:42.988572",
       "input_length": 2,
@@ -219,208 +479,6 @@
       "input_length": 3,
       "intent_categories": [],
       "keywords": []
-    },
-    {
-      "timestamp": "2026-07-08T22:44:16.723618",
-      "input_length": 3,
-      "intent_categories": [],
-      "keywords": []
-    },
-    {
-      "timestamp": "2026-07-08T22:34:05.324305",
-      "input_length": 2,
-      "intent_categories": [],
-      "keywords": []
-    },
-    {
-      "timestamp": "2026-07-08T22:07:37.702620",
-      "input_length": 2,
-      "intent_categories": [],
-      "keywords": []
-    },
-    {
-      "timestamp": "2026-07-08T22:05:21.000562",
-      "input_length": 4,
-      "intent_categories": [],
-      "keywords": [
-        "hiii"
-      ]
-    },
-    {
-      "timestamp": "2026-07-08T22:03:50.545241",
-      "input_length": 2,
-      "intent_categories": [],
-      "keywords": []
-    },
-    {
-      "timestamp": "2026-07-08T21:55:16.735440",
-      "input_length": 9,
-      "intent_categories": [],
-      "keywords": [
-        "there"
-      ]
-    },
-    {
-      "timestamp": "2026-07-08T21:45:24.690054",
-      "input_length": 3386,
-      "intent_categories": [
-        "technical",
-        "personal"
-      ],
-      "keywords": [
-        "code",
-        "main",
-        "elif",
-        "modellm",
-        "local"
-      ]
-    },
-    {
-      "timestamp": "2026-07-07T10:24:23.969132",
-      "input_length": 3386,
-      "intent_categories": [
-        "technical",
-        "personal"
-      ],
-      "keywords": [
-        "code",
-        "main",
-        "elif",
-        "modellm",
-        "local"
-      ]
-    },
-    {
-      "timestamp": "2026-07-07T10:20:47.711183",
-      "input_length": 3,
-      "intent_categories": [],
-      "keywords": []
-    },
-    {
-      "timestamp": "2026-07-07T10:12:41.655235",
-      "input_length": 4144,
-      "intent_categories": [
-        "technical",
-        "personal"
-      ],
-      "keywords": [
-        "code",
-        "main",
-        "elif",
-        "modellm",
-        "local"
-      ]
-    },
-    {
-      "timestamp": "2026-07-07T10:09:47.868161",
-      "input_length": 3,
-      "intent_categories": [],
-      "keywords": []
-    },
-    {
-      "timestamp": "2026-07-07T10:09:22.566236",
-      "input_length": 4113,
-      "intent_categories": [
-        "technical",
-        "personal"
-      ],
-      "keywords": [
-        "code",
-        "main",
-        "elif",
-        "modellm",
-        "local"
-      ]
-    },
-    {
-      "timestamp": "2026-07-07T10:04:55.217343",
-      "input_length": 4113,
-      "intent_categories": [
-        "technical",
-        "personal"
-      ],
-      "keywords": [
-        "code",
-        "main",
-        "elif",
-        "modellm",
-        "local"
-      ]
-    },
-    {
-      "timestamp": "2026-07-07T10:01:27.330850",
-      "input_length": 3,
-      "intent_categories": [],
-      "keywords": []
-    },
-    {
-      "timestamp": "2026-07-07T09:59:28.062199",
-      "input_length": 2,
-      "intent_categories": [],
-      "keywords": []
-    },
-    {
-      "timestamp": "2026-07-07T09:53:35.683725",
-      "input_length": 4,
-      "intent_categories": [],
-      "keywords": [
-        "hiii"
-      ]
-    },
-    {
-      "timestamp": "2026-07-07T09:45:50.342778",
-      "input_length": 1857,
-      "intent_categories": [
-        "technical",
-        "personal"
-      ],
-      "keywords": [
-        "code",
-        "main",
-        "result",
-        "agent",
-        "invoke"
-      ]
-    },
-    {
-      "timestamp": "2026-07-07T09:43:17.805755",
-      "input_length": 2,
-      "intent_categories": [],
-      "keywords": []
-    },
-    {
-      "timestamp": "2026-07-07T09:42:13.587936",
-      "input_length": 2,
-      "intent_categories": [],
-      "keywords": []
-    },
-    {
-      "timestamp": "2026-07-07T09:42:06.315282",
-      "input_length": 2,
-      "intent_categories": [],
-      "keywords": []
-    },
-    {
-      "timestamp": "2026-07-07T09:41:43.198362",
-      "input_length": 4,
-      "intent_categories": [],
-      "keywords": [
-        "hlep"
-      ]
-    },
-    {
-      "timestamp": "2026-07-07T09:39:25.064749",
-      "input_length": 3,
-      "intent_categories": [],
-      "keywords": []
-    },
-    {
-      "timestamp": "2026-07-07T09:39:07.980293",
-      "input_length": 4,
-      "intent_categories": [],
-      "keywords": [
-        "hlep"
-      ]
     }
   ],
   "session_info": {}

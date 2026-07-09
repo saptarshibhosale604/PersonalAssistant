@@ -3,11 +3,11 @@
 Terminal Interface (Numbered / Conversational) - Mode Configuration Manager
 -----------------------------------------------------------------------------
 A lightweight, plain-text terminal application for navigating and managing
-LLM configuration modes through a simple "modesTUI asks / Human answers by number"
+LLM configuration modes through a simple "modesManager asks / Human answers by number"
 workflow (instead of vim-style j/k/l/h navigation).
 
 Flow:
-  modesTUI:  select the mode:
+  modesManager:  select the mode:
        1. mode-llm             [local-1b]
        2. mode-stream          [false]
        ...
@@ -17,14 +17,14 @@ Flow:
        14. [reset] reset to default
   Human: <number>
 
-  If a mode was picked, the modesTUI then asks for the value:
-  modesTUI: select mode value
+  If a mode was picked, the modesManager then asks for the value:
+  modesManager: select mode value
       1 local        model running locally, jarvis like personality
       2 local-buddy  model running locally with best bud personality
       3 global       model running on cloud / chatgpt
   Human: <number>
 
-  modesTUI:
+  modesManager:
   The value saved succesfully
   mode-llm: global
 
@@ -37,6 +37,7 @@ import os
 import sys
 import json
 from typing import Dict, List, Any, Optional
+from Log.log_utils import PrintFunctionName
 
 # from UI.config import modeConfigFilePath, modeConfigSandboxFilePath, modeSandboxLocal, defaultConfig, modeConfigInitializationJson, presetDevelopment, presetProduction, presetTesting, PRESETS
 from UI.config import *
@@ -45,6 +46,7 @@ from UI.config import *
 # UTILITY FUNCTIONS FOR FILE MANAGEMENT
 # ============================================================================
 
+@PrintFunctionName
 def LoadConfigurationFromFile(filename: str = "mode_config.json", modeSandbox: str = "false") -> Dict[str, str]:
     """
     Load configuration from file. If file doesn't exist, create it with default values.
@@ -78,6 +80,7 @@ def LoadConfigurationFromFile(filename: str = "mode_config.json", modeSandbox: s
         }
 
 
+@PrintFunctionName
 def InitializeConfigWithLoadedValues(baseConfig: Dict[str, Any], loadedValues: Dict[str, str]) -> Dict[str, Any]:
     """
     Initialize base configuration with loaded values from file.
@@ -96,6 +99,7 @@ def InitializeConfigWithLoadedValues(baseConfig: Dict[str, Any], loadedValues: D
 class MenuConfig:
     """Manages menu configuration."""
 
+    @PrintFunctionName
     def __init__(self, modeConfigInitializationJson: Dict[str, Any]):
         try:
             if not isinstance(modeConfigInitializationJson, dict) or not modeConfigInitializationJson:
@@ -107,15 +111,19 @@ class MenuConfig:
             raise ValueError(f"Failed to initialize MenuConfig: {str(error)}")
 
     @staticmethod
+    @PrintFunctionName
     def _GetDeepCopy(configDict: Dict[str, Any]) -> Dict[str, Any]:
         return json.loads(json.dumps(configDict))
 
+    @PrintFunctionName
     def GetModeKeys(self) -> List[str]:
         return self.modeKeys.copy()
 
+    @PrintFunctionName
     def GetModeConfig(self, modeKey: str) -> Optional[Dict[str, Any]]:
         return self.modeConfig.get(modeKey)
 
+    @PrintFunctionName
     def GetSubOptions(self, modeKey: str) -> Optional[Dict[str, str]]:
         try:
             modeData = self.GetModeConfig(modeKey)
@@ -126,6 +134,7 @@ class MenuConfig:
             print(f"Error retrieving sub-options: {str(error)}")
             return None
 
+    @PrintFunctionName
     def GetCurrentValue(self, modeKey: str) -> Optional[str]:
         try:
             modeData = self.GetModeConfig(modeKey)
@@ -136,6 +145,7 @@ class MenuConfig:
             print(f"Error getting current value: {str(error)}")
             return None
 
+    @PrintFunctionName
     def SetCurrentValue(self, modeKey: str, value: str) -> bool:
         try:
             if modeKey not in self.modeConfig:
@@ -149,12 +159,14 @@ class MenuConfig:
             print(f"Error setting current value: {str(error)}")
             return False
 
+    @PrintFunctionName
     def GetCurrentConfiguration(self) -> Dict[str, str]:
         result = {}
         for modeKey in self.modeKeys:
             result[modeKey] = self.GetCurrentValue(modeKey)
         return result
 
+    @PrintFunctionName
     def ApplyPreset(self, presetConfig: Dict[str, str]) -> bool:
         try:
             for modeKey, value in presetConfig.items():
@@ -165,6 +177,7 @@ class MenuConfig:
             print(f"Error applying preset: {str(error)}")
             return False
 
+    @PrintFunctionName
     def ResetToDefault(self) -> bool:
         try:
             self.modeConfig = self._GetDeepCopy(self.defaultConfig)
@@ -179,6 +192,7 @@ class MenuConfig:
             print(f"Error resetting configuration: {str(error)}")
             return False
 
+    @PrintFunctionName
     def SaveConfigToFile(self, filename: str = "mode_config.json") -> bool:
         try:
             global modeConfigFilePath
@@ -201,24 +215,25 @@ class MenuConfig:
 
 class ConversationalUIManager:
     """
-    Drives the modesTUI/Human numbered-selection conversation:
+    Drives the modesManager/Human numbered-selection conversation:
 
-        modesTUI: select the mode:
+        modesManager: select the mode:
         1. mode-llm             [local-1b]
         ...
         Human:
         <number>
 
-        modesTUI: select mode value
+        modesManager: select mode value
         1 local  ...
         Human:
         <number>
 
-        modesTUI:
+        modesManager:
         The value saved succesfully
         mode-llm: global
     """
 
+    @PrintFunctionName
     def __init__(self, menuConfig: MenuConfig):
         self.menuConfig = menuConfig
         self.modeKeys = self.menuConfig.GetModeKeys()
@@ -235,9 +250,11 @@ class ConversationalUIManager:
 
     # -------------------------------------------------------------- helpers
     @staticmethod
+    @PrintFunctionName
     def _Print(text: str = "") -> None:
         print(text)
 
+    @PrintFunctionName
     def _ReadHumanSelection(self, validCount: int) -> Optional[int]:
         """Print the 'Human:' prompt, read a number, validate it (1..validCount)."""
         self._Print("Human:")
@@ -248,22 +265,25 @@ class ConversationalUIManager:
         if rawInput.lower() in ("q", "quit", "exit"):
             return None
         if not rawInput.isdigit():
-            self._Print(f"modesTUI: '{rawInput}' is not a valid number, please try again.")
+            self._Print(f"modesManager: '{rawInput}' is not a valid number, please try again.")
             return self._ReadHumanSelection(validCount)
         choice = int(rawInput)
         if choice < 1 or choice > validCount:
-            self._Print(f"modesTUI: please enter a number between 1 and {validCount}.")
+            self._Print(f"modesManager: please enter a number between 1 and {validCount}.")
             return self._ReadHumanSelection(validCount)
         return choice
 
     # ---------------------------------------------------------- main menu
+    @PrintFunctionName
     def RenderMainMenu(self) -> None:
-        self._Print("modesTUI: select the mode:")
+        self._Print("modesManager: select the mode:")
+        self._Print("'q' to quit from the modesManager")
         self._Print("")
         for index, entry in enumerate(self.mainMenuEntries, start=1):
             entryType, payload = entry
             if entryType == 'mode':
                 currentValue = self.menuConfig.GetCurrentValue(payload)
+                payload = payload.replace('-', ' ')
                 self._Print(f"{index}. {payload:<20} [{currentValue}]")
             elif entryType == 'preset':
                 self._Print(f"{index}. [preset] {payload}")
@@ -271,9 +291,10 @@ class ConversationalUIManager:
                 self._Print(f"{index}. [reset] reset to default")
 
     # ----------------------------------------------------------- sub menu
+    @PrintFunctionName
     def RenderSubMenu(self, modeKey: str) -> List[str]:
         """Prints the sub-menu for a mode and returns the ordered list of option keys."""
-        self._Print("modesTUI: select mode value")
+        self._Print("modesManager: select mode value")
         subOptions = self.menuConfig.GetSubOptions(modeKey) or {}
         optionKeys = list(subOptions.keys())
         for index, optionKey in enumerate(optionKeys, start=1):
@@ -282,10 +303,11 @@ class ConversationalUIManager:
         return optionKeys
 
     # -------------------------------------------------------------- flow
+    @PrintFunctionName
     def HandleModeSelection(self, modeKey: str) -> None:
         optionKeys = self.RenderSubMenu(modeKey)
         if not optionKeys:
-            self._Print(f"modesTUI: mode '{modeKey}' has no selectable values.")
+            self._Print(f"modesManager: mode '{modeKey}' has no selectable values.")
             return
         choice = self._ReadHumanSelection(len(optionKeys))
         if choice is None:
@@ -294,42 +316,45 @@ class ConversationalUIManager:
         selectedValue = optionKeys[choice - 1]
         if self.menuConfig.SetCurrentValue(modeKey, selectedValue):
             self.menuConfig.SaveConfigToFile("mode_config.json")
-            self._Print("modesTUI:")
+            self._Print("modesManager:")
             self._Print("The value saved succesfully")
             self._Print(f"{modeKey}: {selectedValue}")
         else:
-            self._Print(f"modesTUI: could not save value for '{modeKey}'.")
+            self._Print(f"modesManager: could not save value for '{modeKey}'.")
 
+    @PrintFunctionName
     def HandlePresetSelection(self, presetName: str) -> None:
         presetConfig = PRESETS[presetName]
         if self.menuConfig.ApplyPreset(presetConfig):
             self.menuConfig.SaveConfigToFile("mode_config.json")
-            self._Print("modesTUI:")
+            self._Print("modesManager:")
             self._Print("The value saved succesfully")
             for modeKey, value in presetConfig.items():
                 self._Print(f"{modeKey}: {value}")
         else:
-            self._Print(f"modesTUI: could not apply preset '{presetName}'.")
+            self._Print(f"modesManager: could not apply preset '{presetName}'.")
 
+    @PrintFunctionName
     def HandleResetSelection(self) -> None:
         if self.menuConfig.ResetToDefault():
             self.menuConfig.SaveConfigToFile("mode_config.json")
-            self._Print("modesTUI:")
+            self._Print("modesManager:")
             self._Print("The value saved succesfully")
             currentConfig = self.menuConfig.GetCurrentConfiguration()
             for modeKey, value in currentConfig.items():
                 self._Print(f"{modeKey}: {value}")
         else:
-            self._Print("modesTUI: could not reset configuration.")
+            self._Print("modesManager: could not reset configuration.")
 
     # --------------------------------------------------------------- run
+    @PrintFunctionName
     def Run(self) -> None:
         self.isRunning = True
         while self.isRunning:
             self.RenderMainMenu()
             choice = self._ReadHumanSelection(len(self.mainMenuEntries))
             if choice is None:
-                self._Print("modesTUI: Goodbye!")
+                self._Print("modesManager: Goodbye!")
                 self.isRunning = False
                 break
 
@@ -343,6 +368,7 @@ class ConversationalUIManager:
 
             self._Print("")
 
+@PrintFunctionName
 def ShowHelp() -> None:
     """
     Prints usage instructions for the numbered-selection TUI.
@@ -371,6 +397,7 @@ def ShowHelp() -> None:
     print("  or press Ctrl+C, and the AI will say 'Goodbye!' and stop.")
     print("=" * 50)
 
+@PrintFunctionName
 def Main(modeSandbox: str = "false") -> None:
     """Main entry point for the conversational, numbered-selection UI."""
     try:
@@ -381,7 +408,7 @@ def Main(modeSandbox: str = "false") -> None:
             modeSandboxLocal = modeSandbox
             modeConfigFilePath = modeConfigSandboxFilePath
 
-        ShowHelp()
+        # ShowHelp()
         loadedConfig = LoadConfigurationFromFile("mode_config.json")
         initializedConfig = InitializeConfigWithLoadedValues(modeConfigInitializationJson, loadedConfig)
         menuConfig = MenuConfig(initializedConfig)
@@ -396,5 +423,5 @@ def Main(modeSandbox: str = "false") -> None:
         sys.exit(1)
 
 
-if __name__ == "__main__":
-    Main()
+# if __name__ == "__main__":
+#     Main()

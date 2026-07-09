@@ -1,10 +1,10 @@
 {
   "mode-llm": "local-4b",
-  "mode-stream": "false",
+  "mode-stream": "true",
   "mode-conversation": "wakeUp",
   "mode-input": "text",
   "mode-output": "text",
-  "mode-context": "no",
+  "mode-context": "yes",
   "mode-framework": "langchain",
   "mode-sandbox": "false",
   "mode-tools": "update",

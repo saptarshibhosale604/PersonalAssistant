@@ -163,6 +163,13 @@ def UpdateAgent(modeLLM: str) -> None:
             temperature=DEFAULT_TEMPERATURE, max_retries=DEFAULT_MAX_RETRIES,
         )
 
+    elif modeLLM == "local-4b-no-tools":
+        LLM = ChatOllama(
+            model="qwen3.5:4b", streaming=True, max_tokens=DEFAULT_MAX_TOKENS,
+            temperature=DEFAULT_TEMPERATURE, max_retries=DEFAULT_MAX_RETRIES, reasoning=False,
+        )
+        TOOLS = []
+
     elif modeLLM == "local-4b":
         LLM = ChatOllama(
             model="qwen3.5:4b", streaming=True, max_tokens=DEFAULT_MAX_TOKENS,
@@ -200,8 +207,88 @@ def UpdateAgent(modeLLM: str) -> None:
 
     AGENT = BuildAgent()
 
-
 @PrintFunctionName
+def PrintPostProcessingLLMVariables(content) -> None:
+    """
+    Print final AIMessage metadata in a human-readable format.
+    Intended for use with stream_mode='updates'.
+    """
+
+    try:
+        if not isinstance(content, dict):
+            return
+
+        modelData = content.get("model")
+        if not modelData:
+            return
+
+        messages = modelData.get("messages", [])
+        if not messages:
+            return
+
+        message = messages[-1]
+
+        responseMetadata = getattr(message, "response_metadata", {})
+        usageMetadata = getattr(message, "usage_metadata", {})
+
+        # print("\n" + "=" * 80)
+        # print("FINAL LLM RESPONSE")
+        # print("-" * BANNER_WIDTH)
+        print("LLM Metrics Extraction:")
+        # print("=" * 80)
+
+        # print(f"Model              : {responseMetadata.get('model_name', 'Unknown')}")
+        # print(f"Provider           : {responseMetadata.get('model_provider', 'Unknown')}")
+        # print(f"Done               : {responseMetadata.get('done', 'Unknown')}")
+        # print(f"Done Reason        : {responseMetadata.get('done_reason', 'Unknown')}")
+
+        print()
+
+        print(f"Input Tokens       : {usageMetadata.get('input_tokens', 0)}")
+        print(f"Output Tokens      : {usageMetadata.get('output_tokens', 0)}")
+        print(f"Total Tokens       : {usageMetadata.get('total_tokens', 0)}")
+
+        print()
+
+        print(f"Created At         : {responseMetadata.get('created_at', 'Unknown')}")
+
+        print(
+            f"Load Duration      : "
+            f"{responseMetadata.get('load_duration', 0) / 1_000_000_000:.2f}s"
+        )
+
+        print(
+            f"Prompt Eval Time   : "
+            f"{responseMetadata.get('prompt_eval_duration', 0) / 1_000_000_000:.2f}s"
+        )
+
+        print(
+            f"Generation Time    : "
+            f"{responseMetadata.get('eval_duration', 0) / 1_000_000_000:.2f}s"
+        )
+
+        print(
+            f"Total Duration     : "
+            f"{responseMetadata.get('total_duration', 0) / 1_000_000_000:.2f}s"
+        )
+
+        if getattr(message, "tool_calls", None):
+            print()
+            print("Tool Calls:")
+            for index, toolCall in enumerate(message.tool_calls, start=1):
+                print(f"  {index}. {toolCall}")
+
+        # print()
+        # print("-" * 80)
+        # print("FINAL RESPONSE")
+        # print("-" * 80)
+        # print(message.content)
+        # print("=" * 80)
+
+    except Exception as error:
+        print(f"PrintPostProcessingLLMVariables Error: {error}")
+
+# @PrintFunctionName
 def ExtractStreamContent(streamMode: str, content) -> str:
     """Extract printable text from a streamed chunk and print it to the console.
 
@@ -211,6 +298,8 @@ def ExtractStreamContent(streamMode: str, content) -> str:
         interrupts that require human approval.
     """
     global REQUESTED_TOOLS_NUMBER_PER_USER_INPUT, REQUESTED_TOOLS_NUMBER_PER_AGENT_INTERRUPT
+
+    # print(f"ExtractStreamContent content: {content}")
 
     if streamMode == "messages":
         if not (isinstance(content, tuple) and len(content) >= 1):
@@ -233,6 +322,9 @@ def ExtractStreamContent(streamMode: str, content) -> str:
         return messageChunk.content or ""
 
     elif streamMode == "updates":
+
+        PrintPostProcessingLLMVariables(content)
+
         interrupts = content.get("__interrupt__", [])
         if not interrupts:
             return ""
@@ -334,12 +426,12 @@ def Main(userInput: str, threadId, modeLLM: str, modeStream: str) -> str:
 
     # print(f"agent.py Main : userInput {userInput}, threadId: {threadId}, "
     #       f"modeLLM: {modeLLM}, modeStream: {modeStream}")
-    print(f"agent.py Main : userInput, threadId: {threadId}, "
+    print(f"[Info] agent.py Main : userInput, threadId: {threadId}, "
           f"modeLLM: {modeLLM}, modeStream: {modeStream}")
 
     threadIdStr = "thread-" + str(threadId)
     configMemory = {"configurable": {"thread_id": threadIdStr}}
-    print(f"thread_id: {threadIdStr}")
+    # print(f"thread_id: {threadIdStr}")
 
     if modeLLM == "local":
         return StreamAndAccumulate(
@@ -362,7 +454,7 @@ def Main(userInput: str, threadId, modeLLM: str, modeStream: str) -> str:
     elif modeLLM == "local-4b" and modeStream == "false":
         # NOTE: leftover debug pause from the original implementation; blocks
         # execution waiting for Enter. Preserved to keep behavior identical.
-        input("HumanInterrupt02")
+        # input("HumanInterrupt02")
 
         result = AGENT.invoke({"messages": [{"role": "user", "content": userInput}]}, config=configMemory)
         print(f"01 result:{result}")
@@ -391,10 +483,11 @@ def Main(userInput: str, threadId, modeLLM: str, modeStream: str) -> str:
             result = AGENT.invoke(Command(resume={"decisions": decisions}), config=configMemory)
             print(f"03 result:{result}")
 
+
     elif modeLLM == "local-4b" and modeStream == "true":
         # NOTE: leftover debug pause from the original implementation; blocks
         # execution waiting for Enter. Preserved to keep behavior identical.
-        input("HumanInterrupt01")
+        # input("HumanInterrupt01")
 
         agentCallingCount = 0
         agentResponse = ""
@@ -403,7 +496,7 @@ def Main(userInput: str, threadId, modeLLM: str, modeStream: str) -> str:
             agentCallingCount += 1
 
             if agentCallingCount == 1 and REQUESTED_TOOLS_NUMBER_PER_USER_INPUT < 1:
-                print(f"agent.py main agent: {AGENT}")
+                # print(f"agent.py main agent: {AGENT}")
                 agentResponse = StreamAndAccumulate([{"role": "user", "content": userInput}], configMemory)
 
             elif REQUESTED_TOOLS_NUMBER_PER_USER_INPUT >= 1:
@@ -428,6 +521,30 @@ def Main(userInput: str, threadId, modeLLM: str, modeStream: str) -> str:
             logger.debug(f"agentCallingCountPerUserInput: {agentCallingCount}")
             agentResponse = ""
 
+    elif modeLLM == "local-4b-no-tools" and modeStream == "true":
+        # NOTE: leftover debug pause from the original implementation; blocks
+        # execution waiting for Enter. Preserved to keep behavior identical.
+        # input("HumanInterrupt01")
+
+        agentCallingCount = 0
+        agentResponse = ""
+
+        while True:
+            agentCallingCount += 1
+
+            if agentCallingCount == 1:
+                # print(f"agent.py main agent: {AGENT}")
+                agentResponse = StreamAndAccumulate([{"role": "user", "content": userInput}], configMemory)
+
+                print()
+                FormatMessageTypes("")
+                print()
+
+            else:
+                return agentResponse
+
+            logger.debug(f"agentCallingCountPerUserInput: {agentCallingCount}")
+            agentResponse = ""
     elif "global" in modeLLM:
         agentCallingCount = 0
         agentResponse = ""

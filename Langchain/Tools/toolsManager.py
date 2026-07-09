@@ -16,6 +16,7 @@ import os
 from typing import List, Any, Dict
 import sys
 
+from Log.log_utils import PrintFunctionName
 
 # Module-level configuration
 # CONFIG_FILE = "tools_cson"
@@ -44,6 +45,7 @@ DEFAULT_CONFIG = {
 toolsConfig: Dict[str, bool] = {}
 
 
+@PrintFunctionName
 def LoadToolsConfig() -> None:
     """
     Load tools configuration from file or use defaults.
@@ -74,6 +76,7 @@ def LoadToolsConfig() -> None:
         toolsConfig = DEFAULT_CONFIG.copy()
 
 
+@PrintFunctionName
 def SaveToolsConfig() -> None:
     """
     Save current tools configuration to file.
@@ -94,6 +97,34 @@ def SaveToolsConfig() -> None:
     except IOError as error:
         print(f"✗ Error saving configuration: {str(error)}")
 
+
+import contextlib
+from typing import Any
+
+@PrintFunctionName
+def ImportModule02(modulePath: str) -> Any:
+    """
+    Dynamically import a Python module by path with warnings suppressed.
+    """
+    try:
+        # Suppress all warnings for this block (including deprecation warnings)
+        with contextlib.suppress(UserWarning, DeprecationWarning): 
+            parts = modulePath.split('.')
+            
+            if len(parts) > 1:
+                # Navigate through nested modules
+                current_module = __import__(parts[0])
+                for part in parts[1:]:
+                    try:
+                        current_module = getattr(current_module, part)
+                    except AttributeError as e:
+                        raise ImportError(f"Cannot import {modulePath}: Attribute '{part}' not found") from e
+            
+            return current_module
+
+    except (ImportError, AttributeError) as error:
+        # Only print the actual error message here
+        raise ImportError(f"Cannot import {modulePath}: {str(error)}")
 
 def ImportModule(modulePath: str) -> Any:
     """
@@ -125,6 +156,7 @@ def ImportModule(modulePath: str) -> Any:
         raise ImportError(f"Cannot import {modulePath}: {str(error)}")
 
 
+@PrintFunctionName
 def GetToolsList() -> List[Any]:
     """
     Retrieve filtered list of tools based on current configuration.
@@ -147,7 +179,9 @@ def GetToolsList() -> List[Any]:
     combinedToolsList: List[Any] = []
 
     try:
+        toolTypeCounter = 0
         for toolName, modulePath in TOOLS_MODULES.items():
+            toolTypeCounter += 1
             # Check if tool is enabled in configuration
             if toolsConfig.get(toolName, False):
                 try:
@@ -157,26 +191,28 @@ def GetToolsList() -> List[Any]:
                     # Call ToolsList() function from the module
                     if hasattr(module, 'ToolsList'):
                         toolsList = module.ToolsList()
-                        print("### finding the list here")
+                        # print("### finding the list here")
                         # print(f"toolsList: {toolsList}")
-                        for i, tool in enumerate(toolsList):
-                            print(f"{i+1}. toolsList: {tool.name}: {tool.description[:10]}")
+                        for toolsCounter, tool in enumerate(toolsList):
+                            # print(f"{i+1}. toolsList: {tool.name}: {tool.description[:10]}")
+
+                            print(f"    {toolTypeCounter}.{toolsCounter+1}. {tool.name}: {tool.description[:30]}")
                         combinedToolsList.extend(toolsList)
                         # print(f"combinedToolsList: {combinedToolsList}")
                         # for i, tool in enumerate(combinedToolsList):
                         #     print(f"{i+1}. combinedToolsList: {tool.name}: {tool.description[:10]}")
-                        print(f"✓ Loaded {toolName}: {len(toolsList)} tools")
+                        print(f"{toolTypeCounter} ✓ Loaded {toolName}: {len(toolsList)} tools")
                     else:
-                        print(f"⚠ Warning: {toolName} has no ToolsList() function")
+                        print(f"{toolTypeCounter} ⚠ Warning: {toolName} has no ToolsList() function")
 
                 except ImportError as importError:
-                    print(f"⚠ Warning: Could not import {toolName}: {str(importError)}")
+                    print(f"{toolTypeCounter} ⚠ Warning: Could not import {toolName}: {str(importError)}")
                     print(f"  Module path: {modulePath}")
 
                 except Exception as error:
-                    print(f"⚠ Warning: Error loading {toolName}: {str(error)}")
+                    print(f"{toolTypeCounter} ⚠ Warning: Error loading {toolName}: {str(error)}")
             else:
-                print(f"⊘ Skipped {toolName} (disabled)")
+                print(f"{toolTypeCounter} ⊘ Skipped {toolName} (disabled)")
 
     except Exception as error:
         print(f"✗ Error retrieving tools list: {str(error)}")
@@ -186,9 +222,10 @@ def GetToolsList() -> List[Any]:
     return combinedToolsList
 
 
-def SelectToolTUI() -> str:
+@PrintFunctionName
+def SelectToolManger() -> str:
     """
-    Display the tool-selection TUI screen (step 1 of the update workflow).
+    Display the tool-selection Manger screen (step 1 of the update workflow).
 
     Lists every configured tool with its current Enabled/Disabled status
     and prompts the user to pick one by number.
@@ -198,7 +235,7 @@ def SelectToolTUI() -> str:
     """
     toolNames = list(TOOLS_MODULES.keys())
 
-    print("modesTUI: select the tool:")
+    print("modesManger: select the tool:")
     for index, toolName in enumerate(toolNames, start=1):
         status = "Enabled" if toolsConfig.get(toolName, False) else "Disabled"
         print(f"{index}. {toolName:<20} [{status}]")
@@ -206,6 +243,8 @@ def SelectToolTUI() -> str:
     selection = input("Human:\n").strip()
 
     try:
+        if selection == "q":
+            return "quit"
         selectedIndex = int(selection) - 1
         if selectedIndex < 0 or selectedIndex >= len(toolNames):
             raise IndexError
@@ -215,9 +254,10 @@ def SelectToolTUI() -> str:
         return ""
 
 
-def ToggleToolTUI(toolName: str) -> bool:
+@PrintFunctionName
+def ToggleToolManger(toolName: str) -> bool:
     """
-    Display the enable/disable TUI screen for a single tool (step 2 of the
+    Display the enable/disable Manger screen for a single tool (step 2 of the
     update workflow), save the new preference, and report the result.
 
     Args:
@@ -228,16 +268,18 @@ def ToggleToolTUI(toolName: str) -> bool:
     """
     global toolsConfig
 
-    print(f"modesTUI: {toolName}")
-    print("0 Enable                llm streaming mode off")
-    print("1 Disable                 llm streaming mode on")
+    print(f"modesManger: {toolName}")
+    print("0 Disable")
+    print("1 Enable")
+    # print("0 Enable                llm streaming mode off")
+    # print("1 Disable                 llm streaming mode on")
 
     choice = input("Human:\n").strip()
 
     if choice == "0":
-        newStatus = True
-    elif choice == "1":
         newStatus = False
+    elif choice == "1":
+        newStatus = True
     else:
         print("⚠ Invalid input. No changes made.")
         return False
@@ -245,20 +287,21 @@ def ToggleToolTUI(toolName: str) -> bool:
     toolsConfig[toolName] = newStatus
     SaveToolsConfig()
 
-    print("modesTUI:")
+    print("modesManger:")
     print("The value saved succesfully")
     print(f"mode-stream: {str(newStatus).lower()}")
 
     return True
 
 
+@PrintFunctionName
 def Main(inputChoice="none") -> List[Any]:
     """
     Main entry point for the Tools Manager.
 
     Behavior:
         - inputChoice == "update": walks the user through the two-step
-          modesTUI flow (pick a tool, then enable/disable it), saves the
+          modesManger flow (pick a tool, then enable/disable it), saves the
           preference, and returns the refreshed tools list.
         - inputChoice == "get": simply returns the tools list built from
           the currently saved preferences.
@@ -276,12 +319,16 @@ def Main(inputChoice="none") -> List[Any]:
         LoadToolsConfig()
 
         if inputChoice == "update":
-            selectedTool = SelectToolTUI()
-            if not selectedTool:
-                return GetToolsList()
+            while True:
+                selectedTool = SelectToolManger()
+                print(f"selectedTool: {selectedTool}")
+                if selectedTool == "quit":
+                    return GetToolsList()
+                # if not selectedTool:
+                #     return GetToolsList()
 
-            ToggleToolTUI(selectedTool)
-            return GetToolsList()
+                ToggleToolManger(selectedTool)
+                # return GetToolsList()
 
         elif inputChoice == "get":
             return GetToolsList()
