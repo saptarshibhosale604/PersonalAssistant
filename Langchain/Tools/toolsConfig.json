@@ -1,6 +1,6 @@
 {
     "toolsGeneral": true,
-    "toolsTest": true,
+    "toolsTest": false,
     "toolsPii": true,
     "toolsDataAnalysis": false,
     "toolsFinanceAssist": false

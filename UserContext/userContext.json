@@ -1,7 +1,7 @@
 {
   "user_profile": {
-    "interactions_count": 131,
-    "last_interaction": "2026-07-07T10:24:23.969132",
+    "interactions_count": 165,
+    "last_interaction": "2026-07-09T01:45:42.988572",
     "common_topics": [
       "personal",
       "technical"
@@ -9,6 +9,272 @@
     "preferences": {}
   },
   "interaction_history": [
+    {
+      "timestamp": "2026-07-09T01:45:42.988572",
+      "input_length": 2,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-07-09T01:44:34.866331",
+      "input_length": 2,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-07-09T01:43:16.707359",
+      "input_length": 3,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-07-09T01:42:50.570230",
+      "input_length": 3,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-07-09T01:42:29.683618",
+      "input_length": 3,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-07-09T01:40:14.040536",
+      "input_length": 2,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-07-09T01:39:47.142899",
+      "input_length": 2,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-07-09T01:35:16.692487",
+      "input_length": 2,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-07-09T01:33:25.962365",
+      "input_length": 2,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-07-09T01:29:11.806971",
+      "input_length": 1134,
+      "intent_categories": [
+        "technical",
+        "personal"
+      ],
+      "keywords": [
+        "code",
+        "toolslist",
+        "module",
+        "toolslist",
+        "print"
+      ]
+    },
+    {
+      "timestamp": "2026-07-09T01:24:07.103303",
+      "input_length": 3,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-07-09T00:59:47.003500",
+      "input_length": 23,
+      "intent_categories": [],
+      "keywords": [
+        "mode",
+        "update",
+        "tools"
+      ]
+    },
+    {
+      "timestamp": "2026-07-09T00:56:27.969885",
+      "input_length": 4,
+      "intent_categories": [],
+      "keywords": [
+        "hiii"
+      ]
+    },
+    {
+      "timestamp": "2026-07-09T00:45:50.644496",
+      "input_length": 2,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-07-09T00:45:28.279887",
+      "input_length": 2,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-07-09T00:42:18.369084",
+      "input_length": 23,
+      "intent_categories": [],
+      "keywords": [
+        "whats"
+      ]
+    },
+    {
+      "timestamp": "2026-07-09T00:25:59.453907",
+      "input_length": 369,
+      "intent_categories": [
+        "technical",
+        "personal"
+      ],
+      "keywords": [
+        "code",
+        "getallmodevalues",
+        "none",
+        "print",
+        "every"
+      ]
+    },
+    {
+      "timestamp": "2026-07-09T00:25:37.479902",
+      "input_length": 1,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-07-09T00:19:04.286548",
+      "input_length": 47,
+      "intent_categories": [],
+      "keywords": [
+        "explain",
+        "print",
+        "value"
+      ]
+    },
+    {
+      "timestamp": "2026-07-09T00:16:16.577487",
+      "input_length": 3,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-07-09T00:12:23.044626",
+      "input_length": 222,
+      "intent_categories": [
+        "personal"
+      ],
+      "keywords": [
+        "give",
+        "other",
+        "right",
+        "this",
+        "from"
+      ]
+    },
+    {
+      "timestamp": "2026-07-09T00:03:59.928762",
+      "input_length": 3,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-07-08T23:51:00.349586",
+      "input_length": 3602,
+      "intent_categories": [
+        "technical",
+        "personal"
+      ],
+      "keywords": [
+        "code",
+        "main",
+        "modeconfigfilepath",
+        "modesconfig",
+        "json"
+      ]
+    },
+    {
+      "timestamp": "2026-07-08T23:36:42.366270",
+      "input_length": 4,
+      "intent_categories": [],
+      "keywords": [
+        "okay"
+      ]
+    },
+    {
+      "timestamp": "2026-07-08T23:34:35.102815",
+      "input_length": 16,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-07-08T23:03:12.130432",
+      "input_length": 2,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-07-08T23:01:53.226687",
+      "input_length": 3,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-07-08T22:44:16.723618",
+      "input_length": 3,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-07-08T22:34:05.324305",
+      "input_length": 2,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-07-08T22:07:37.702620",
+      "input_length": 2,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-07-08T22:05:21.000562",
+      "input_length": 4,
+      "intent_categories": [],
+      "keywords": [
+        "hiii"
+      ]
+    },
+    {
+      "timestamp": "2026-07-08T22:03:50.545241",
+      "input_length": 2,
+      "intent_categories": [],
+      "keywords": []
+    },
+    {
+      "timestamp": "2026-07-08T21:55:16.735440",
+      "input_length": 9,
+      "intent_categories": [],
+      "keywords": [
+        "there"
+      ]
+    },
+    {
+      "timestamp": "2026-07-08T21:45:24.690054",
+      "input_length": 3386,
+      "intent_categories": [
+        "technical",
+        "personal"
+      ],
+      "keywords": [
+        "code",
+        "main",
+        "elif",
+        "modellm",
+        "local"
+      ]
+    },
     {
       "timestamp": "2026-07-07T10:24:23.969132",
       "input_length": 3386,
@@ -154,356 +420,6 @@
       "intent_categories": [],
       "keywords": [
         "hlep"
-      ]
-    },
-    {
-      "timestamp": "2026-07-07T09:38:37.441747",
-      "input_length": 1857,
-      "intent_categories": [
-        "technical",
-        "personal"
-      ],
-      "keywords": [
-        "code",
-        "main",
-        "result",
-        "agent",
-        "invoke"
-      ]
-    },
-    {
-      "timestamp": "2026-07-07T09:37:32.665868",
-      "input_length": 1857,
-      "intent_categories": [
-        "technical",
-        "personal"
-      ],
-      "keywords": [
-        "code",
-        "main",
-        "result",
-        "agent",
-        "invoke"
-      ]
-    },
-    {
-      "timestamp": "2026-07-07T09:36:33.519397",
-      "input_length": 1857,
-      "intent_categories": [
-        "technical",
-        "personal"
-      ],
-      "keywords": [
-        "code",
-        "main",
-        "result",
-        "agent",
-        "invoke"
-      ]
-    },
-    {
-      "timestamp": "2026-07-07T09:20:30.630085",
-      "input_length": 1857,
-      "intent_categories": [
-        "technical",
-        "personal"
-      ],
-      "keywords": [
-        "code",
-        "main",
-        "result",
-        "agent",
-        "invoke"
-      ]
-    },
-    {
-      "timestamp": "2026-07-07T09:17:17.175578",
-      "input_length": 4,
-      "intent_categories": [],
-      "keywords": [
-        "kjkj"
-      ]
-    },
-    {
-      "timestamp": "2026-07-07T01:40:33.790257",
-      "input_length": 23,
-      "intent_categories": [],
-      "keywords": [
-        "whats",
-        "weather",
-        "here"
-      ]
-    },
-    {
-      "timestamp": "2026-07-07T01:37:38.368655",
-      "input_length": 30,
-      "intent_categories": [
-        "personal"
-      ],
-      "keywords": [
-        "give",
-        "list",
-        "files"
-      ]
-    },
-    {
-      "timestamp": "2026-07-07T01:35:48.339086",
-      "input_length": 14,
-      "intent_categories": [
-        "personal"
-      ],
-      "keywords": [
-        "whats",
-        "name"
-      ]
-    },
-    {
-      "timestamp": "2026-07-07T01:31:09.950430",
-      "input_length": 14,
-      "intent_categories": [
-        "personal"
-      ],
-      "keywords": [
-        "whats",
-        "name"
-      ]
-    },
-    {
-      "timestamp": "2026-07-07T01:28:13.132933",
-      "input_length": 4,
-      "intent_categories": [],
-      "keywords": [
-        "hiii"
-      ]
-    },
-    {
-      "timestamp": "2026-07-07T01:20:52.307742",
-      "input_length": 14,
-      "intent_categories": [
-        "personal"
-      ],
-      "keywords": [
-        "whats",
-        "name"
-      ]
-    },
-    {
-      "timestamp": "2026-07-07T01:13:21.480853",
-      "input_length": 34,
-      "intent_categories": [
-        "personal"
-      ],
-      "keywords": [
-        "give",
-        "list",
-        "files"
-      ]
-    },
-    {
-      "timestamp": "2026-07-07T01:11:50.678512",
-      "input_length": 4,
-      "intent_categories": [],
-      "keywords": [
-        "hiii"
-      ]
-    },
-    {
-      "timestamp": "2026-07-07T01:09:48.438210",
-      "input_length": 34,
-      "intent_categories": [
-        "personal"
-      ],
-      "keywords": [
-        "give",
-        "list",
-        "files"
-      ]
-    },
-    {
-      "timestamp": "2026-07-07T01:08:56.883320",
-      "input_length": 4,
-      "intent_categories": [],
-      "keywords": [
-        "hiii"
-      ]
-    },
-    {
-      "timestamp": "2026-07-07T01:04:39.282308",
-      "input_length": 14,
-      "intent_categories": [
-        "personal"
-      ],
-      "keywords": [
-        "whats",
-        "name"
-      ]
-    },
-    {
-      "timestamp": "2026-07-07T00:53:45.557448",
-      "input_length": 31,
-      "intent_categories": [
-        "personal"
-      ],
-      "keywords": [
-        "whats",
-        "name"
-      ]
-    },
-    {
-      "timestamp": "2026-07-07T00:53:02.803870",
-      "input_length": 2,
-      "intent_categories": [],
-      "keywords": []
-    },
-    {
-      "timestamp": "2026-07-07T00:49:55.782425",
-      "input_length": 16,
-      "intent_categories": [
-        "personal"
-      ],
-      "keywords": [
-        "what",
-        "name"
-      ]
-    },
-    {
-      "timestamp": "2026-07-07T00:48:20.984515",
-      "input_length": 9,
-      "intent_categories": [],
-      "keywords": [
-        "there"
-      ]
-    },
-    {
-      "timestamp": "2026-07-07T00:23:45.779400",
-      "input_length": 3,
-      "intent_categories": [],
-      "keywords": []
-    },
-    {
-      "timestamp": "2026-07-07T00:22:42.940719",
-      "input_length": 4,
-      "intent_categories": [],
-      "keywords": [
-        "hiii"
-      ]
-    },
-    {
-      "timestamp": "2026-07-07T00:01:29.964050",
-      "input_length": 10,
-      "intent_categories": [],
-      "keywords": [
-        "hiii",
-        "there"
-      ]
-    },
-    {
-      "timestamp": "2026-07-06T23:48:00.337551",
-      "input_length": 10,
-      "intent_categories": [],
-      "keywords": [
-        "hiii",
-        "there"
-      ]
-    },
-    {
-      "timestamp": "2026-07-06T23:47:11.583473",
-      "input_length": 3,
-      "intent_categories": [],
-      "keywords": []
-    },
-    {
-      "timestamp": "2026-07-06T23:46:28.731911",
-      "input_length": 22,
-      "intent_categories": [],
-      "keywords": [
-        "update",
-        "mode",
-        "global"
-      ]
-    },
-    {
-      "timestamp": "2026-07-06T23:42:46.926650",
-      "input_length": 34,
-      "intent_categories": [
-        "personal"
-      ],
-      "keywords": [
-        "give",
-        "list",
-        "files"
-      ]
-    },
-    {
-      "timestamp": "2026-07-06T23:41:34.832695",
-      "input_length": 25,
-      "intent_categories": [
-        "personal"
-      ],
-      "keywords": [
-        "give",
-        "list",
-        "files"
-      ]
-    },
-    {
-      "timestamp": "2026-07-06T23:40:36.400118",
-      "input_length": 25,
-      "intent_categories": [
-        "personal"
-      ],
-      "keywords": [
-        "give",
-        "list",
-        "files"
-      ]
-    },
-    {
-      "timestamp": "2026-07-06T23:37:19.302248",
-      "input_length": 25,
-      "intent_categories": [
-        "personal"
-      ],
-      "keywords": [
-        "give",
-        "list",
-        "files"
-      ]
-    },
-    {
-      "timestamp": "2026-07-06T23:36:35.576663",
-      "input_length": 12,
-      "intent_categories": [],
-      "keywords": []
-    },
-    {
-      "timestamp": "2026-07-06T23:34:43.372140",
-      "input_length": 3,
-      "intent_categories": [],
-      "keywords": []
-    },
-    {
-      "timestamp": "2026-06-21T18:04:04.137090",
-      "input_length": 140,
-      "intent_categories": [
-        "personal"
-      ],
-      "keywords": [
-        "read",
-        "file",
-        "temp03",
-        "then",
-        "find"
-      ]
-    },
-    {
-      "timestamp": "2026-06-21T18:01:49.591067",
-      "input_length": 24,
-      "intent_categories": [],
-      "keywords": [
-        "read",
-        "file",
-        "temp03"
       ]
     }
   ],

@@ -18,6 +18,7 @@ import Langchain.Tools.toolsManager as toolsManager
 import UI.modesTUI as modesTUI
 import UserContext.userContext as UserContext
 from Log.custom_logger import logger
+from Log.log_utils import PrintFunctionName
 
 # Optional / alternate I/O backends (kept for reference, not currently wired in):
 # import readline
@@ -26,7 +27,7 @@ from Log.custom_logger import logger
 # import LLM.llm as LLM
 # import userInputToScriptInvocation as UITSI
 
-logger.debug("Initialized assistant.py")
+# logger.debug("Initialized assistant.py")
 
 # ---- Constants / Global State ----
 LIST_WAKE_UP_CALLS = ["hey there", "hi there", "hey rpi"]
@@ -48,24 +49,16 @@ COMMANDS = [
 
 FORMAT_MESSAGE_WIDTH = 60  # Total width used when printing section separators
 
-# ---- Print the function names ----
-
-isPrintFunctionNamesEnable = True
-
-def PrintFunctionNames(stringValue):
-    if isPrintFunctionNamesEnable:
-        print(stringValue)
-
 # ---- Mode Configuration Helpers ----
-
+@PrintFunctionName
 def _ResolveModeConfigPath() -> str:
     """Return the active mode-config file path, honoring sandbox mode."""
-    PrintFunctionNames("cli _ResolveModeConfigPath...")
     if MODE_SANDBOX == "true":
         return MODE_CONFIG_SANDBOX_FILE_PATH
     return MODE_CONFIG_FILE_PATH
 
 
+@PrintFunctionName
 def LoadModes() -> Optional[dict]:
     """
     Load the mode configuration from disk.
@@ -73,22 +66,23 @@ def LoadModes() -> Optional[dict]:
     If the config file does not exist yet, trigger initialization via
     modesTUI and return None (caller should reload afterward if needed).
     """
-    PrintFunctionNames("cli LoadModes...")
+    # PrintFunctionNames("cli LoadModes...")
     configPath = _ResolveModeConfigPath()
 
     if os.path.exists(configPath):
-        logger.debug("LoadModes: getting current mode config file")
+        logger.debug("[Debug] LoadModes: getting current mode config file")
         with open(configPath, "r") as configFile:
             return json.load(configFile)
 
-    logger.debug("LoadModes: initializing the mode config file")
+    logger.debug("[Debug] LoadModes: initializing the mode config file")
     modesTUI.LoadConfigurationFromFile(modeSandbox=MODE_SANDBOX)
     return None
 
 
+@PrintFunctionName
 def UpdateModeValue(modeName: str, modeValue: str) -> None:
     """Update a single mode's value in the config file and persist it."""
-    PrintFunctionNames("cli UpdateModeValue...")
+    # PrintFunctionNames("cli UpdateModeValue...")
     modeConfig = LoadModes()
     modeConfig[modeName] = modeValue
 
@@ -99,23 +93,29 @@ def UpdateModeValue(modeName: str, modeValue: str) -> None:
     print()
 
 
+@PrintFunctionName
 def GetAllModeValues() -> None:
     """Print every mode name and its current value."""
-    PrintFunctionNames("cli GetAllModeValues...")
+    # PrintFunctionNames("cli GetAllModeValues...")
     modeConfig = LoadModes()
+    counter = 1
     for key, value in modeConfig.items():
-        print(f"  {key:<27} → {value}")
+        # print(f"  {key:<27} → {value}")
+        print(f"{counter}.  {key:<20} [{value}]")
+        counter += 1
 
 
+@PrintFunctionName
 def GetModeValue(modeName: str) -> Any:
     """Return the current value for the given mode name."""
-    PrintFunctionNames("cli GetModeValue...")
+    # PrintFunctionNames("cli GetModeValue...")
     modeConfig = LoadModes()
     return modeConfig[modeName]
 
 
+@PrintFunctionName
 def DropModeConfigFile() -> None:
-    PrintFunctionNames("cli DropModeConfigFile...")
+    # PrintFunctionNames("cli DropModeConfigFile...")
     """Delete the current mode config file, if it exists."""
     configPath = _ResolveModeConfigPath()
     if os.path.exists(configPath):
@@ -127,6 +127,7 @@ def DropModeConfigFile() -> None:
 
 # ---- Tool / Command Helpers ----
 
+@PrintFunctionName
 def FormatToolsPrinting(tools: Iterable[Any]) -> None:
     """
     Print tools in the format: <toolName>: <toolDescription>
@@ -134,7 +135,7 @@ def FormatToolsPrinting(tools: Iterable[Any]) -> None:
     Supports LangChain StructuredTool/BaseTool instances, dicts, and
     callables with name/description attributes.
     """
-    PrintFunctionNames("cli FormatToolsPrinting...")
+    # PrintFunctionNames("cli FormatToolsPrinting...")
     for index, tool in enumerate(tools, start=1):
         name = None
         description = None
@@ -156,6 +157,7 @@ def FormatToolsPrinting(tools: Iterable[Any]) -> None:
         print(f"{name}: {description}")
 
 
+@PrintFunctionName
 def BasicCmds(userInput: str) -> bool:
     """
     Handle basic CLI commands (help, mode changes).
@@ -163,7 +165,7 @@ def BasicCmds(userInput: str) -> bool:
     Returns True if the input was recognized and handled as a basic
     command, False if it should be passed on for further processing.
     """
-    PrintFunctionNames("cli BasicCmds...")
+    # PrintFunctionNames("cli BasicCmds...")
     global MODE_SANDBOX
 
     parts = userInput.lower().split()
@@ -171,6 +173,8 @@ def BasicCmds(userInput: str) -> bool:
     if parts[0] == "help":
         FormatMessageTypes("SystemMessage")
         logger.info("Help:")
+        logger.info("Type 'help' for list of commands")
+        logger.info("Type 'mode update' for update the modes")
         GetAllModeValues()
 
     elif len(parts) <= 3 and parts[0] == "mode":
@@ -217,9 +221,10 @@ def BasicCmds(userInput: str) -> bool:
     return True
 
 
+@PrintFunctionName
 def Completer(text: str, state: int) -> Optional[str]:
     """Auto-completion callback for readline-style tab completion."""
-    PrintFunctionNames("cli Completer...")
+    # PrintFunctionNames("cli Completer...")
     options = [command for command in COMMANDS if command.startswith(text)]
     if state < len(options):
         return options[state]
@@ -230,16 +235,18 @@ def Completer(text: str, state: int) -> Optional[str]:
 # readline.parse_and_bind("tab: complete")
 
 
+@PrintFunctionName
 def FormatMessageTypes(text: str) -> None:
     """Print a section separator line with the given label centered in it."""
-    PrintFunctionNames("cli FormatMessageTypes...")
+    # PrintFunctionNames("cli FormatMessageTypes...")
     padding = (FORMAT_MESSAGE_WIDTH - len(text) - 4) // 2
     print("=" * padding + " " + text + " " + "=" * padding)
 
 
+@PrintFunctionName
 def ReadUserInputFile() -> Optional[str]:
     """Read and return the contents of the userInput.txt file, if present."""
-    PrintFunctionNames("cli ReadUserInputFile...")
+    # PrintFunctionNames("cli ReadUserInputFile...")
     if os.path.exists(USER_INPUT_FILE):
         with open(USER_INPUT_FILE, "r") as inputFile:
             return inputFile.read()
@@ -249,9 +256,11 @@ def ReadUserInputFile() -> Optional[str]:
 
 # ---- Input / Output ----
 
+# @log_call
+@PrintFunctionName
 def Input() -> str:
     """Read user input according to the current mode-input setting."""
-    PrintFunctionNames("cli Input...")
+    # PrintFunctionNames("cli Input...")
     if MODE_SANDBOX == "true":
         FormatMessageTypes("HumanMessage:Sandbox")
     else:
@@ -279,14 +288,15 @@ def Input() -> str:
         logger.info(f"Error: Invalid modeInput: {modeInput}")
         userInput = None
 
-    logger.debug(f"userInput: {userInput}")
+    # logger.debug(f"userInput: {userInput}")
     FormatMessageTypes("")
     return userInput
 
 
+@PrintFunctionName
 def Processing(userInput: str) -> Any:
     """Route user input through basic commands or the LLM framework."""
-    PrintFunctionNames("cli Processing...")
+    # PrintFunctionNames("cli Processing...")
     global THREAD_ID
 
     if BasicCmds(userInput):
@@ -310,9 +320,10 @@ def Processing(userInput: str) -> Any:
     return None
 
 
+@PrintFunctionName
 def Output(assistantOutput: Any) -> None:
     """Emit the assistant's output according to the current mode-output setting."""
-    PrintFunctionNames("cli Output...")
+    # PrintFunctionNames("cli Output...")
     logger.debug(f"assistantOutput: {assistantOutput}")
 
     modeOutput = GetModeValue("mode-output")
@@ -326,28 +337,31 @@ def Output(assistantOutput: Any) -> None:
 
 # ---- Main Loop ----
 
+@PrintFunctionName
 def WelcomeUser() -> None:
     """Print a welcome banner and show the help command output."""
-    PrintFunctionNames("cli WelcomeUser...")
-    logger.debug("WelcomeUser()")
+    # PrintFunctionNames("cli WelcomeUser...")
+    # logger.debug("WelcomeUser()")
     logger.info("Welcome to Personal Assistant CLI")
-    logger.info("Type 'help' for list of commands")
 
     assistantOutput = Processing("help")
     if assistantOutput is not None:
         Output(assistantOutput)
 
 
+@PrintFunctionName
 def Main() -> None:
     """Run a single input -> processing -> output cycle."""
-    PrintFunctionNames("cli Main...")
+    # PrintFunctionNames("cli Main...")
     global USER_INPUT_COUNT
 
     USER_INPUT_COUNT += 1
     logger.debug(f"UserInputCount: {USER_INPUT_COUNT}")
 
     userInput = Input()
+    print(f"userInput after input: {userInput}")
     if userInput is not None:
+        print(f"userInput before procesing: {userInput}")
         assistantOutput = Processing(userInput)
         if assistantOutput is not None:
             Output(assistantOutput)

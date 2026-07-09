@@ -35,7 +35,7 @@ logger.addHandler(console_handler)
 
 # # Logging examples
 # logger.info("start logging")
-logger.debug('Logging started')
+# logger.debug('Logging started')
 # logger.info('This is an info message')
 # logger.warning('This is a warning message')
 # logger.error('This is an error message')

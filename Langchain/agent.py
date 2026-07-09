@@ -1,624 +1,451 @@
-## IMPORT ##
-# # # # # # # # # # # # # # # # # # # # # 
-#    ___ __  __ ____   ___  ____ ___:_    #
-#   |_ _|  \/  |  _ \ / _ \|  _ \_   _|   #
-#    | || |\/| | |_) | | | | |_) || |     #
-#    | || |  | |  __/| |_| |  _ < | |     #
-#   |___|_|  |_|_|    \___/|_| \_\|_|     #
-#                                         #
-#                                         #
-# # # # # # # # # # # # # # # # # # # # # 
+"""
+Agent module.
 
-## API keys
+Builds and manages a LangChain agent that can run against different LLM
+backends (local Ollama models or OpenAI) and routes tool calls through a
+human-in-the-loop (HITL) approval middleware.
+"""
 
 import os
-def RemoveSpaces(input_string):
-    # Remove spaces from the input string
-    return input_string.replace(" ", "")
 
-openai_key = "sk-proj-zP6XLa1m5gtlBcXJCaHZGmAvXEvUrP 5ATJSPBfLRdEuF-vSroLAG4V0zBdpwPz9PTXe9rM0-CgT3BlbkFJ83 AZyS7Zds5OT4G7S7MJslTok1O8P7ftX6Zz_IvdtMsy_CnjJeBoOv-o-G5t13-1Yw20ei_BwA" # myTestKey08, saptarshibhosale604@gmail.com
-tavily_key = "tvly-kX76LCz C36oih0u9COcf6oa 53A47MX0g"
+from Log.log_utils import PrintFunctionName
 
-os.environ["OPENAI_API_KEY"] = RemoveSpaces(openai_key)
-os.environ["TAVILY_API_KEY"] = RemoveSpaces(tavily_key)
+@PrintFunctionName
+def RemoveSpaces(inputString: str) -> str:
+    """Remove all whitespace characters from a string.
 
-## Library
+    Used to sanitize API keys that were pasted with accidental line-wrap
+    spaces.
+    """
+    return inputString.replace(" ", "")
+
+
+# --------------------------------------------------------------------------- #
+# API keys
+# --------------------------------------------------------------------------- #
+# SECURITY NOTE: these are live credentials committed directly in source.
+# Rotate/revoke them and load from a secrets manager or .env file instead
+# (see "Optional Suggestions" in the accompanying review).
+OPENAI_KEY = (
+    "sk-proj-zP6XLa1m5gtlBcXJCaHZGmAvXEvUrP 5ATJSPBfLRdEuF-vSroLAG4V0zBdpwPz9PTXe9rM0-CgT3BlbkFJ83"
+    " AZyS7Zds5OT4G7S7MJslTok1O8P7ftX6Zz_IvdtMsy_CnjJeBoOv-o-G5t13-1Yw20ei_BwA"
+)  # myTestKey08, saptarshibhosale604@gmail.com
+TAVILY_KEY = "tvly-kX76LCz C36oih0u9COcf6oa 53A47MX0g"
+
+os.environ["OPENAI_API_KEY"] = RemoveSpaces(OPENAI_KEY)
+os.environ["TAVILY_API_KEY"] = RemoveSpaces(TAVILY_KEY)
+
+# Imported after the API-key env vars are set above, since some provider
+# SDKs read credentials from the environment at import time.
 from langchain.agents import create_agent
 from langchain.agents.middleware import HumanInTheLoopMiddleware
-from langchain_openai import ChatOpenAI
 from langchain_ollama.chat_models import ChatOllama
-from langgraph.types import Command
+from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import InMemorySaver
-from pprint import pprint
+from langgraph.types import Command
 
-## Custom scripts
 from Log.custom_logger import logger
-
-## Tools
-# import Langchain.Tools.toolsTest as toolsTest
-# import Langchain.Tools.toolsGeneral as toolsGeneral
-# import Langchain.Tools.toolsPii as toolsPii
-# import Langchain.Tools.toolsDataAnalysis as toolsDataAnalysis
-# import Langchain.Tools.ToolsFinanceAssist.toolsFinanceAssist as toolsFinanceAssist
-
 import Langchain.Tools.toolsManager as toolsManager
 
-## VARIABLES ##
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-#   __     ___    ____  ___    _    ____  _     _____ ____     #
-#   \ \   / / \  |  _ \|_ _|  / \  | __ )| |   | ____/ ___|    #
-#    \ \ / / _ \ | |_) || |  / _ \ |  _ \| |   |  _| \___ \    #
-#     \ V / ___ \|  _ < | | / ___ \| |_) | |___| |___ ___) |   #
-#      \_/_/   \_\_| \_\___/_/   \_\____/|_____|_____|____/    #
-#                                                              #
-#                                                              #
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 
-requestedToolsNumberPerUserInput = 0
+# --------------------------------------------------------------------------- #
+# Constants
+# --------------------------------------------------------------------------- #
+DEFAULT_MAX_TOKENS = 500
+DEFAULT_TEMPERATURE = 0
+DEFAULT_MAX_RETRIES = 1
+BANNER_WIDTH = 60
 
-modeCurrentLLM = "na" # save mode current llm, for detecting changes in the mode
+JARVIS_SYSTEM_PROMPT = (
+    "You are an assistance like a JARVIS from Iron Man. "
+    "Your name is RPI. Your master name is SSB"
+)
+BUDDY_SYSTEM_PROMPT = (
+    "You are a chearful, intelligent, naughty, best friend, sarcastic character. "
+    "Your name is RPI. The user name is SSB, who is your best buddy"
+)
 
-tools = [] # Default no tools
+# Tools that require explicit human approval before execution.
+TOOL_INTERRUPT_POLICY = {
+    # toolsTest
+    "toolTestGetWeather": True,
+    "toolTestCalculateExpression": True,
+    "toolTestCreatePoem": True,
+    # toolsPii
+    "toolMyName": True,
+    "toolMyPetsName": True,
+    # toolsGeneral
+    "toolShell": True,
+    "toolSetCronRemainder": True,
+    "toolWebSearch": True,
+    # toolsDataAnalysis
+    "execute_pyspark_code": True,
+    "analyze_csv_data": True,
+    # toolsFinanceAssist V01
+    "ToolReadFinanceData": True,
+    "ToolWriteFinanceData": True,
+    # toolsFinanceAssist V02
+    "sql_db_query": True,
+    "sql_db_schema": True,
+    "sql_db_list_tables": True,
+    "sql_db_query_checker": True,
+}
 
-requestedToolsNumberPerAgentInterrupt = 0 
 
-# llm = ChatOllama(model="llama3.2:1b", max_tokens=500, temperature=0, max_retries=1) # Default
-# llm = ChatOllama(model="qwen3.5:4b", streaming=True, max_tokens=500, temperature=0, max_retries=1)
-llm = ChatOllama(model="qwen3.5:4b", streaming=True, max_tokens=500, temperature=0, max_retries=1, reasoning=False)
-# llm = ChatOpenAI(model="gpt-3.5-turbo", streaming=True, max_tokens=500, temperature=0, max_retries=1) # only for test
+# --------------------------------------------------------------------------- #
+# Global mutable state
+# --------------------------------------------------------------------------- #
+REQUESTED_TOOLS_NUMBER_PER_USER_INPUT = 0
+REQUESTED_TOOLS_NUMBER_PER_AGENT_INTERRUPT = 0
+MODE_CURRENT_LLM = "na"  # tracks the active LLM mode, to detect mode changes
+TOOLS = []  # default: no tools
 
-## FUNCTIONS ##
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-#    _____ _   _ _   _  ____ _____ ___ ___  _   _ ____     #
-#   |  ___| | | | \ | |/ ___|_   _|_ _/ _ \| \ | / ___|    #
-#   | |_  | | | |  \| | |     | |  | | | | |  \| \___ \    #
-#   |  _| | |_| | |\  | |___  | |  | | |_| | |\  |___) |   #
-#   |_|    \___/|_| \_|\____| |_| |___\___/|_| \_|____/    #
-#                                                          #
-#                                                          #
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+LLM = ChatOllama(
+    model="qwen3.5:4b",
+    streaming=True,
+    max_tokens=DEFAULT_MAX_TOKENS,
+    temperature=DEFAULT_TEMPERATURE,
+    max_retries=DEFAULT_MAX_RETRIES,
+    reasoning=False,
+)
 
-# Format the AI, Human, Tool message types
-def FormatMessageTypes(text):
-    total_width = 60
-    # total_width = 61
-    text_length = len(text)
-    padding = (total_width - text_length - 4) // 2
+# --------------------------------------------------------------------------- #
+# Functions
+# --------------------------------------------------------------------------- #
+
+@PrintFunctionName
+def FormatMessageTypes(text: str) -> None:
+    """Print a centered '=== text ===' banner used to separate message blocks."""
+    padding = (BANNER_WIDTH - len(text) - 4) // 2
     print("=" * padding + " " + text + " " + "=" * padding)
 
-# Build Langchain agent
+
+@PrintFunctionName
 def BuildAgent():
-    """Create the LangChain agent with OpenAI and our tools, plus HITL middleware."""
-    print("Agent BuildAgent new instance")
-    model = llm
-    
-    print(f"Agent BuildAgent llm: {llm}")
-    # Require human approval for each tool call
-    interrupt_policy = {
-        # toolsTest
-        "toolTestGetWeather": True,
-        "toolTestCalculateExpression": True,
-        "toolTestCreatePoem": True,
+    """Create a new LangChain agent from the current global LLM/tools + HITL middleware."""
+    # print("Agent BuildAgent new instance")
+    # print(f"Agent BuildAgent llm: {LLM}")
 
-        # toolsPii
-        "toolMyName": True,
-        "toolMyPetsName": True,
-
-        # toolsGeneral
-        "toolShell": True,
-        # "toolShell": False,
-        "toolSetCronRemainder": True,
-        "toolWebSearch": True,
-
-        #toolsDataAnalysis
-        "execute_pyspark_code": True,
-        "analyze_csv_data": True,
-
-        #toolsFinanceAssist V01
-        "ToolReadFinanceData": True,
-        "ToolWriteFinanceData": True,
-
-        #toolsFinanceAssist V02
-        "sql_db_query": True,
-        "sql_db_schema": True,
-        "sql_db_list_tables": True,
-        "sql_db_query_checker": True
-    }
     middleware = [
         HumanInTheLoopMiddleware(
-            interrupt_on=interrupt_policy,
-            description_prefix="Tool execution pending approval"
+            interrupt_on=TOOL_INTERRUPT_POLICY,
+            description_prefix="Tool execution pending approval",
         )
     ]
-
-    # Create the agent with model, tools, and middleware
-    agent = create_agent(model=model, tools=tools, middleware=middleware, checkpointer=InMemorySaver())
-    # agent = create_agent(model=model, tools=tools, middleware=middleware, checkpointer=InMemorySaver(), debug=True)
-    return agent
-
-agent = BuildAgent()
-
-# Initialise new agent instance with updated LLM and Tools
-def UpdateAgent(modeLLM):
-    global llm
-    global modeCurrentLLM
-    global agent
-    global tools
-    global logger
-
-    print(f"Agent UpdateAgent: modeLLM: {modeLLM}, modeCurrentLLM: {modeCurrentLLM}")
-    if(modeLLM != modeCurrentLLM):
-        # print("Changing the LLM")
-        logger.debug(f"Agent UpdateAgent Changing LLM: modeLLM: {modeLLM}, modeCurrentLLM: {modeCurrentLLM}")
-        modeCurrentLLM = modeLLM
-        # print(f"agent UpdateAgent02: modeLLM: {modeLLM} :: modeCurrentLLM: {modeCurrentLLM}")
-
-        if(modeLLM == "local-1b"):
-            llm = ChatOllama(model="llama3.2:1b", streaming=True, max_tokens=500, temperature=0, max_retries=1)
-            # llm = ChatOllama(model="llama3.2:1b", temperature=0, verbose=True)
-            tools = []
-
-        elif(modeLLM == "local-3b"):
-            llm = ChatOllama(model="llama3.2", streaming=True, max_tokens=500, temperature=0, max_retries=1)
-
-        elif(modeLLM == "local-4b"):
-            print("here 05")
-            # llm = ChatOllama(model="qwen3.5:4b", streaming=True, max_tokens=500, temperature=0, max_retries=1, think=False)
-            # llm = ChatOllama(model="qwen3.5:4b", streaming=True, max_tokens=500, temperature=0, max_retries=1)
-            llm = ChatOllama(model="qwen3.5:4b", streaming=True, max_tokens=500, temperature=0, max_retries=1, reasoning=False)
-            tools = toolsManager.Main("get") # "get" : Get tools list
-            
-            # print(f"tools: {tools}")
-
-        elif(modeLLM == "local-7b-raw"):
-            llm = ChatOllama(model="llama2-uncensored:7b", streaming=True, max_tokens=500, temperature=0, max_retries=1)
-
-        elif(modeLLM == "local-7b-vision"):
-            llm = ChatOllama(model="llava:7b", streaming=True, max_tokens=500, temperature=0, max_retries=1)
-
-        elif(modeLLM == "global"):
-            # llm = ChatOpenAI(model="gpt-3.5-turbo", max_tokens=500, temperature=0, max_retries=1)
-            llm = ChatOpenAI(model="gpt-3.5-turbo", streaming=True, max_tokens=500, temperature=0, max_retries=1)
-            # tools = toolsGeneral.ToolsList() 
-            tools = toolsManager.Main("get") # "get" : Get tools list
-            # print(f"toolsManager tools: {tools}")
-            # input("Human01")
-            # tools = ( toolsGeneral.ToolsList()
-            #     + toolsTest.ToolsList() 
-            #     + toolsPii.ToolsList() 
-            #     # + # toolsDataAnalysis.ToolsList()
-            #     + toolsFinanceAssist.ToolsList() )
-            # tools = toolsGeneral.ToolsList() +
-            #     toolsTest.ToolsList() + 
-            #     toolsPii.ToolsList() + 
-            #     # toolsDataAnalysis.ToolsList() +
-            #     toolsFinanceAssist.ToolsList() 
-
-        elif(modeLLM == "globalGemini"):
-            # llm = GoogleGenerativeAI(model="models/text-bison-001", google_api_key='AIzaSyBwIrjcMjKA1V3XJ_hCLurJx33wh33NWdk')
-            llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key='AIzaSyBPH-0Dd5e2Heu8lFs1rCci8ZdGxnr_ZvE')
-        
-        # rebuild the agent with new llm and tools
-        agent = BuildAgent()
-
-# Extracting interrupts, tools to be called, llm streamed chunks from the streamed data
-def ExtractStreamContent(stream_mode, content):
-    global requestedToolsNumberPerUserInput
-    
-    # print(f"stream_mode: {stream_mode}, content: {content}")
-    
-    # content is related to the chunks generated from llm
-    if stream_mode == "messages":
-        # Extract AIMessageChunk content safely
-        if isinstance(content, tuple) and len(content) >= 1:
-            message_chunk = content[0]
-            if hasattr(message_chunk, 'content'):
-                # print("===============")
-                # print(f"message_chunk.content: {message_chunk.content}")
-                # Check if the content is an AIMessageChunk or ToolMessage
-                # if isinstance(message_chunk, AIMessageChunk):
-                #     content_type = "AIMessageChunk"
-                # elif isinstance(message_chunk, ToolMessage):
-                #     content_type = "ToolMessage"
-                # else:
-                #     content_type = "Unknown Content Type"
-                # Check message type and print accordingly
-                if hasattr(message_chunk, 'type'):
-                    msg_type = message_chunk.type
-                else:
-                    # Fallback: check class name
-                    msg_type = message_chunk.__class__.__name__
-                
-                # print(f"msg_type: [{msg_type}] ")
-                # if msg_type == 
-                if msg_type == "tool":
-                    # print("print [toolMessage] ")
-                    FormatMessageTypes("ToolMessage")
-                    print(f"{message_chunk.content}", end="", flush=True)
-                    print()
-                    FormatMessageTypes("")
-                    print()
-                else:
-                    print(f"{message_chunk.content}", end="", flush=True)
-                # if msg_type == "AIMessageChunk":
-                #     print("print [AIMessage] ")
-                # if "AIMessageChunk" in msg_type:
-                #     print("print02 [AIMessage] ")
+    return create_agent(model=LLM, tools=TOOLS, middleware=middleware, checkpointer=InMemorySaver())
 
 
-                
-                # Print the content type and content
-                # print(f"{content_type}: {message_chunk.content}")
-                # print(f"{message_chunk.content}")
-                # print(f"{message_chunk.content}", end="", flush=True)
-                # print(token.content_blocks[0]["text"], end="", flush=True)
-                # print("===============")
-                return message_chunk.content or ""
-        
-        # Extract metadata if needed
-        # commented checking the effect
-        # elif isinstance(content, tuple) and len(content) == 2:
-        #     message_chunk, metadata = content
-        #     if hasattr(message_chunk, 'content'):
-        #         # print("===============")
-        #         # print(f"message_chunk.content02: {message_chunk.content}")
-        #         print(f"{message_chunk.content}", end="|", flush=True)
-        #         # print("===============")
-        #         return message_chunk.content or ""
-        
-    # content is related updates like interrupt
-    elif stream_mode == "updates":
-        # Handle updates format
-       # Extract interrupt information
+AGENT = BuildAgent()
+
+
+@PrintFunctionName
+def UpdateAgent(modeLLM: str) -> None:
+    """Rebuild the global agent whenever the requested LLM mode changes."""
+    global LLM, MODE_CURRENT_LLM, AGENT, TOOLS
+
+    print(f"Agent UpdateAgent: modeLLM: {modeLLM}, modeCurrentLLM: {MODE_CURRENT_LLM}")
+    if modeLLM == MODE_CURRENT_LLM:
+        return
+
+    logger.debug(f"Agent UpdateAgent Changing LLM: modeLLM: {modeLLM}, modeCurrentLLM: {MODE_CURRENT_LLM}")
+    MODE_CURRENT_LLM = modeLLM
+
+    if modeLLM == "local-1b":
+        LLM = ChatOllama(
+            model="llama3.2:1b", streaming=True, max_tokens=DEFAULT_MAX_TOKENS,
+            temperature=DEFAULT_TEMPERATURE, max_retries=DEFAULT_MAX_RETRIES,
+        )
+        TOOLS = []
+
+    elif modeLLM == "local-3b":
+        LLM = ChatOllama(
+            model="llama3.2", streaming=True, max_tokens=DEFAULT_MAX_TOKENS,
+            temperature=DEFAULT_TEMPERATURE, max_retries=DEFAULT_MAX_RETRIES,
+        )
+
+    elif modeLLM == "local-4b":
+        LLM = ChatOllama(
+            model="qwen3.5:4b", streaming=True, max_tokens=DEFAULT_MAX_TOKENS,
+            temperature=DEFAULT_TEMPERATURE, max_retries=DEFAULT_MAX_RETRIES, reasoning=False,
+        )
+        TOOLS = toolsManager.Main("get")  # "get": fetch tools list
+
+    elif modeLLM == "local-7b-raw":
+        LLM = ChatOllama(
+            model="llama2-uncensored:7b", streaming=True, max_tokens=DEFAULT_MAX_TOKENS,
+            temperature=DEFAULT_TEMPERATURE, max_retries=DEFAULT_MAX_RETRIES,
+        )
+
+    elif modeLLM == "local-7b-vision":
+        LLM = ChatOllama(
+            model="llava:7b", streaming=True, max_tokens=DEFAULT_MAX_TOKENS,
+            temperature=DEFAULT_TEMPERATURE, max_retries=DEFAULT_MAX_RETRIES,
+        )
+
+    elif modeLLM == "global":
+        LLM = ChatOpenAI(
+            model="gpt-3.5-turbo", streaming=True, max_tokens=DEFAULT_MAX_TOKENS,
+            temperature=DEFAULT_TEMPERATURE, max_retries=DEFAULT_MAX_RETRIES,
+        )
+        TOOLS = toolsManager.Main("get")  # "get": fetch tools list
+
+    elif modeLLM == "globalGemini":
+        # NOTE: ChatGoogleGenerativeAI is not imported in this module; this
+        # branch raises NameError if selected. Preserved as-is from the
+        # original implementation (see "Issues Found" in the review).
+        LLM = ChatGoogleGenerativeAI(
+            model="gemini-2.0-flash",
+            google_api_key="AIzaSyBPH-0Dd5e2Heu8lFs1rCci8ZdGxnr_ZvE",
+        )
+
+    AGENT = BuildAgent()
+
+
+@PrintFunctionName
+def ExtractStreamContent(streamMode: str, content) -> str:
+    """Extract printable text from a streamed chunk and print it to the console.
+
+    Handles two stream modes:
+      - "messages": incremental LLM/tool message chunks, printed as they arrive.
+      - "updates": state updates, used to detect and surface pending tool-call
+        interrupts that require human approval.
+    """
+    global REQUESTED_TOOLS_NUMBER_PER_USER_INPUT, REQUESTED_TOOLS_NUMBER_PER_AGENT_INTERRUPT
+
+    if streamMode == "messages":
+        if not (isinstance(content, tuple) and len(content) >= 1):
+            return ""
+
+        messageChunk = content[0]
+        if not hasattr(messageChunk, "content"):
+            return ""
+
+        messageType = getattr(messageChunk, "type", messageChunk.__class__.__name__)
+        if messageType == "tool":
+            FormatMessageTypes("ToolMessage")
+            print(f"{messageChunk.content}", end="", flush=True)
+            print()
+            FormatMessageTypes("")
+            print()
+        else:
+            print(f"{messageChunk.content}", end="", flush=True)
+
+        return messageChunk.content or ""
+
+    elif streamMode == "updates":
         interrupts = content.get("__interrupt__", [])
-        if interrupts:
-            # Handle tuple of interrupts (common in LangGraph)
-            first_interrupt = interrupts[0] if isinstance(interrupts, tuple) else interrupts[0]
-            
-            requestedToolsNumberPerUserInput += 1
+        if not interrupts:
+            return ""
 
-            global requestedToolsNumberPerAgentInterrupt
-            requestedToolsNumberPerAgentInterrupt = len(first_interrupt.value["action_requests"])
+        firstInterrupt = interrupts[0]
+        REQUESTED_TOOLS_NUMBER_PER_USER_INPUT += 1
+        REQUESTED_TOOLS_NUMBER_PER_AGENT_INTERRUPT = len(firstInterrupt.value["action_requests"])
 
-            # logger.debug(f"requestedToolsNumberPerAgentInterrupt: {requestedToolsNumberPerAgentInterrupt}")
+        for actionRequest in firstInterrupt.value["action_requests"]:
+            toolName = actionRequest["name"]
+            args = actionRequest.get("args", actionRequest.get("arguments", {}))
+            print(f"\n{'-' * BANNER_WIDTH}")
+            logger.info(
+                f"tool_name: {toolName},\nargs: {args},\n"
+                f"requestedToolsNumberPerUserInput: {REQUESTED_TOOLS_NUMBER_PER_USER_INPUT}\n"
+                f"requestedToolsNumberPerAgentInterrupt: {REQUESTED_TOOLS_NUMBER_PER_AGENT_INTERRUPT}"
+            )
+            print(f"{'-' * BANNER_WIDTH}")
+            input("Is this approved or rejected?(Default: approved): ")
 
-            for i in range(0, requestedToolsNumberPerAgentInterrupt):
-                # Extract action details
-                action = first_interrupt.value["action_requests"][i]
-                tool_name = action["name"]
-                args = action.get("args", action.get("arguments", {}))
-                print(f"\n{'-'*60}")
-                # print(f"tool_name: {tool_name}, args: {args}")
-                logger.info(f"tool_name: {tool_name},\nargs: {args},\nrequestedToolsNumberPerUserInput: {requestedToolsNumberPerUserInput}\nrequestedToolsNumberPerAgentInterrupt: {requestedToolsNumberPerAgentInterrupt}")
-                print(f"{'-'*60}")
-                input("Is this approved or rejected?(Default: approved): ")
-                
+        return ""
+
     else:
-        print(f"else stream_mode: {stream_mode}")
+        print(f"else stream_mode: {streamMode}")
+        return ""
 
-    return ""
 
-# Main function
-def Main(userInput, threadId, modeLLM, modeStream):
+@PrintFunctionName
+def StreamAndAccumulate(messages: list, configMemory: dict) -> str:
+    """Stream a fresh agent turn for the given messages, printing and
+    accumulating the response text, wrapped in an AIMessage banner."""
+    response = ""
+    FormatMessageTypes("AIMessage")
+    for streamMode, chunk in AGENT.stream(
+        {"messages": messages}, stream_mode=["updates", "messages"], config=configMemory
+    ):
+        chunkText = ExtractStreamContent(streamMode, chunk)
+        if chunkText:
+            response += chunkText
+    print()
+    FormatMessageTypes("")
+    print()
+    return response
+
+
+@PrintFunctionName
+def StreamResumeAndAccumulate(decisions: list, configMemory: dict) -> str:
+    """Resume a previously-interrupted agent run with approval decisions,
+    streaming and accumulating the response text."""
+    response = ""
+    FormatMessageTypes("AIMessage")
+    for streamMode, chunk in AGENT.stream(
+        Command(resume={"decisions": decisions}),
+        stream_mode=["updates", "messages"],
+        config=configMemory,
+    ):
+        chunkText = ExtractStreamContent(streamMode, chunk)
+        if chunkText:
+            response += chunkText
+    print()
+    FormatMessageTypes("")
+    print()
+    return response
+
+
+@PrintFunctionName
+def PrintLlmMetrics(lastMessage) -> None:
+    """Print token usage and duration metrics for the most recent LLM response."""
+    usage = lastMessage.usage_metadata
+    responseMetadata = lastMessage.response_metadata
+
+    print("-" * BANNER_WIDTH)
+    print("LLM Metrics Extraction:")
+    print(f"Input Tokens: {usage.get('input_tokens', 'N/A')}")
+    print(f"Output Tokens: {usage.get('output_tokens', 'N/A')}")
+
+    totalDurationMs = responseMetadata.get("total_duration", "N/A")
+    if isinstance(totalDurationMs, (int, float)):
+        print(f"Total Duration (ms): {totalDurationMs / 1000:.2f} seconds")
+    else:
+        print(f"Total Duration (ms): {totalDurationMs}")
+
+    print(f"Prompt Eval Count (tokens): {usage.get('prompt_eval_count', 'N/A')}")
+    print(f"Evaluation Count: {usage.get('eval_count', 'N/A')}")
+
+
+@PrintFunctionName
+def Main(userInput: str, threadId, modeLLM: str, modeStream: str) -> str:
+    """Route a user input to the appropriate LLM/agent execution strategy.
+
+    `modeLLM` selects the backend/personality (e.g. "local", "local-buddy",
+    "local-4b", "global"...). `modeStream` ("true"/"false") only affects the
+    "local-4b" mode, choosing between an auto-approving streaming loop and an
+    interactive invoke-based approval loop.
+    """
+    global REQUESTED_TOOLS_NUMBER_PER_USER_INPUT, REQUESTED_TOOLS_NUMBER_PER_AGENT_INTERRUPT
+
     UpdateAgent(modeLLM)
 
+    # print(f"agent.py Main : userInput {userInput}, threadId: {threadId}, "
+    #       f"modeLLM: {modeLLM}, modeStream: {modeStream}")
+    print(f"agent.py Main : userInput, threadId: {threadId}, "
+          f"modeLLM: {modeLLM}, modeStream: {modeStream}")
 
-    while True:
-        # print("Agent Main Entering the while loop ...")
-        print(f"agent.py Main : userInput {userInput}, threadId: {threadId}, modeLLM: {modeLLM}, modeStream: {modeStream}")
-        # print(f"agent.py Main : userInput {userInput}, threadId: {threadId}, modeLLM: {modeLLM}")
-        # print(f"agent.py Main : modeLLM {modeLLM}")
+    threadIdStr = "thread-" + str(threadId)
+    configMemory = {"configurable": {"thread_id": threadIdStr}}
+    print(f"thread_id: {threadIdStr}")
 
-        # memory
-        thread_id ="thread-" + str(threadId)
-        configMemory = {"configurable": {"thread_id": thread_id}}
-        # print(f"configMemory: {configMemory}")
-        print(f"thread_id: {thread_id}")
+    if modeLLM == "local":
+        return StreamAndAccumulate(
+            [
+                {"role": "system", "content": JARVIS_SYSTEM_PROMPT},
+                {"role": "user", "content": userInput},
+            ],
+            configMemory,
+        )
 
-        agentResponsePerUserInput = ""
-    
-        # Agent.stream handling for local llm
-        # if "local" in modeLLM:
-        if modeLLM == "local":
-            # local-buddy
-            FormatMessageTypes("AIMessage")
-            # print(f"\n{'='*60}")
-            # print
-            for stream_mode, chunk in agent.stream(  
-                {"messages": [
-                    {"role": "system", "content": "You are an assistance like a JARVIS from Iron Man. Your name is RPI. Your master name is SSB"},
-                    {"role": "user", "content": userInput}
-                ]},
-                stream_mode=["updates", "messages"],
-                config=configMemory
-            ):
-                # print(f"stream_mode: {stream_mode}")
-                # print(f"content: {chunk}")
-                # print("\n")
-                chunk_text = ExtractStreamContent(stream_mode, chunk)
-                if chunk_text:
-                    agentResponsePerUserInput += chunk_text
+    elif modeLLM == "local-buddy":
+        return StreamAndAccumulate(
+            [
+                {"role": "system", "content": BUDDY_SYSTEM_PROMPT},
+                {"role": "user", "content": userInput},
+            ],
+            configMemory,
+        )
 
-            # print(f"\n{'='*60}")
-            print()
-            FormatMessageTypes("")
-            print()
+    elif modeLLM == "local-4b" and modeStream == "false":
+        # NOTE: leftover debug pause from the original implementation; blocks
+        # execution waiting for Enter. Preserved to keep behavior identical.
+        input("HumanInterrupt02")
 
-            return agentResponsePerUserInput
+        result = AGENT.invoke({"messages": [{"role": "user", "content": userInput}]}, config=configMemory)
+        print(f"01 result:{result}")
 
-        elif modeLLM == "local-buddy":
-            # local-buddy
-            FormatMessageTypes("AIMessage")
-            # print(f"\n{'='*60}")
-            # print
-            for stream_mode, chunk in agent.stream(  
-                {"messages": [
-                    {"role": "system", "content": "You are a chearful, intelligent, naughty, best friend, sarcastic character. Your name is RPI. The user name is SSB, who is your best buddy"},
-                    {"role": "user", "content": userInput}
-                ]},
-                stream_mode=["updates", "messages"],
-                config=configMemory
-            ):
-                # print(f"stream_mode: {stream_mode}")
-                # print(f"content: {chunk}")
-                # print("\n")
-                chunk_text = ExtractStreamContent(stream_mode, chunk)
-                if chunk_text:
-                    agentResponsePerUserInput += chunk_text
+        lastMessage = result["messages"][-1]
+        PrintLlmMetrics(lastMessage)
 
-            # print(f"\n{'='*60}")
-            print()
-            FormatMessageTypes("")
-            print()
+        while True:
+            print("agiain in started the while loop")
+            state = AGENT.get_state(configMemory)
+            print(f"02 state:{state}")
 
-            return agentResponsePerUserInput
+            if not state.interrupts:
+                return result["messages"][-1].content
 
-        # Agent.stream handling for local-4b llm
-        # elif "local-4b" in modeLLM:
-        # elif modeLLM == "local-4b":
-        elif modeLLM == "local-4b" and modeStream == "false":
-            global requestedToolsNumberPerUserInput
+            interrupt = state.interrupts[0]
+            actions = interrupt.value["action_requests"]
+            decisions = []
+            for action in actions:
+                print("-" * BANNER_WIDTH)
+                print("Tool :", action["name"])
+                print("Args :", action["args"])
+                choice = input("Approve? [Y/n] : ")
+                decisions.append({"type": "reject"} if choice.lower() == "n" else {"type": "approve"})
 
-            # print("agent while loop, GLOBAL in the modeLLM")
-            agentCallingCountPerUserInput = 0
-            input("HumanInterrupt02")
-            result = agent.invoke(
+            result = AGENT.invoke(Command(resume={"decisions": decisions}), config=configMemory)
+            print(f"03 result:{result}")
 
-                {"messages": [{"role": "user", "content": userInput}]},
-                config=configMemory,
-            )
-            print(f"01 result:{result}")
-            # --- START OF YOUR REQUESTED PRINTING LOGIC ---
-            
-            # 1. Access the last message from the result (not necessarily from state, though they are similar here)
-            messages = result["messages"]
-            last_message = messages[-1] 
-            
-            print("-" * 60)
-            print("LLM Metrics Extraction:")
-            print(f"Input Tokens: {last_message.usage_metadata.get('input_tokens', 'N/A')}")
-            print(f"Output Tokens: {last_message.usage_metadata.get('output_tokens', 'N/A')}")
-            print(f"Total Duration (ms): {last_message.response_metadata.get('total_duration', 'N/A') / 1000:.2f} seconds") # Convert ms to sec
-            
-            # Optional: Print other useful metadata if available in response_metadata or usage_metadata
-            prompt_eval_count = last_message.usage_metadata.get('prompt_eval_count', 'N/A')
-            eval_count = last_message.usage_metadata.get('eval_count', 'N/A')
-            
-            print(f"Prompt Eval Count (tokens): {prompt_eval_count}")
-            print(f"Evaluation Count: {eval_count}")
+    elif modeLLM == "local-4b" and modeStream == "true":
+        # NOTE: leftover debug pause from the original implementation; blocks
+        # execution waiting for Enter. Preserved to keep behavior identical.
+        input("HumanInterrupt01")
 
-            
-            while True: 
-                print("agiain in started the while loop")
+        agentCallingCount = 0
+        agentResponse = ""
 
-                state = agent.get_state(configMemory)
+        while True:
+            agentCallingCount += 1
 
-                print(f"02 state:{state}")
-                #
-                # Finished?
-                #
-                if not state.interrupts:
-                    messages = result["messages"]
-                    last = messages[-1]
-                    # print(f"03 last.content:{last.content}")
-                    # print(last.content)
-                    return last.content
+            if agentCallingCount == 1 and REQUESTED_TOOLS_NUMBER_PER_USER_INPUT < 1:
+                print(f"agent.py main agent: {AGENT}")
+                agentResponse = StreamAndAccumulate([{"role": "user", "content": userInput}], configMemory)
 
-                #
-                # Human approval required
-                #
-                interrupt = state.interrupts[0]
-                actions = interrupt.value["action_requests"]
-                decisions = []
-                for action in actions:
-                    print("-" * 60)
-                    print("Tool :", action["name"])
-                    print("Args :", action["args"])
-                    choice = input("Approve? [Y/n] : ")
+            elif REQUESTED_TOOLS_NUMBER_PER_USER_INPUT >= 1:
+                REQUESTED_TOOLS_NUMBER_PER_USER_INPUT -= 1
+                FormatMessageTypes("AIMessage")
 
-                    if choice.lower() == "n":
-                        decisions.append({"type": "reject"})
-                    else:
-                        decisions.append({"type": "approve"})
+                decisions = [{"type": "approve"} for _ in range(REQUESTED_TOOLS_NUMBER_PER_AGENT_INTERRUPT)]
+                REQUESTED_TOOLS_NUMBER_PER_AGENT_INTERRUPT = 0
 
-                result = agent.invoke(
-                    Command(
-                        resume={
-                            "decisions": decisions
-                        }
-                    ),
-                    config=configMemory,
-                )
-                print(f"03 result:{result}")
-                # return result
+                # NOTE: original resumes via invoke() here (not stream()), so
+                # any tool response text is not appended to agentResponse.
+                # Preserved as-is to keep behavior identical (see review).
+                AGENT.invoke(Command(resume={"decisions": decisions}), config=configMemory)
 
-        # elif modeLLM == "local-4b02":
-        elif modeLLM == "local-4b" and modeStream == "true":
-            global requestedToolsNumberPerUserInput
+                print()
+                FormatMessageTypes("")
+                print()
 
-            # print("agent while loop, GLOBAL in the modeLLM")
-            agentCallingCountPerUserInput = 0
-            input("HumanInterrupt01")
+            else:
+                return agentResponse
 
-            while True: 
-                agentCallingCountPerUserInput+= 1
-                # print(f"while loop starting, agentCallingCountPerUserInput: {agentCallingCountPerUserInput}")
+            logger.debug(f"agentCallingCountPerUserInput: {agentCallingCount}")
+            agentResponse = ""
 
-                # First time calling the Agent, and no interrupted tools request pending
-                if agentCallingCountPerUserInput == 1 and requestedToolsNumberPerUserInput < 1:
-                    FormatMessageTypes("AIMessage")
-                    # print(f"\n{'='*60}")
-                    
-                    print(f"agent.py main agent: {agent}")
-                    # print
-                    for stream_mode, chunk in agent.stream(  
-                        {"messages": [{"role": "user", "content": userInput}]},
-                        # stream_mode="updates, messages",
-                        stream_mode=["updates", "messages"],
-                        config=configMemory
-                    ):
-                        # print(f"01 stream_mode: {stream_mode}")
-                        # print(f"content: {chunk}")
-                        # print("\n")
-                        chunk_text = ExtractStreamContent(stream_mode, chunk)
-                        if chunk_text:
-                            agentResponsePerUserInput += chunk_text
-                    # result = agent.invoke(
-                    #     {"messages": [{"role": "user", "content": userInput}]},
-                    #     config=configMemory,
-                    # )
-                    # messages = result["messages"]
+    elif "global" in modeLLM:
+        agentCallingCount = 0
+        agentResponse = ""
 
-                    # last_message = messages[-1]
+        while True:
+            agentCallingCount += 1
 
-                    # print("result agent.invoke")
-                    # print(last_message.content)
+            if agentCallingCount == 1 and REQUESTED_TOOLS_NUMBER_PER_USER_INPUT < 1:
+                agentResponse = StreamAndAccumulate([{"role": "user", "content": userInput}], configMemory)
 
-                    # agentResponsePerUserInput = last_message.content
+            elif REQUESTED_TOOLS_NUMBER_PER_USER_INPUT >= 1:
+                REQUESTED_TOOLS_NUMBER_PER_USER_INPUT -= 1
+                decisions = [{"type": "approve"} for _ in range(REQUESTED_TOOLS_NUMBER_PER_AGENT_INTERRUPT)]
+                REQUESTED_TOOLS_NUMBER_PER_AGENT_INTERRUPT = 0
+                agentResponse = StreamResumeAndAccumulate(decisions, configMemory)
 
-                    # print(f"\n{'='*60}")
-                    print()
-                    FormatMessageTypes("")
-                    print()
+            else:
+                return agentResponse
 
-
-                # Not the first time calling the Agent, OR Interrupted tools requests are pending
-                elif requestedToolsNumberPerUserInput >= 1:
-                    global requestedToolsNumberPerAgentInterrupt
-                    requestedToolsNumberPerUserInput -= 1
-
-                    # print(f"\n{'='*60}")
-                    FormatMessageTypes("AIMessage")
-
-                    # combine the decisions of all the interrupt requests togather
-                    decisions = []
-                    for i in range(requestedToolsNumberPerAgentInterrupt):
-                        decisions.append({"type": "approve"})
-
-                    requestedToolsNumberPerAgentInterrupt = 0
-
-                    # # print(f"decisions: {decisions}")
-                    # for stream_mode, chunk in agent.stream(  
-                    #     Command(resume={"decisions": decisions}),
-                    #     # Command(resume={"decisions": [{"type": "approve"}]}),
-                    #     stream_mode=["updates", "messages"],
-                    #     config=configMemory
-                    # ):
-                    #     # print(f"02 stream_mode: {stream_mode}")
-                    #     # print(f"content: {chunk}")
-                    #     # print("\n")
-                    #     chunk_text = ExtractStreamContent(stream_mode, chunk)
-                    #     if chunk_text:
-                    #         agentResponsePerUserInput += chunk_text
-
-                    result = agent.invoke(
-                        Command(resume={"decisions": decisions}),
-                        config=configMemory,
-                    )
-                    # print(f"\n{'='*60}")
-                    print()
-                    FormatMessageTypes("")
-                    print()
-
-                else:
-
-                    return agentResponsePerUserInput
-
-                logger.debug(f"agentCallingCountPerUserInput: {agentCallingCountPerUserInput}")
-                # print(f"agentCallingCountPerUserInput: {agentCallingCountPerUserInput}, agentResponsePerUserInput: {agentResponsePerUserInput}")
-                agentResponsePerUserInput = ""
-        # Agent.stream handling for global llm
-        elif "global" in modeLLM:
-
-            # print("agent while loop, GLOBAL in the modeLLM")
-            agentCallingCountPerUserInput = 0
-
-            while True: 
-                agentCallingCountPerUserInput+= 1
-                # print(f"while loop starting, agentCallingCountPerUserInput: {agentCallingCountPerUserInput}")
-
-                # First time calling the Agent, and no interrupted tools request pending
-                if agentCallingCountPerUserInput == 1 and requestedToolsNumberPerUserInput < 1:
-                    FormatMessageTypes("AIMessage")
-                    # print(f"\n{'='*60}")
-                    # print
-                    for stream_mode, chunk in agent.stream(  
-                        {"messages": [{"role": "user", "content": userInput}]},
-                        # stream_mode="updates, messages",
-                        stream_mode=["updates", "messages"],
-                        config=configMemory
-                    ):
-                        # print(f"01 stream_mode: {stream_mode}")
-                        # print(f"content: {chunk}")
-                        # print("\n")
-                        chunk_text = ExtractStreamContent(stream_mode, chunk)
-                        if chunk_text:
-                            agentResponsePerUserInput += chunk_text
-
-                    # print(f"\n{'='*60}")
-                    print()
-                    FormatMessageTypes("")
-                    print()
-
-
-                # Not the first time calling the Agent, OR Interrupted tools requests are pending
-                elif requestedToolsNumberPerUserInput >= 1:
-                    requestedToolsNumberPerUserInput -= 1
-
-                    # print(f"\n{'='*60}")
-                    FormatMessageTypes("AIMessage")
-
-                    # combine the decisions of all the interrupt requests togather
-                    decisions = []
-                    for i in range(requestedToolsNumberPerAgentInterrupt):
-                        decisions.append({"type": "approve"})
-
-                    requestedToolsNumberPerAgentInterrupt = 0
-
-                    # print(f"decisions: {decisions}")
-                    for stream_mode, chunk in agent.stream(  
-                        Command(resume={"decisions": decisions}),
-                        # Command(resume={"decisions": [{"type": "approve"}]}),
-                        stream_mode=["updates", "messages"],
-                        config=configMemory
-                    ):
-                        # print(f"02 stream_mode: {stream_mode}")
-                        # print(f"content: {chunk}")
-                        # print("\n")
-                        chunk_text = ExtractStreamContent(stream_mode, chunk)
-                        if chunk_text:
-                            agentResponsePerUserInput += chunk_text
-
-                    # print(f"\n{'='*60}")
-                    print()
-                    FormatMessageTypes("")
-                    print()
-
-                else:
-
-                    return agentResponsePerUserInput
-
-                logger.debug(f"agentCallingCountPerUserInput: {agentCallingCountPerUserInput}")
-                # print(f"agentCallingCountPerUserInput: {agentCallingCountPerUserInput}, agentResponsePerUserInput: {agentResponsePerUserInput}")
-                agentResponsePerUserInput = ""
-
+            logger.debug(f"agentCallingCountPerUserInput: {agentCallingCount}")
+            agentResponse = ""

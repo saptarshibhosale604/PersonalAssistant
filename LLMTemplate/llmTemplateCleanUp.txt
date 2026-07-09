@@ -50,5 +50,5 @@ Return the response in exactly this format.
 Here is the code:
 
 ```python
-PASTE YOUR SCRIPT HERE
+pasted code have the script
 ```
