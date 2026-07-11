@@ -326,7 +326,7 @@ def Processing(userInput: str) -> Any:
 def Output(assistantOutput: Any) -> None:
     """Emit the assistant's output according to the current mode-output setting."""
     # PrintFunctionNames("cli Output...")
-    logger.debug(f"assistantOutput: {assistantOutput}")
+    logger.info(f"[Info] assistantOutput: {assistantOutput}")
 
     modeOutput = GetModeValue("mode-output")
     if modeOutput == "text":

@@ -1,3 +1,13 @@
+"""
+README.md
+## toolProposeArchitectures,
+- This is still not good, with or without thinking
+- The Json structure width and height is going above its limit
+- try with diff architecture expectation
+    
+#
+
+"""
 import json
 import re
 import subprocess
@@ -35,7 +45,7 @@ from langchain_ollama.chat_models import ChatOllama
 #    compile-and-fix loop) since a 4B model fails to produce valid JSON on
 #    the first try more often than larger models, especially for the big
 #    architecture spec.
-DEFAULT_MAX_TOKENS = 4096      # was 500 -- see note (1) above
+DEFAULT_MAX_TOKENS = 8096      # was 500 -- see note (1) above
 DEFAULT_TEMPERATURE = 0
 DEFAULT_MAX_RETRIES = 1
 DEFAULT_NUM_CTX = 32768        # was unset (defaulted to 2048) -- see note (2)
@@ -77,22 +87,60 @@ LLM = ChatOllama(
 # ------------------------------------------------------------------ #
 # Shared helpers
 # ------------------------------------------------------------------ #
+# def StreamLlmResponse(promptText):
+#     """
+#     Streams the LLM response chunk-by-chunk to stdout and returns the
+#     fully concatenated AIMessage-like object (last chunk carries the
+#     aggregated usage/response metadata once streaming completes).
+#     """
+#     fullChunk = None
+#     try:
+#         for chunk in LLM.stream(promptText):
+#             print(f"CHUNK: {chunk}")
+#             fullChunk = chunk if fullChunk is None else fullChunk + chunk
+#             # print(chunk)
+#             # print(chunk.content, end="", flush=True)
+#         print()
+#     except Exception as streamError:
+#         print(f"\n[StreamLlmResponse] Error while streaming LLM output: {streamError}")
+#         raise
+#     return fullChunk
+
 def StreamLlmResponse(promptText):
-    """
-    Streams the LLM response chunk-by-chunk to stdout and returns the
-    fully concatenated AIMessage-like object (last chunk carries the
-    aggregated usage/response metadata once streaming completes).
-    """
     fullChunk = None
+
+    printedThinkingHeader = False
+    printedResponseHeader = False
+
     try:
         for chunk in LLM.stream(promptText):
+
+            # Print thinking stream
+            reasoning = chunk.additional_kwargs.get("reasoning_content")
+            if reasoning:
+                if not printedThinkingHeader:
+                    print("\n------ Thinking ------")
+                    printedThinkingHeader = True
+                print(reasoning, end="", flush=True)
+
+            # Print response stream
+            if chunk.content:
+                if not printedResponseHeader:
+                    if printedThinkingHeader:
+                        print()  # Finish the thinking line
+                    print("\n------ Responding ------")
+                    printedResponseHeader = True
+                print(chunk.content, end="", flush=True)
+
             fullChunk = chunk if fullChunk is None else fullChunk + chunk
+
         print()
+
     except Exception as streamError:
         print(f"\n[StreamLlmResponse] Error while streaming LLM output: {streamError}")
         raise
-    return fullChunk
 
+    return fullChunk
 
 def ExtractLlmMetrics(aiMessage):
     """

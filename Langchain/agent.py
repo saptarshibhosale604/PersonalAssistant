@@ -369,6 +369,29 @@ def StreamAndAccumulate(messages: list, configMemory: dict) -> str:
     print()
     return response
 
+@PrintFunctionName
+def StreamAndAccumulateResume(messages: list, configMemory: dict, decisions) -> str:
+    """Resume a previously interrupted agent execution using the provided
+    decisions, streaming and accumulating the response text while displaying
+    it under an AIMessage banner."""
+    response = ""
+    FormatMessageTypes("AIMessageResume")
+    # for streamMode, chunk in AGENT.invoke(
+    for streamMode, chunk in AGENT.stream(
+        Command(resume={"decisions": decisions}), stream_mode=["updates", "messages"], config=configMemory
+        # Command(resume={"decisions": decisions}), config=configMemory
+    ):
+    # for streamMode, chunk in AGENT.stream(
+    #     {"messages": messages}, stream_mode=["updates", "messages"], config=configMemory
+    # ):
+        chunkText = ExtractStreamContent(streamMode, chunk)
+        if chunkText:
+            response += chunkText
+    print()
+    FormatMessageTypes("")
+    print()
+    return response
+
 
 @PrintFunctionName
 def StreamResumeAndAccumulate(decisions: list, configMemory: dict) -> str:
@@ -509,7 +532,8 @@ def Main(userInput: str, threadId, modeLLM: str, modeStream: str) -> str:
                 # NOTE: original resumes via invoke() here (not stream()), so
                 # any tool response text is not appended to agentResponse.
                 # Preserved as-is to keep behavior identical (see review).
-                AGENT.invoke(Command(resume={"decisions": decisions}), config=configMemory)
+                # AGENT.invoke(Command(resume={"decisions": decisions}), config=configMemory)
+                agentResponse = StreamAndAccumulateResume([{"role": "user", "content": userInput}], configMemory, decisions)
 
                 print()
                 FormatMessageTypes("")
@@ -518,7 +542,7 @@ def Main(userInput: str, threadId, modeLLM: str, modeStream: str) -> str:
             else:
                 return agentResponse
 
-            logger.debug(f"agentCallingCountPerUserInput: {agentCallingCount}")
+            logger.debug(f"[Info] agentCallingCountPerUserInput: {agentCallingCount}")
             agentResponse = ""
 
     elif modeLLM == "local-4b-no-tools" and modeStream == "true":

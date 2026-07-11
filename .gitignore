@@ -16,3 +16,5 @@ Temp/*
 !Temp/llmTemplateScriptGeneration.txt
 
 Langchain/Tools/ToolsProjectBuilder/Project*
+Langchain/Tools/ToolAskGPT/Results
+Langchain/Tools/ToolAskGPT/state.json

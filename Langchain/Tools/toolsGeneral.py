@@ -28,21 +28,23 @@ from langchain_community.tools.tavily_search import TavilySearchResults
 # toolShell = ShellTool(ask_human_input=False, verbose=True)
 # toolShell = ShellTool(ask_human_input=True ) # this is also working fine
 toolShell = ShellTool() 
-toolShell.description = toolShell.description + f"args {toolShell.args}".replace("{", "{{").replace("}", "}}")
+toolShell.description = toolShell.description + f" args {toolShell.args}".replace("{", "{{").replace("}", "}}")
 # toolShell.description = f"This tool should only call if the input includes the phrase `my pc`. The tool " + toolShell.description
 
 # ONLY FOR WINDOWS POWERSHELL
+toolShell.description = toolShell.description.replace("shell", "PowerShell")
 # toolShell.description = f"" + toolShell.description + " Note that multiple cmds should be separated by `;`"
-toolShell.description += """
 
-Execute a shell command on Windows.
+# toolShell.description += """
 
-Rules:
-- Execute exactly one command per tool call.
-- If a task requires multiple commands, call this tool again for each command.
-- Use Windows powershell syntax.
-- Preserve quotes and escaping exactly as needed.
-"""
+# Execute a shell command on Windows.
+
+# Rules:
+# - Execute exactly one command per tool call.
+# - If a task requires multiple commands, call this tool again for each command.
+# - Use Windows powershell syntax.
+# - Preserve quotes and escaping exactly as needed.
+# """
 
 # print(f"toolShell.description: {toolShell.description}")
 print(f"toolShell.description: {toolShell.description}")
