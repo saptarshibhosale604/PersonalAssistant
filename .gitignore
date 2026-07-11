@@ -14,3 +14,5 @@ Log/*
 Temp/*
 
 !Temp/llmTemplateScriptGeneration.txt
+
+Langchain/Tools/ToolsProjectBuilder/Project*

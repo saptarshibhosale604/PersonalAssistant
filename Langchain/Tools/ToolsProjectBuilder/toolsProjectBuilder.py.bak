@@ -1,0 +1,846 @@
+import json
+import re
+from datetime import datetime, timezone
+
+from langchain_core.tools import tool
+from langchain_ollama.chat_models import ChatOllama
+
+# ------------------------------------------------------------------ #
+# Global configuration (kept consistent with toolsPii.py conventions)
+# ------------------------------------------------------------------ #
+DEFAULT_MAX_TOKENS = 500
+DEFAULT_TEMPERATURE = 0
+DEFAULT_MAX_RETRIES = 1
+BANNER_WIDTH = 60
+
+# Global output file names -- one per tool, as requested.
+PROJECT_IDEA_FILE = "Langchain/Tools/ToolsProjectBuilder/Project/project_idea.json"
+PROJECT_GOAL_FILE = "Langchain/Tools/ToolsProjectBuilder/Project/project_goal.json"
+PROJECT_ARCHITECTURES_FILE = "Langchain/Tools/ToolsProjectBuilder/Project/project_architectures.json"
+PROJECT_SCRIPTS = "Langchain/Tools/ToolsProjectBuilder/Project/ProjectScripts" 
+
+LLM = ChatOllama(
+    model="qwen3.5:4b", streaming=True, max_tokens=DEFAULT_MAX_TOKENS,
+    temperature=DEFAULT_TEMPERATURE, max_retries=DEFAULT_MAX_RETRIES, reasoning=False,
+)
+
+
+# ------------------------------------------------------------------ #
+# Shared helpers
+# ------------------------------------------------------------------ #
+# -- JSON --
+def StreamLlmResponse(promptText):
+    """
+    Streams the LLM response chunk-by-chunk to stdout and returns the
+    fully concatenated AIMessage-like object (last chunk carries the
+    aggregated usage/response metadata once streaming completes).
+    """
+    fullChunk = None
+    try:
+        for chunk in LLM.stream(promptText):
+            # print(chunk.content, end="", flush=True)
+            fullChunk = chunk if fullChunk is None else fullChunk + chunk
+        print()  # newline after streaming finishes
+    except Exception as streamError:
+        print(f"\n[StreamLlmResponse] Error while streaming LLM output: {streamError}")
+        raise
+    return fullChunk
+
+
+def ExtractLlmMetrics(aiMessage):
+    """
+    Pulls token usage and timing metrics out of an AIMessage returned by
+    ChatOllama. Ollama reports durations in nanoseconds, so they are
+    converted to seconds here.
+    """
+    metrics = {}
+    try:
+        usage = getattr(aiMessage, "usage_metadata", None) or {}
+        meta = getattr(aiMessage, "response_metadata", None) or {}
+
+        inputTokens = usage.get("input_tokens", meta.get("prompt_eval_count", 0))
+        outputTokens = usage.get("output_tokens", meta.get("eval_count", 0))
+        totalTokens = usage.get("total_tokens", inputTokens + outputTokens)
+
+        def NsToSeconds(nsValue):
+            try:
+                return round(int(nsValue) / 1e9, 2)
+            except (TypeError, ValueError):
+                return 0.0
+
+        metrics = {
+            "inputTokens": inputTokens,
+            "outputTokens": outputTokens,
+            "totalTokens": totalTokens,
+            "createdAt": meta.get("created_at", datetime.now(timezone.utc).isoformat()),
+            "loadDuration": NsToSeconds(meta.get("load_duration", 0)),
+            "promptEvalDuration": NsToSeconds(meta.get("prompt_eval_duration", 0)),
+            "generationDuration": NsToSeconds(meta.get("eval_duration", 0)),
+            "totalDuration": NsToSeconds(meta.get("total_duration", 0)),
+        }
+    except Exception as metricsError:
+        print(f"[ExtractLlmMetrics] Error extracting metrics: {metricsError}")
+    return metrics
+
+
+def PrintLlmMetrics(metrics):
+    """
+    Prints the extracted metrics in the fixed banner format requested:
+
+    LLM Metrics Extraction:
+    Input Tokens       : 567
+    ...
+    """
+    try:
+        print("LLM Metrics Extraction:")
+        print(f"Input Tokens       : {metrics.get('inputTokens', 0)}")
+        print(f"Output Tokens      : {metrics.get('outputTokens', 0)}")
+        print(f"Total Tokens       : {metrics.get('totalTokens', 0)}")
+        print(f"Created At         : {metrics.get('createdAt', '')}")
+        print(f"Load Duration      : {metrics.get('loadDuration', 0)}s")
+        print(f"Prompt Eval Time   : {metrics.get('promptEvalDuration', 0)}s")
+        print(f"Generation Time    : {metrics.get('generationDuration', 0)}s")
+        print(f"Total Duration     : {metrics.get('totalDuration', 0)}s")
+        print("-" * BANNER_WIDTH)
+    except Exception as printError:
+        print(f"[PrintLlmMetrics] Error printing metrics: {printError}")
+
+
+def ExtractJsonBlock(rawText):
+    """
+    Best-effort extraction of a JSON object/array from raw LLM text,
+    in case the model wraps it in markdown code fences or extra prose.
+    """
+    try:
+        fencedMatch = re.search(r"```(?:json)?\s*(.*?)```", rawText, re.DOTALL)
+        candidateText = fencedMatch.group(1).strip() if fencedMatch else rawText.strip()
+        return candidateText
+    except Exception as extractError:
+        print(f"[ExtractJsonBlock] Error extracting JSON block: {extractError}")
+        return rawText
+
+
+def ValidateJson(candidateText):
+    """
+    Validates that candidateText is well-formed JSON.
+    Returns the parsed object on success, raises on failure.
+    """
+    try:
+        parsedObject = json.loads(candidateText)
+        return parsedObject
+    except json.JSONDecodeError as validationError:
+        print(f"[ValidateJson] Invalid JSON produced by LLM: {validationError}")
+        raise
+
+
+import json
+from pathlib import Path
+
+def SaveJsonToFile(parsedObject, fileName):
+    """
+    Persists a validated JSON-serialisable object to disk.
+    Automatically creates any missing directories and files.
+    """
+    try:
+        # Convert string path to Path object for cross-platform compatibility
+        file_path = Path(fileName)
+        
+        # Create parent directories if they don't exist (e.g., 'Project/')
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        with open(file_path, "w", encoding="utf-8") as outFile:
+            json.dump(parsedObject, outFile, indent=2, ensure_ascii=False)
+            
+        print(f"[SaveJsonToFile] Saved output to '{fileName}'")
+    except Exception as saveError:
+        # Re-print the error with context if desired, or just log it
+        print(f"[SaveJsonToFile] Error saving JSON to '{fileName}': {saveError}")
+        raise
+
+# def SaveJsonToFile(parsedObject, fileName):
+#     """
+#     Persists a validated JSON-serialisable object to disk.
+#     """
+#     try:
+#         with open(fileName, "w", encoding="utf-8") as outFile:
+#             json.dump(parsedObject, outFile, indent=2, ensure_ascii=False)
+#         print(f"[SaveJsonToFile] Saved output to '{fileName}'")
+#     except Exception as saveError:
+#         print(f"[SaveJsonToFile] Error saving JSON to '{fileName}': {saveError}")
+#         raise
+
+
+def BuildResultPayload(parsedContent, metrics):
+    """
+    Wraps the LLM's validated content together with its metrics into a
+    single JSON-serialisable dict.
+    """
+    # return {"result": parsedContent, "metrics": metrics}
+    return {"result": parsedContent}
+
+
+def RunJsonToolPipeline(promptText, fileName):
+    """
+    Shared pipeline used by all three tools:
+      1. Stream the LLM response (printed live).
+      2. Extract + print metrics.
+      3. Extract, validate and wrap the JSON content.
+      4. Save to the given global file name.
+    Returns the final payload dict (or an error dict on failure).
+    """
+    try:
+        aiMessage = StreamLlmResponse(promptText)
+        metrics = ExtractLlmMetrics(aiMessage)
+        PrintLlmMetrics(metrics)
+
+        candidateText = ExtractJsonBlock(aiMessage.content)
+        parsedContent = ValidateJson(candidateText)
+
+        payload = BuildResultPayload(parsedContent, metrics)
+        SaveJsonToFile(payload, fileName)
+        return payload
+    except Exception as pipelineError:
+        print(f"[RunJsonToolPipeline] Pipeline failed: {pipelineError}")
+        return {"error": str(pipelineError)}
+
+
+# -- Python --
+
+def ValidatePython(candidateText):
+    """
+    Validates that the generated text is valid Python.
+    Raises SyntaxError if invalid.
+    """
+    try:
+        compile(candidateText, "<generated>", "exec")
+        return candidateText
+    except SyntaxError as e:
+        print(f"[ValidatePython] Invalid Python: {e}")
+        raise
+
+# from pathlib import Path
+
+def SavePythonToFile(codeText, fileName):
+    """
+    Saves generated Python code to disk.
+    Creates parent directories automatically.
+    """
+    try:
+        filePath = Path(fileName)
+        filePath.parent.mkdir(parents=True, exist_ok=True)
+
+        with open(filePath, "w", encoding="utf-8") as f:
+            f.write(codeText)
+
+        print(f"[SavePythonToFile] Saved output to '{fileName}'")
+    except Exception as e:
+        print(f"[SavePythonToFile] Error saving Python: {e}")
+        raise
+
+
+def BuildPythonPayload(codeText, metrics):
+    """
+    Wraps generated Python together with metrics.
+    """
+    return {
+        "code": codeText,
+        "metrics": metrics,
+    }
+
+def RunPyToolPipeline(promptText, fileName):
+    """
+    Shared pipeline for Python generation.
+
+    1. Stream LLM output.
+    2. Extract metrics.
+    3. Validate Python.
+    4. Save .py file.
+    """
+    try:
+        aiMessage = StreamLlmResponse(promptText)
+
+        metrics = ExtractLlmMetrics(aiMessage)
+        PrintLlmMetrics(metrics)
+
+        codeText = aiMessage.content.strip()
+
+        ValidatePython(codeText)
+
+        payload = BuildPythonPayload(codeText, metrics)
+
+        SavePythonToFile(codeText, fileName)
+
+        return payload
+
+    except Exception as e:
+        print(f"[RunPyToolPipeline] Pipeline failed: {e}")
+        return {"error": str(e)}
+
+# ------------------------------------------------------------------ #
+# Tools
+# ------------------------------------------------------------------ #
+@tool
+def toolCreateProjectIdea(userInput: str) -> dict:
+    '''If input asks to "create a project idea" or "come up with a project" from a rough user input.'''
+    promptText = (
+        "You are a software project consultant. Based on the user's input below, "
+        "write a single descriptive software project idea (3-6 sentences covering "
+        "the problem it solves, target users, and core features).\n\n"
+        f"User input: '{userInput}'\n\n"
+        "Respond ONLY with valid JSON in exactly this shape, no extra text:\n"
+        '{"projectIdea": "<the descriptive project idea>"}'
+    )
+    # return RunJsonToolPipeline(promptText, PROJECT_IDEA_FILE)
+    if RunJsonToolPipeline(promptText, PROJECT_IDEA_FILE):
+        # return f"Project Idea created here: {PROJECT_IDEA_FILE}"
+        return f"""
+Project idea successfully generated.
+
+IMPORTANT:
+The requested project idea has already been completely generated and saved.
+Do NOT regenerate, summarize, expand, or rewrite the project idea.
+Simply tell the user where it was saved.
+Saved to:
+{PROJECT_IDEA_FILE}
+        """
+    else:
+        return f"Failed to create the project idea"
+
+
+@tool
+def toolSummarizeProjectGoal(userInput: str) -> dict:
+    '''If input asks to "summarize the project idea" into a short project goal.'''
+    raw_project_idea = ""
+
+    try:
+        with open(PROJECT_IDEA_FILE, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        
+        # Extract the project idea from "result.projectIdea"
+        raw_project_idea = data.get("result", {}).get("projectIdea")
+        
+        if not raw_project_idea:
+            raise ValueError("Could not find 'projectIdea' in the JSON file.")
+
+    except FileNotFoundError:
+        # Fallback or error handling for missing files during development/testing
+        print(f"File {PROJECT_IDEA_FILE} not found. Using default fallback idea.")
+        raw_project_idea = "There is nothing in my mind right now"
+        
+    except json.JSONDecodeError as e:
+        print(f"Failed to parse JSON file: {e}")
+        raw_project_idea = "There is nothing in my mind right now"
+
+    promptText = (
+        "You are a software project consultant. Summarize the descriptive project "
+        "idea below into a single short, punchy project goal (max 2 sentences).\n\n"
+        f"Project idea: '{raw_project_idea}'\n\n"
+        "Respond ONLY with valid JSON in exactly this shape, no extra text:\n"
+        '{"projectGoal": "<the short project goal>"}'
+    )
+    # return RunJsonToolPipeline(promptText, PROJECT_GOAL_FILE)
+    if RunJsonToolPipeline(promptText, PROJECT_GOAL_FILE):
+        return f"""
+Project idea successfully generated.
+
+IMPORTANT:
+The requested project goal has already been completely generated and saved.
+Do NOT regenerate, summarize, expand, or rewrite the project idea.
+Simply tell the user where it was saved.
+Saved to:
+{PROJECT_GOAL_FILE}
+        """
+    else:
+        return f"Failed to create the project idea"
+
+
+@tool
+def toolProposeArchitectures(userInput: str) -> dict:
+    '''If input asks to "propose architectures" or "suggest software architecture options" for a project.'''
+    
+    # 1. Load Project Idea from file (referencing the working function logic)
+    raw_project_idea = ""
+    try:
+        with open(PROJECT_IDEA_FILE, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        
+        raw_project_idea = data.get("result", {}).get("projectIdea")
+        
+        if not raw_project_idea:
+            raise ValueError("Could not find 'projectIdea' in the JSON file.")
+
+    except FileNotFoundError:
+        print(f"File {PROJECT_IDEA_FILE} not found. Using default fallback idea.")
+        raw_project_idea = "There is nothing in my mind right now"
+        
+    except json.JSONDecodeError as e:
+        print(f"Failed to parse JSON file: {e}")
+        raw_project_idea = "There is nothing in my mind right now"
+
+    # 2. Load Project Goal from file (referencing the working function logic)
+    project_goal_text = ""
+    try:
+        with open(PROJECT_GOAL_FILE, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        
+        raw_project_goal = data.get("result", {}).get("projectGoal")
+        
+        if not raw_project_goal:
+            raise ValueError("Could not find 'projectGoal' in the JSON file.")
+
+    except FileNotFoundError:
+        print(f"File {PROJECT_GOAL_FILE} not found. Using default fallback goal.")
+        project_goal_text = "There is nothing specific defined yet."
+        
+    except json.JSONDecodeError as e:
+        print(f"Failed to parse JSON file: {e}")
+        project_goal_text = "There is nothing specific defined yet."
+
+    # 3. Construct PromptText using the original raw function's structure but with loaded data
+    promptText = f"""
+# Role
+You are a Python API Generator. Your task is to analyze the provided Project idea and Project goal and output ONLY a valid JSON object representing the function signatures, parameters, outputs, and dependencies of the system. Do not include any markdown text outside the code block or conversational filler.
+
+# Input Data
+"Project idea: '{raw_project_idea}'\n\n"
+"Project goal: '{project_goal_text}'\n\n"
+
+# Constraints & Rules
+1. **Output Format ONLY**: Return exactly one JSON object wrapped in a ```json ... ``` markdown code block. No other text before or after the code block.
+2. **Structure**: The JSON must contain two keys: `functions` (a list of objects) and `dependencies` (an array mapping function IDs to their required dependencies).
+3. **Function Object Structure**: Each item in `functions` must have exactly these fields:
+   - `name`: String (camelCase, e.g., "process_data")
+   - `description`: Short string explaining what it does.
+   - `input_params`: List of objects with keys `{{param_name}}: {{type_hint}}` (e.g., [{{"id": "user_id", "type": "int"}}])
+   - `output_param`: Object with key `{{return_type}}` and value description or type hint.
+4. **Dependencies**: Map each function by its ID to the list of other function IDs it calls directly. If a function is independent, use an empty array [].
+
+"""
+
+    # promptText = (
+    #     "You are a senior software architect. Given the project description below, "
+    #     "propose between 2 and 4 candidate software architectures.\n\n"
+    #     f"Project idea: '{raw_project_idea}'\n\n"
+    #     f"Project goal: '{project_goal_text}'\n\n"
+    #     "Respond ONLY with valid JSON in exactly this shape, no extra text:\n"
+    #     '{"architectures": ['
+    #     '{"name": "<architecture name>", '
+    #     '"layout": "<folder/file layout as a string, using \\n for new lines>", '
+    #     '"advantages": ["<advantage 1>", "<advantage 2>"], '
+    #     '"disadvantages": ["<disadvantage 1>", "<disadvantage 2>"]}'
+    #     "]}"
+    # )
+
+    # 4. Execute Pipeline and Handle Return (referencing the working function logic)
+    if RunJsonToolPipeline(promptText, PROJECT_ARCHITECTURES_FILE):
+        return f"""
+Architectures successfully generated.
+
+IMPORTANT:
+The requested software architecture proposals have already been completely generated and saved.
+Do NOT regenerate or rewrite them manually.
+Simply tell the user where they were saved.
+Saved to:
+{PROJECT_ARCHITECTURES_FILE}
+        """
+    else:
+        return f"Failed to create the architectural proposal."
+
+# def toolProposeArchitectures(userInput: str) -> dict:
+#     '''If input asks to "propose architectures" or "suggest software architecture options" for a project.'''
+#     promptText = (
+#         "You are a senior software architect. Given the project description below, "
+#         "propose between 2 and 4 candidate software architectures.\n\n"
+#         f"Project idea: '{userInput}'\n\n"
+#         f"Project goal: '{userInput}'\n\n"
+#         "Respond ONLY with valid JSON in exactly this shape, no extra text:\n"
+#         '{"architectures": ['
+#         '{"name": "<architecture name>", '
+#         '"layout": "<folder/file layout as a string, using \\n for new lines>", '
+#         '"advantages": ["<advantage 1>", "<advantage 2>"], '
+#         '"disadvantages": ["<disadvantage 1>", "<disadvantage 2>"]}'
+#         "]}"
+#     )
+#     return RunJsonToolPipeline(promptText, PROJECT_ARCHITECTURES_FILE)
+
+# PROJECT_ARCHITECTURES_FILE = "project_arch.json" 
+# PROJECT_SCRIPTS
+# OUTPUT_DIR = "./generated_scripts" 
+
+@tool
+def toolCreateFunctionScript(userInput: str) -> dict:
+    """
+    Generate Python function implementations for every function
+    defined in project_arch.json -> result.functions.
+    """
+
+    try:
+        with open(PROJECT_ARCHITECTURES_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        functions = data.get("result", {}).get("functions")
+
+        if not functions:
+            raise ValueError("Could not find 'functions' in the JSON file.")
+
+    except FileNotFoundError:
+        return "project_arch.json not found."
+
+    except json.JSONDecodeError as e:
+        return f"Invalid JSON: {e}"
+
+    except Exception as e:
+        return str(e)
+
+    
+    # 2. Load Project Goal from file (referencing the working function logic)
+    project_goal_text = ""
+    try:
+        with open(PROJECT_GOAL_FILE, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        
+        raw_project_goal = data.get("result", {}).get("projectGoal")
+        
+        if not raw_project_goal:
+            raise ValueError("Could not find 'projectGoal' in the JSON file.")
+
+    except FileNotFoundError:
+        print(f"File {PROJECT_GOAL_FILE} not found. Using default fallback goal.")
+        project_goal_text = "There is nothing specific defined yet."
+        
+    except json.JSONDecodeError as e:
+        print(f"Failed to parse JSON file: {e}")
+        project_goal_text = "There is nothing specific defined yet."
+
+
+    functionCounter = 0
+    generated = []
+
+    for function in functions:
+        functionCounter += 1
+        promptText = f"""
+You are an expert Python software engineer.
+
+Generate ONLY ONE Python function.
+
+Project Goal:
+{project_goal_text}
+
+Function Specification:
+{json.dumps(function, indent=2)}
+
+Requirements:
+- Implement exactly this function.
+- Include type hints.
+- Include a docstring.
+- Do NOT call the function.
+- Do NOT generate any other helper functions.
+- Return ONLY valid python script.
+
+Output Rules:
+- Return ONLY the Python function.
+- Do NOT wrap the code in markdown.
+- Do NOT include ```python.
+- Do NOT include explanations.
+- Do NOT include comments outside the function.
+- Do NOT return JSON.
+- The first character of your response must be `d` from the word `def`.
+"""
+
+        # outputFile = os.path.join(
+        #     PROJECT_SCRIPTS,
+        #     f"{function['name']}.json"
+        # )
+
+        outputFile = f"{PROJECT_SCRIPTS}/{function['name']}.py"
+
+        # if RunJsonToolPipeline(promptText, outputFile):
+        if RunPyToolPipeline(promptText, outputFile):
+            generated.append(function["name"])
+            print(f"Function {functionCounter} generation done")
+            print(f"Function name: '{function["name"]}'")
+            print(f"Function file: '{outputFile}'\n")
+
+    return f"""
+Generated {len(generated)} functions.
+
+Saved into:
+{PROJECT_SCRIPTS}
+"""
+
+# def toolCreateFunctionScript(userInput: str) -> dict:
+#     '''Generates Python function scripts for individual functions found in result => functions.'''
+    
+#     # raw_project_data = ""
+
+#     try:
+#         with open(PROJECT_ARCHITECTURES_FILE, 'r', encoding='utf-8') as f:
+#             data = json.load(f)
+        
+#         # Extract the project idea from "result.projectIdea" (if it exists for context)
+#         # Note: The original code looked here. We will also look at result.functions if available.
+#         raw_project_idea = data.get("result", {}).get("projectIdea")
+        
+#         functions_list = []
+#         try:
+#             functions_data = data.get("result", {})
+#             functions_list = functions_data.get("functions", [])
+            
+#             # If no specific project idea is provided, we can still generate scripts 
+#             # based on the function definitions themselves.
+#             if not raw_project_idea and not functions_list:
+#                 raise ValueError("Could not find 'projectIdea' or 'functions' in the JSON file.")
+
+#         except (KeyError, AttributeError):
+#             print(f"Unexpected structure in {PROJECT_ARCHITECTURES_FILE}. Using fallback data.")
+#             raw_project_idea = "A generic game project with undefined functions."
+#             functions_list = [] # Fallback empty list to avoid crash if schema is missing
+            
+#     except FileNotFoundError:
+#         print(f"File {PROJECT_ARCHITECTURES_FILE} not found. Generating scripts based on user input only.")
+#         raw_project_idea = userInput or "Unknown context provided by the user."
+#         functions_list = [
+#             {"name": "placeholder_func", "description": "A placeholder function generated from user request.", 
+#              "input_params": [], "output_param": {"return_type": "string"}}
+#         ]
+
+#     except json.JSONDecodeError as e:
+#         print(f"Failed to parse JSON file: {e}")
+#         raw_project_idea = userInput or "Unknown context."
+#         functions_list = []
+
+#     # Construct the prompt for each function individually if we want granular control, 
+#     # OR generate a single script containing all. 
+#     # Based on your request ("create a python function script for individual functions"), 
+#     # we will assume the goal is to create ONE file or multiple files per function.
+    
+#     generated_scripts = []
+
+#     prompt_template = (
+#         "You are an expert Python developer. Generate valid, runnable Python code based on the following specifications.\n\n"
+#         f"Context: {raw_project_idea}\n\n"
+#         'Function Specifications:\n'
+#     )
+
+#     # Build the function list string for the prompt
+#     func_specs = []
+#     if functions_list:
+#         for idx, func in enumerate(functions_list):
+#             name = func.get("name", f"function_{idx}")
+#             desc = func.get("description", "No description provided.")
+            
+#             # Parse input params dynamically (simple logic)
+#             inputs_str = ""
+#             if "input_params" in func and isinstance(func["input_params"], list):
+#                 for p in func["input_params"]:
+#                     param_name = f"{p.get('id', 'param')}:{p.get('type', 'string')}"
+#                     inputs_str += f"- {param_name}\n"
+
+#             # Parse output params dynamically
+#             outputs_str = ""
+#             if "output_param" in func:
+#                 return_type = func["output_param"].get("return_type", "void")
+#                 outputs_str = f"- Returns type: {return_type}"
+
+#             spec_block = (f"{idx+1}. **{name}**\n   Description: {desc}\n   Inputs:\n" + inputs_str + "\n   Output:" + outputs_str)
+#             func_specs.append(spec_block)
+
+#     promptText = (
+#         f"{prompt_template}{chr(10).join(func_specs)}\n\n"
+#         "For each function listed above, generate a complete Python method including:\n"
+#         "- Type hints for arguments and return value.\n"
+#         "- Docstrings explaining the logic based on the description.\n"
+#         "- Standard error handling where appropriate (e.g., try/except).\n\n"
+#         "Output ONLY valid JSON containing an array of code blocks. Do not include markdown formatting like ```python around the code inside the strings unless requested, but keep it clean:\n'""\n{"scripts": [{"name": "<function_name>", "code": "<full python method>"}, ...]}"
+#     )
+
+#     # Simulating the pipeline call logic similar to toolSummarizeProjectGoal
+#     # In a real environment, you would replace this with your actual LLM wrapper.
+    
+#     if RunJsonToolPipeline(promptText, PROJECT_SCRIPTS): 
+#         return f"""
+# Function scripts successfully generated and saved!
+
+# IMPORTANT:
+# The Python code for all functions has been created based on the project architecture.
+# Do NOT regenerate or rewrite unless changes are requested.
+
+# Saved to directory: {PROJECT_SCRIPTS}
+# Check files named after each function (e.g., get_player_choice.py).
+#         """
+#     else:
+#         return f"Failed to create the Python function scripts."
+
+
+@tool
+def toolAssembleProject() -> dict:
+    """
+    Assemble the project
+    """
+    # Generates the application's main() function and assembles every
+    # generated Python file into a single runnable project.py file.
+
+    PROJECT_MAIN_FILE = f"{PROJECT_SCRIPTS}/main.py"
+    PROJECT_OUTPUT_FILE = f"{PROJECT_SCRIPTS}/project.py"
+
+    # ------------------------------------------------------------
+    # Load architecture
+    # ------------------------------------------------------------
+    try:
+        with open(PROJECT_ARCHITECTURES_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        result = data.get("result", {})
+
+        functions = result.get("functions", [])
+        dependencies = result.get("dependencies", {})
+
+        if not functions:
+            raise ValueError("No functions found.")
+
+    except FileNotFoundError:
+        return f"Could not find '{PROJECT_ARCHITECTURES_FILE}'."
+
+    except json.JSONDecodeError as e:
+        return f"Invalid JSON: {e}"
+
+    except Exception as e:
+        return str(e)
+
+    # ------------------------------------------------------------
+    # Load project goal
+    # ------------------------------------------------------------
+    try:
+        with open(PROJECT_GOAL_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        project_goal = (
+            data.get("result", {})
+            .get("projectGoal", "")
+        )
+
+    except Exception:
+        project_goal = ""
+
+    # ------------------------------------------------------------
+    # Read every generated function
+    # ------------------------------------------------------------
+    functionCode = ""
+
+    for function in functions:
+
+        filename = f"{PROJECT_SCRIPTS}/{function['name']}.py"
+
+        try:
+            with open(filename, "r", encoding="utf-8") as f:
+                functionCode += f.read().rstrip()
+                functionCode += "\n\n"
+
+        except FileNotFoundError:
+            print(f"Missing script: {filename}")
+
+    # ------------------------------------------------------------
+    # Generate main.py
+    # ------------------------------------------------------------
+    promptText = f"""
+You are an expert Python software engineer.
+
+Generate ONLY the application's main() function.
+
+The functions already exist.
+
+DO NOT regenerate any existing functions.
+
+Project Goal:
+{project_goal}
+
+Function Specifications:
+{json.dumps(functions, indent=2)}
+
+Dependency Graph:
+{json.dumps(dependencies, indent=2)}
+
+Requirements:
+
+- Generate ONLY:
+    def main():
+- Use the existing functions.
+- Use the dependency graph.
+- Call the functions in the proper order.
+- Handle return values.
+- Do not redefine any function.
+- End with:
+
+if __name__ == "__main__":
+    main()
+
+Output Rules:
+
+- Return ONLY Python.
+- No markdown.
+- No explanations.
+- No comments outside the code.
+- The first character must be 'd'.
+"""
+
+    result = RunPyToolPipeline(promptText, PROJECT_MAIN_FILE)
+
+    if "error" in result:
+        return "Failed to generate main.py"
+
+    print(f"Generated {PROJECT_MAIN_FILE}")
+
+    # ------------------------------------------------------------
+    # Assemble project.py
+    # ------------------------------------------------------------
+    projectCode = ""
+
+    # Add every generated function
+    for function in functions:
+
+        filename = f"{PROJECT_SCRIPTS}/{function['name']}.py"
+
+        try:
+            with open(filename, "r", encoding="utf-8") as f:
+                projectCode += f.read().rstrip()
+                projectCode += "\n\n"
+
+        except FileNotFoundError:
+            print(f"Skipping missing file: {filename}")
+
+    # Add generated main.py
+    try:
+        with open(PROJECT_MAIN_FILE, "r", encoding="utf-8") as f:
+            projectCode += f.read()
+
+    except FileNotFoundError:
+        return "main.py was not generated."
+
+    # Save final project.py
+    try:
+        SavePythonToFile(projectCode, PROJECT_OUTPUT_FILE)
+        print(f"Saving the file: {PROJECT_OUTPUT_FILE}")
+
+    except Exception as e:
+        return f"Failed assembling project.py: {e}"
+
+    return f"""
+Project assembled successfully.
+
+Generated:
+- {PROJECT_MAIN_FILE}
+
+Assembled:
+- {PROJECT_OUTPUT_FILE}
+"""
+
+# ------------------------------------------------------------------ #
+# Tool registry (mirrors toolsPii.py's ToolsList pattern)
+# ------------------------------------------------------------------ #
+toolsBasic = [toolCreateProjectIdea, toolSummarizeProjectGoal, toolProposeArchitectures, toolCreateFunctionScript, toolAssembleProject]
+tools = toolsBasic
+
+
+def ToolsList():
+    global tools
+    return tools

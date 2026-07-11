@@ -29,7 +29,8 @@ TOOLS_MODULES = {
     "toolsTest": "Langchain.Tools.toolsTest",
     "toolsPii": "Langchain.Tools.toolsPii",
     "toolsDataAnalysis": "Langchain.Tools.toolsDataAnalysis",
-    "toolsFinanceAssist": "Langchain.Tools.ToolsFinanceAssist.toolsFinanceAssist"
+    "toolsFinanceAssist": "Langchain.Tools.ToolsFinanceAssist.toolsFinanceAssist",
+    "toolsProjectBuilder": "Langchain.Tools.ToolsProjectBuilder.toolsProjectBuilder"
 }
 
 # Default configuration
@@ -235,7 +236,7 @@ def SelectToolManger() -> str:
     """
     toolNames = list(TOOLS_MODULES.keys())
 
-    print("modesManger: select the tool:")
+    print("toolsManger: select the tool:")
     for index, toolName in enumerate(toolNames, start=1):
         status = "Enabled" if toolsConfig.get(toolName, False) else "Disabled"
         print(f"{index}. {toolName:<20} [{status}]")
@@ -268,7 +269,7 @@ def ToggleToolManger(toolName: str) -> bool:
     """
     global toolsConfig
 
-    print(f"modesManger: {toolName}")
+    print(f"toolsManger: {toolName}")
     print("0 Disable")
     print("1 Enable")
     # print("0 Enable                llm streaming mode off")
@@ -287,7 +288,7 @@ def ToggleToolManger(toolName: str) -> bool:
     toolsConfig[toolName] = newStatus
     SaveToolsConfig()
 
-    print("modesManger:")
+    print("toolsManger:")
     print("The value saved succesfully")
     print(f"mode-stream: {str(newStatus).lower()}")
 
@@ -301,7 +302,7 @@ def Main(inputChoice="none") -> List[Any]:
 
     Behavior:
         - inputChoice == "update": walks the user through the two-step
-          modesManger flow (pick a tool, then enable/disable it), saves the
+          toolsManger flow (pick a tool, then enable/disable it), saves the
           preference, and returns the refreshed tools list.
         - inputChoice == "get": simply returns the tools list built from
           the currently saved preferences.

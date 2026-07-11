@@ -143,11 +143,11 @@ def UpdateAgent(modeLLM: str) -> None:
     """Rebuild the global agent whenever the requested LLM mode changes."""
     global LLM, MODE_CURRENT_LLM, AGENT, TOOLS
 
-    print(f"Agent UpdateAgent: modeLLM: {modeLLM}, modeCurrentLLM: {MODE_CURRENT_LLM}")
+    # print(f"Agent UpdateAgent: modeLLM: {modeLLM}, modeCurrentLLM: {MODE_CURRENT_LLM}")
     if modeLLM == MODE_CURRENT_LLM:
         return
 
-    logger.debug(f"Agent UpdateAgent Changing LLM: modeLLM: {modeLLM}, modeCurrentLLM: {MODE_CURRENT_LLM}")
+    # logger.debug(f"Agent UpdateAgent Changing LLM: modeLLM: {modeLLM}, modeCurrentLLM: {MODE_CURRENT_LLM}")
     MODE_CURRENT_LLM = modeLLM
 
     if modeLLM == "local-1b":
@@ -234,7 +234,7 @@ def PrintPostProcessingLLMVariables(content) -> None:
         # print("\n" + "=" * 80)
         # print("FINAL LLM RESPONSE")
         # print("-" * BANNER_WIDTH)
-        print("LLM Metrics Extraction:")
+        print("\nLLM Metrics Extraction:")
         # print("=" * 80)
 
         # print(f"Model              : {responseMetadata.get('model_name', 'Unknown')}")
@@ -397,7 +397,7 @@ def PrintLlmMetrics(lastMessage) -> None:
     responseMetadata = lastMessage.response_metadata
 
     print("-" * BANNER_WIDTH)
-    print("LLM Metrics Extraction:")
+    print("\nLLM Metrics Extraction:")
     print(f"Input Tokens: {usage.get('input_tokens', 'N/A')}")
     print(f"Output Tokens: {usage.get('output_tokens', 'N/A')}")
 

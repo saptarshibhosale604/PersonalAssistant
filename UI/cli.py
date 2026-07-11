@@ -70,11 +70,11 @@ def LoadModes() -> Optional[dict]:
     configPath = _ResolveModeConfigPath()
 
     if os.path.exists(configPath):
-        logger.debug("[Debug] LoadModes: getting current mode config file")
+        # logger.debug("[Debug] LoadModes: getting current mode config file")
         with open(configPath, "r") as configFile:
             return json.load(configFile)
 
-    logger.debug("[Debug] LoadModes: initializing the mode config file")
+    # logger.debug("[Debug] LoadModes: initializing the mode config file")
     modesManager.LoadConfigurationFromFile(modeSandbox=MODE_SANDBOX)
     return None
 
@@ -358,7 +358,7 @@ def Main() -> None:
     global USER_INPUT_COUNT
 
     USER_INPUT_COUNT += 1
-    logger.debug(f"UserInputCount: {USER_INPUT_COUNT}")
+    logger.debug(f"[Debug] UserInputCount: {USER_INPUT_COUNT}")
 
     userInput = Input()
     # print(f"userInput after input: {userInput}")

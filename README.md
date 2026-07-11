@@ -174,7 +174,9 @@ mksession!
 :<C-r><C-l> 
 
 # Windows
+## not working
 python .\ui\cli.py  
+## working
 python -m UI.cli
 
 # DONE

@@ -1,0 +1,75 @@
+# Code:
+
+toolsPii.py:-
+from langchain_core.tools import tool
+from langchain_ollama.chat_models import ChatOllama
+
+DEFAULT_MAX_TOKENS = 500
+DEFAULT_TEMPERATURE = 0
+DEFAULT_MAX_RETRIES = 1
+BANNER_WIDTH = 60
+
+LLM = ChatOllama(
+    model="qwen3.5:4b", streaming=True, max_tokens=DEFAULT_MAX_TOKENS,
+    temperature=DEFAULT_TEMPERATURE, max_retries=DEFAULT_MAX_RETRIES, reasoning=False,
+)
+
+@tool
+def toolMyName(userInput :str) -> str:
+	'''If input asks "what is my name?"'''
+	# userInput = f"user input = '{userInput}'"
+
+	return {"SSB"}
+
+@tool
+def toolMyPetsName(userInput :str) -> str:
+	'''If input asks "what is my pets name?"'''
+	# userInput = f"user input = '{userInput}'"
+
+	return {"RPI"}
+
+
+# toolsAdvance =  [toolShell]             	# Need for human in loop
+# toolsIntermediate = [toolSetCronRemainder]
+# toolsBasic = [toolMyName, toolMyPetsName]                  # No need for human in loop
+# toolsBasic = [toolMyName]                  # No need for human in loop
+toolsBasic = [toolMyName, toolMyPetsName]                  # No need for human in loop
+
+tools = toolsBasic
+
+# ~ humanBreak = input("humanBreak:")
+
+def ToolsList():
+    global tools
+    return tools
+
+# Question:
+
+- Create a similar toolsProjectBuilder.py file
+- which have 3 tools 
+    - 1st tool: create a descriptive project idea from the given user input
+    - 2nd tool: Summarize the descriptive project idea into a short project goal. 
+    - 3rd tool: Propose 2 to 4 candidate software architectures for this project. For each, give: a name, the folder/file layout, and short advantages/disadvantages.
+- each tool should print the llm output in streaming mode
+- each tool should summarise the llm summary like this
+LLM Metrics Extraction:
+- each tools should create its output in some kind of json format
+- validate the json format
+- once validation is done save the generated llm ouput to a file (file name should be a global variable)
+
+Input Tokens       : 567
+Output Tokens      : 10
+Total Tokens       : 577
+
+Created At         : 2026-07-10T10:17:56.8011664Z
+Load Duration      : 16.23s
+Prompt Eval Time   : 18.98s
+Generation Time    : 1.38s
+Total Duration     : 36.62s
+
+# Code style conventions used throughout this codebase
+
+- Functions: `PascalCase`
+- Variables: `camelCase`
+- Every risky operation is wrapped in `try/except`
+- Docstrings and comments throughout

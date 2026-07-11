@@ -3,5 +3,6 @@
     "toolsTest": false,
     "toolsPii": false,
     "toolsDataAnalysis": false,
-    "toolsFinanceAssist": false
+    "toolsFinanceAssist": false,
+    "toolsProjectBuilder": true
 }

@@ -1,8 +1,8 @@
 {
-  "mode-llm": "local-4b-no-tools",
+  "mode-llm": "local-4b",
   "mode-stream": "true",
   "mode-conversation": "wakeUp",
-  "mode-input": "text",
+  "mode-input": "multilinne",
   "mode-output": "text",
   "mode-context": "yes",
   "mode-framework": "langchain",
