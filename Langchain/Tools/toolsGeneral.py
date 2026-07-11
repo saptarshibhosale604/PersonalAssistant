@@ -32,7 +32,26 @@ toolShell.description = toolShell.description + f" args {toolShell.args}".replac
 # toolShell.description = f"This tool should only call if the input includes the phrase `my pc`. The tool " + toolShell.description
 
 # ONLY FOR WINDOWS POWERSHELL
-toolShell.description = toolShell.description.replace("shell", "PowerShell")
+toolShell.description = '''
+Run a single PowerShell command on this Windows machine.
+
+Arguments:
+args {{
+    'command': {{
+        'type': 'string',
+        'title': 'Command',
+        'description': 'A single PowerShell command to execute.'
+    }}
+}}
+
+Rules:
+- Executes exactly ONE PowerShell command per tool call.
+- The `command` argument must be a single string.
+- Never provide an array or list of commands.
+- If multiple commands are required, invoke this tool multiple times, once per command.
+- Do not combine unrelated commands using ';', '&', '&&', or newlines unless the user explicitly requested a single compound PowerShell command.
+'''
+# toolShell.description = toolShell.description.replace("shell", "PowerShell")
 # toolShell.description = f"" + toolShell.description + " Note that multiple cmds should be separated by `;`"
 
 # toolShell.description += """

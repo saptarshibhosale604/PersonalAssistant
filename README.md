@@ -221,6 +221,7 @@ python -m UI.cli
 - A, bug, streaming is not wokring in local-4b and stream mode on
 
 # TODO 
+- a, bug, toolShell giving error if calls multiple cmds
 - A, improve, clean the code
 - B, improve, change the mode-vars from true, false to on, off
 - A, bug, mode context no not working
