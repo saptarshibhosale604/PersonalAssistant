@@ -44,7 +44,7 @@ MODE_SANDBOX = "false"
 COMMANDS = [
     "mode", "input", "text", "speech", "output", "context", "yes", "no",
     "llm", "local", "global", "globalgemini", "framework", "langchain",
-    "fabric", "True", "False", "multiline",
+    "fabric", "True", "False", "multi",
 ]
 
 FORMAT_MESSAGE_WIDTH = 60  # Total width used when printing section separators
@@ -159,6 +159,130 @@ def FormatToolsPrinting(tools: Iterable[Any]) -> None:
 
 
 @PrintFunctionName
+def BasicCmds02(userInput: str) -> bool:
+    """
+    Handle basic CLI commands.
+
+    Supported commands:
+
+        /
+        /help
+
+        /input <value>
+        /llm <value>
+        /stream <value>
+
+        /get
+        /update
+        /sandbox <true|false>
+        /tools <update|get>
+        /reset
+
+    Returns True if handled, otherwise False.
+    """
+    global MODE_SANDBOX
+    global THREAD_ID
+
+    userInput = userInput.strip()
+
+    if not userInput.startswith("/"):
+        return False
+
+    parts = userInput.split()
+
+    command = parts[0].lower()
+    value = parts[1].lower() if len(parts) > 1 else None
+
+    print(f"BasicCmds02 {command} ==> {value}")
+
+    # --------------------------------------------------
+    # Help
+    # --------------------------------------------------
+
+    if command in ("/", "/help"):
+        FormatMessageTypes("SystemMessage")
+        logger.info("Help:")
+        logger.info("Available commands:")
+        logger.info("  /input <value>")
+        logger.info("  /llm <value>")
+        logger.info("  /stream <value>")
+        logger.info("  /get")
+        logger.info("  /update")
+        logger.info("  /sandbox <true|false>")
+        logger.info("  /tools <update|get>")
+        logger.info("  /reset")
+        GetAllModeValues()
+        return True
+
+    # --------------------------------------------------
+    # Update mode values
+    # --------------------------------------------------
+
+    elif command in ("/input", "/llm", "/stream"):
+        UpdateModeValue(f"mode-{command[1:]}", value)
+        return True
+
+    # --------------------------------------------------
+    # Show current modes
+    # --------------------------------------------------
+
+    elif command == "/get":
+        GetAllModeValues()
+        return True
+
+    # --------------------------------------------------
+    # Interactive mode update
+    # --------------------------------------------------
+
+    elif command == "/update":
+        if MODE_SANDBOX == "true":
+            modesManager.Main(MODE_SANDBOX)
+        else:
+            modesManager.Main()
+        return True
+
+    # --------------------------------------------------
+    # Sandbox
+    # --------------------------------------------------
+
+    elif command == "/sandbox":
+        MODE_SANDBOX = value
+        modesManager.LoadConfigurationFromFile(modeSandbox=MODE_SANDBOX)
+        GetAllModeValues()
+        return True
+
+    # --------------------------------------------------
+    # Tools
+    # --------------------------------------------------
+
+    elif command == "/tools":
+        tools = toolsManager.Main(value)
+        print("toolsManager: Goodbye!")
+        # FormatToolsPrinting(tools)
+        return True
+
+    # --------------------------------------------------
+    # 
+    # --------------------------------------------------
+
+    elif command == "/new":
+        # tools = toolsManager.Main(value)
+        print("toolsManager: New session")
+        THREAD_ID += 1  
+        # FormatToolsPrinting(tools)
+        return True
+
+    # --------------------------------------------------
+    # Reset
+    # --------------------------------------------------
+
+    elif command == "/reset":
+        DropModeConfigFile()
+        return True
+
+    return False
+
+@PrintFunctionName
 def BasicCmds(userInput: str) -> bool:
     """
     Handle basic CLI commands (help, mode changes).
@@ -256,6 +380,46 @@ def ReadUserInputFile() -> Optional[str]:
     return None
 
 
+@PrintFunctionName
+def PromptInjection(userInput: str) -> bool:
+    """
+    Handle prompt injection attempts by appending a safety note.
+    
+    Returns True if an attempt was detected and handled, False otherwise.
+    """
+    parts = userInput.lower().split()
+    
+    # Check if the first word is "cmd" (case-insensitive check on original input logic usually applies here)
+    # "if the first word is CMD"sed on user request:
+    # We will perform a case-insensitive split to be robust, but strictly check for 'cmd' as per instruction.
+    
+    if parts and parts[0].lower() == "cmd":
+        original_input = userInput
+        
+        # Append the required note at the end of the input string
+        # addNote = "\nNote: use one command at a time."
+        # addNote = "\nNote: use one command at a time."
+        addNote = (
+            "\n\nImportant:\n"
+            "- Execute exactly ONE PowerShell command per tool call.\n"
+            "- Do not combine commands using ';', '&', '&&', or newlines.\n"
+            "- If multiple commands are needed, invoke the tool multiple times."
+        )
+        
+        # Construct the new full input to be processed (or logged)
+        final_processed_input = f"{original_input}\n{addNote}"
+        
+        # print(f"PromptInjection detected. Processing with note appended:")
+        logger.info(f"[INJECTED] note for CMD")
+        
+        # return True
+    
+    # else:
+    #     # If not a CMD injection attempt, pass through or handle as normal (return False to indicate handled by this specific handler)
+    #     FormatMessageTypes("")
+    #     print()
+    #     return False
+        
 # ---- Input / Output ----
 
 # @log_call
@@ -272,12 +436,16 @@ def Input() -> str:
 
     if modeInput == "text":
         userInput = input("")
-    elif modeInput == "multiline":
+    elif modeInput == "multi":
         logger.info(
-            "Paste your multiline input followed by Ctrl-D (Linux/macOS) "
-            "or Ctrl-Z (Windows) then Enter:"
+            "Paste your multiline input\n"
+            "To exit the mode multi type 'text'\n"
+            "To submit input Ctrl-Z (Windows) or Ctrl-D (Linux/macOS) then Enter:"
         )
-        userInput = sys.stdin.read()
+        # userInput = sys.stdin.read()
+        userInput = sys.stdin.read().strip()
+        if userInput == "text":
+            userInput = "/input text"
     elif modeInput == "file":
         userInput = ReadUserInputFile()
         print(userInput)
@@ -303,7 +471,10 @@ def Processing(userInput: str) -> Any:
 
     if BasicCmds(userInput):
         return None
+    if BasicCmds02(userInput):
+        return None
 
+    PromptInjection(userInput)
     if GetModeValue("mode-conversation") == "wakeUp":
         modeFramework = GetModeValue("mode-framework")
 

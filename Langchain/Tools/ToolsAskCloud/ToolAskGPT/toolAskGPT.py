@@ -32,12 +32,12 @@ from playwright.sync_api import (
     TimeoutError as PlaywrightTimeoutError,
 )
 
-try:
-    from langchain_core.tools import tool
-except ImportError:
-    # Allows standalone testing even if langchain isn't installed yet.
-    def tool(func):
-        return func
+# try:
+#     # from langchain_core.tools import tool
+# except ImportError:
+#     # Allows standalone testing even if langchain isn't installed yet.
+#     def tool(func):
+#         return func
 
 
 # ---------------------------------------------------------------------------
@@ -46,6 +46,11 @@ except ImportError:
 
 CHATGPT_URL = "https://chatgpt.com"
 STATE_FILE = Path("state.json")
+from datetime import datetime
+
+timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+# RESULT_FILE = f"Results/result_{timestamp}.txt"
+RESULT_FILE = f"Langchain/Tools/ToolsAskCloud/ToolAskGPT/Results/result_{timestamp}.txt"
 
 PROMPT_TEXTBOX_SELECTOR = "#prompt-textarea"          # contenteditable div
 SEND_BUTTON_SELECTOR = "[data-testid='send-button']"
@@ -185,6 +190,21 @@ def _wait_for_completion(page: Page) -> None:
     )
 
 
+def save_response_if_present(answer: str) -> bool:
+    """
+    Save the response to a file if it contains any non-whitespace text.
+
+    Returns:
+        True if the response was written to the file.
+        False if there was no response to write.
+    """
+    if not answer or not answer.strip():
+        return False
+
+    Path(RESULT_FILE).write_text(answer, encoding="utf-8")
+    print(f"[ask_chatgpt] Response written to '{RESULT_FILE}'.")
+    return True
+
 def _read_response(page: Page) -> str:
     print("[ask_chatgpt] Reading response...")
     time.sleep(5)
@@ -235,6 +255,7 @@ def _ask_chatgpt_impl(prompt: str, headless: bool = False) -> str:
                 _send_prompt(page, prompt)
                 _wait_for_completion(page)
                 answer = _read_response(page)
+                save_response_if_present(answer)
             except AskChatGPTError:
                 raise
             except Exception as e:
@@ -250,8 +271,8 @@ def _ask_chatgpt_impl(prompt: str, headless: bool = False) -> str:
             print("[ask_chatgpt] Browser closed.")
 
 
-@tool
-def ask_chatgpt(prompt: str) -> str:
+# @tool
+def AskChatgpt(prompt: str) -> str:
     """
     Opens chatgpt.com in a browser, starts a new chat, sends `prompt`,
     waits for the assistant to finish responding, and returns the response

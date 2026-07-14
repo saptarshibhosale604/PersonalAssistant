@@ -76,6 +76,7 @@ TOOL_INTERRUPT_POLICY = {
     "toolMyPetsName": True,
     # toolsGeneral
     "toolShell": True,
+    "toolPowershell": True,
     "toolSetCronRemainder": True,
     "toolWebSearch": True,
     # toolsDataAnalysis
@@ -230,6 +231,8 @@ def PrintPostProcessingLLMVariables(content) -> None:
 
         responseMetadata = getattr(message, "response_metadata", {})
         usageMetadata = getattr(message, "usage_metadata", {})
+        # print(f"responseMetadata: {responseMetadata}")
+        # print(f"usageMetadata: {usageMetadata}")
 
         # print("\n" + "=" * 80)
         # print("FINAL LLM RESPONSE")
@@ -247,8 +250,18 @@ def PrintPostProcessingLLMVariables(content) -> None:
         print(f"Input Tokens       : {usageMetadata.get('input_tokens', 0)}")
         print(f"Output Tokens      : {usageMetadata.get('output_tokens', 0)}")
         print(f"Total Tokens       : {usageMetadata.get('total_tokens', 0)}")
+                
+        evalDurationNs = responseMetadata.get("eval_duration", 0)
+        outputTokens = usageMetadata.get("output_tokens", 0)
 
-        print()
+        tokensPerSecond = (
+            outputTokens / (evalDurationNs / 1_000_000_000)
+            if evalDurationNs > 0
+            else 0.0
+        )
+
+        print(f"Tokens / Second    : {tokensPerSecond:.2f}")
+        # print()
 
         print(f"Created At         : {responseMetadata.get('created_at', 'Unknown')}")
 
@@ -424,6 +437,16 @@ def PrintLlmMetrics(lastMessage) -> None:
     print(f"Input Tokens: {usage.get('input_tokens', 'N/A')}")
     print(f"Output Tokens: {usage.get('output_tokens', 'N/A')}")
 
+    evalDurationNs = responseMetadata.get("eval_duration", 0)
+    outputTokens = usage.get("output_tokens", 0)
+
+    tokensPerSecond = (
+        outputTokens / (evalDurationNs / 1_000_000_000)
+        if evalDurationNs > 0
+        else 0.0
+    )
+
+    print(f"Tokens / Second    : {tokensPerSecond:.2f}")
     totalDurationMs = responseMetadata.get("total_duration", "N/A")
     if isinstance(totalDurationMs, (int, float)):
         print(f"Total Duration (ms): {totalDurationMs / 1000:.2f} seconds")

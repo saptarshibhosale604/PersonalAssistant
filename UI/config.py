@@ -48,7 +48,7 @@ modeConfigInitializationJson = {
             'text': 'Text input mode',
             'speech': 'Speech input mode',
             'file': 'Read from the userInput.txt file',
-            'multiline': 'Text input mode multiline'
+            'multi': 'Text input mode multi'
         }
     },
     'mode-output': {
@@ -98,7 +98,7 @@ modeConfigInitializationJson = {
 presetDevelopment = {
     'mode-llm': 'local',
     'mode-conversation': 'wakeUp',
-    'mode-input': 'multiline',
+    'mode-input': 'multi',
     'mode-output': 'text',
     'mode-context': 'yes',
     'mode-framework': 'langchain',

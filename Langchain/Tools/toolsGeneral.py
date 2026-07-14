@@ -25,32 +25,35 @@ from langchain_community.tools.tavily_search import TavilySearchResults
 
 ## ## INITIALIZING TOOLS ## ## 
 
+# toolShell = ShellTool() 
+# toolShell.name = "toolShell"
+# toolShell.description = toolShell.description + f" args {toolShell.args}".replace("{", "{{").replace("}", "}}")
+
+
 # toolShell = ShellTool(ask_human_input=False, verbose=True)
 # toolShell = ShellTool(ask_human_input=True ) # this is also working fine
-toolShell = ShellTool() 
-toolShell.description = toolShell.description + f" args {toolShell.args}".replace("{", "{{").replace("}", "}}")
 # toolShell.description = f"This tool should only call if the input includes the phrase `my pc`. The tool " + toolShell.description
 
 # ONLY FOR WINDOWS POWERSHELL
-toolShell.description = '''
-Run a single PowerShell command on this Windows machine.
+# toolShell.description = '''
+# Run a single PowerShell command on this Windows machine.
 
-Arguments:
-args {{
-    'command': {{
-        'type': 'string',
-        'title': 'Command',
-        'description': 'A single PowerShell command to execute.'
-    }}
-}}
+# Arguments:
+# args {{
+#     'command': {{
+#         'type': 'string',
+#         'title': 'Command',
+#         'description': 'A single PowerShell command to execute.'
+#     }}
+# }}
 
-Rules:
-- Executes exactly ONE PowerShell command per tool call.
-- The `command` argument must be a single string.
-- Never provide an array or list of commands.
-- If multiple commands are required, invoke this tool multiple times, once per command.
-- Do not combine unrelated commands using ';', '&', '&&', or newlines unless the user explicitly requested a single compound PowerShell command.
-'''
+# Rules:
+# - Executes exactly ONE PowerShell command per tool call.
+# - The `command` argument must be a single string.
+# - Never provide an array or list of commands.
+# - If multiple commands are required, invoke this tool multiple times, once per command.
+# - Do not combine unrelated commands using ';', '&', '&&', or newlines unless the user explicitly requested a single compound PowerShell command.
+# '''
 # toolShell.description = toolShell.description.replace("shell", "PowerShell")
 # toolShell.description = f"" + toolShell.description + " Note that multiple cmds should be separated by `;`"
 
@@ -66,11 +69,58 @@ Rules:
 # """
 
 # print(f"toolShell.description: {toolShell.description}")
-print(f"toolShell.description: {toolShell.description}")
-toolShell.name = "toolShell"
+# print(f"toolShell.description: {toolShell.description}")
 
 # ~ print("toolShell.description: ", toolShell.description)
 # ~ humanBreak = input("humanBreak:")
+
+from typing import Annotated
+from langchain.tools import tool
+import subprocess
+
+
+@tool
+def toolPowershell(
+    commands: Annotated[
+        str | list[str],
+        "List of shell commands to run. Deserialized using json.loads"
+    ],
+) -> str:
+    """
+    Execute one or more PowerShell commands.
+args {{'commands': {{'anyOf': [{{'type': 'string'}}, {{'items': {{'type': 'string'}}, 'type': 'array'}}], 'description': 'List of shell commands to run. Deserialized using json.loads', 'title': 'Commands'}}}}
+    """
+
+    if isinstance(commands, list):
+        script = "\n".join(commands)
+    else:
+        script = commands
+
+    try:
+        result = subprocess.run(
+            [
+                "powershell",
+                "-NoProfile",
+                "-ExecutionPolicy", "Bypass",
+                "-Command",
+                script,
+            ],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+
+        stdout = result.stdout.strip()
+        stderr = result.stderr.strip()
+
+        if result.returncode == 0:
+            return stdout or "Success."
+        else:
+            return stderr or stdout or "Unknown PowerShell error."
+
+    except Exception as e:
+        return str(e)
+    
 
 # the gmail credentials temperary commented
 #credentials = get_gmail_credentials(
@@ -247,14 +297,16 @@ toolWebSearch.name = "toolWebSearch"
 # print(" \n toolsGeneral: toolSetCronRemainder")
 # print(toolSetCronRemainder)
 
-toolsAdvance =  [toolShell]             	# Need for human in loop
+# toolsAdvance =  [toolShell]             	# Need for human in loop
+toolsAdvance =  [toolPowershell]             	# Need for human in loop
 # toolsAdvance =  toolPlaywright             	# Need for human in loop
-toolsIntermediate = [toolSetCronRemainder]
+# toolsIntermediate = [toolSetCronRemainder]
 # toolsBasic = [toolYoutube, toolWebSearch, toolMyName]                  # No need for human in loop
 # toolsBasic = [toolYoutube, toolWebSearch]                  # No need for human in loop
 toolsBasic = [toolWebSearch]                  # No need for human in loop
 
-tools = toolsAdvance + toolsIntermediate + toolsBasic
+tools = toolsAdvance + toolsBasic
+# tools = toolsAdvance + toolsIntermediate + toolsBasic
 # tools =  toolsAdvance 
 # globalTools = tools
 

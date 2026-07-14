@@ -176,11 +176,20 @@ mksession!
 # Windows
 ## not working
 python .\ui\cli.py  
+python .\toolsAskGPT.py (Get-Clipboard)
+python .\toolsAskGPT.py (Get-Content  -Raw)
 ## working
 python -m UI.cli
 
+# lm studio:
+- google / gemma-4-e4b gemma4 7.9B
+Gemma4, effective 4B version. Supports image input, reasoning, and tool calling.
+- Qwen3.5 9B Q4 6.5gb
+- https://lmstudio.ai/models/google/gemma-4-e4b 6.3gb
+- https://huggingface.co/lmstudio-community/Qwen3.5-4B-GGUF 3.3gb
+
 # DONE
-- mode multiline input true is not working
+- mode multi input true is not working
 - remove tool calling for local llm
 - Need to start logging
 - work on mode context no for local llm
@@ -222,6 +231,7 @@ python -m UI.cli
 
 # TODO 
 - a, bug, toolShell giving error if calls multiple cmds
+    - temp fix: run one cmd at a time in user input
 - A, improve, clean the code
 - B, improve, change the mode-vars from true, false to on, off
 - A, bug, mode context no not working

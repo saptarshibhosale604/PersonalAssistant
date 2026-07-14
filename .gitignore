@@ -17,4 +17,15 @@ Temp/*
 
 Langchain/Tools/ToolsProjectBuilder/Project*
 Langchain/Tools/ToolAskGPT/Results
+Langchain/Tools/ToolsAskCloud/ToolAskGPT/Results/
 Langchain/Tools/ToolAskGPT/state.json
+Langchain/Tools/ToolsAskCloud/ToolAskGPT/state.json
+
+UI/InfoExtractor/Output
+UI/InfoExtractor/lib
+
+state.json.bak
+# where is this state.json is coming from? change its path to exact where it need to be
+
+UI/modesConfigSandbox.json
+UI/modesConfig.json

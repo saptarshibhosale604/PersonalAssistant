@@ -4,5 +4,6 @@
     "toolsPii": false,
     "toolsDataAnalysis": false,
     "toolsFinanceAssist": false,
-    "toolsProjectBuilder": true
+    "toolsProjectBuilder": false,
+    "toolsAskCloud": true
 }

@@ -26,11 +26,12 @@ CONFIG_FILE = "./Langchain/Tools/toolsConfig.json"
 # Tool module mapping
 TOOLS_MODULES = {
     "toolsGeneral": "Langchain.Tools.toolsGeneral",
+    "toolsAskCloud": "Langchain.Tools.ToolsAskCloud.toolsAskCloud",
     "toolsTest": "Langchain.Tools.toolsTest",
     "toolsPii": "Langchain.Tools.toolsPii",
     "toolsDataAnalysis": "Langchain.Tools.toolsDataAnalysis",
     "toolsFinanceAssist": "Langchain.Tools.ToolsFinanceAssist.toolsFinanceAssist",
-    "toolsProjectBuilder": "Langchain.Tools.ToolsProjectBuilder.toolsProjectBuilder"
+    "toolsProjectBuilder": "Langchain.Tools.ToolsProjectBuilder.toolsProjectBuilder",
 }
 
 # Default configuration
