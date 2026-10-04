@@ -12,7 +12,7 @@ import sys
 from typing import Any, Iterable, Optional
 
 # ---- Local imports ----
-import Fabric.manager as Fabric
+# import Fabric.manager as Fabric
 import Langchain.agent as Agent
 import Langchain.Tools.toolsManager as toolsManager
 import UI.modesManager as modesManager

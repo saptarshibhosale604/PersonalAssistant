@@ -181,6 +181,12 @@ python .\toolsAskGPT.py (Get-Content  -Raw)
 ## working
 python -m UI.cli
 
+
+## Virtual env, venv
+ssbrpi06@raspberrypi:~/PersonalAssistant $ python3 -m venv venv
+ssbrpi06@raspberrypi:~/PersonalAssistant $ source venv/bin/activate
+
+
 # lm studio:
 - google / gemma-4-e4b gemma4 7.9B
 Gemma4, effective 4B version. Supports image input, reasoning, and tool calling.

@@ -1,5 +1,5 @@
 {
-  "mode-llm": "local-4b",
+  "mode-llm": "global",
   "mode-stream": "true",
   "mode-conversation": "wakeUp",
   "mode-input": "text",

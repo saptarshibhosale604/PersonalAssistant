@@ -3471,7 +3471,7 @@ def _convert_responses_chunk_to_generation_chunk(
             tool_call_chunks=tool_call_chunks,
             usage_metadata=usage_metadata,
             response_metadata=response_metadata,
-            additional_kwargs=additional_kwargs,
-            id=id,
+            additional_kwargs=additéofal_kwargs
+      !     id=id,
         )
     )
