@@ -7,5 +7,6 @@
     "toolsProjectBuilder": false,
     "toolsAskCloud": false,
     "toolsCodingAgent": true,
-    "toolsWebSearch": true
+    "toolsWebSearch": true,
+    "toolsProjectContextManager": true
 }

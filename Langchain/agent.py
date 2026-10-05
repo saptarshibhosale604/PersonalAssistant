@@ -97,6 +97,8 @@ TOOL_INTERRUPT_POLICY = {
     "toolWriteFile": True,
     "toolEditFile": True,
     "toolExecuteBash": True,
+    # toolsProjectContextManager
+    "ReadProjectContext": True,
     # toolsWebSearch
     "toolSearchDuckDuckGo": True,
     "toolSearchWikipedia": True,
