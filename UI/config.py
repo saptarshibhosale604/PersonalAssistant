@@ -5,7 +5,7 @@ modeSandboxLocal = "false"
 
 # Create file with default configuration
 defaultConfig = {
-    'mode-llm': 'local-1b',
+    'mode-llm': 'globalGemini01',
     'mode-stream': 'false',
     'mode-conversation': 'wakeUp',
     'mode-input': 'text',
@@ -25,8 +25,10 @@ modeConfigInitializationJson = {
             'local-4b': 'Model running locally, qwen3.5:4b',
             'local-4b-no-tools': 'Model running locally, qwen3.5:4b, without any agent tools',
             'local-buddy': 'Model running locally with Best bud personality',
-            'global': 'Model running on cloud / chatgpt',
-            'globalGemini': 'Model running on cloud / Google Gemini'
+            'globalChatgpt01': 'Model running on cloud / chatgpt gpt-5.5, for plan generation',
+            'globalChatgpt02': 'Model running on cloud / chatgpt gpt-5.4, for plan execution',
+            'globalGemini01': 'Model running on cloud / Google gemini-3.6-flash, best (planning + complex tools)',
+            'globalGemini02': 'Model running on cloud / Google gemini-3.5-flash-lite, 2nd best (fast, simple tasks)'
         }
     },
     'mode-stream': {
@@ -109,7 +111,7 @@ presetDevelopment = {
 
 # Preset 2: Production Mode
 presetProduction = {
-    'mode-llm': 'global',
+    'mode-llm': 'globalChatgpt02',
     'mode-conversation': 'wakeUp',
     'mode-input': 'text',
     'mode-output': 'speech',

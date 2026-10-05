@@ -6,5 +6,6 @@
     "toolsFinanceAssist": false,
     "toolsProjectBuilder": false,
     "toolsAskCloud": false,
-    "toolsCodingAgent": true
+    "toolsCodingAgent": true,
+    "toolsWebSearch": true
 }

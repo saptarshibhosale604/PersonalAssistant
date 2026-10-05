@@ -43,7 +43,7 @@ MODE_SANDBOX = "false"
 
 COMMANDS = [
     "mode", "input", "text", "speech", "output", "context", "yes", "no",
-    "llm", "local", "global", "globalgemini", "framework", "langchain",
+    "llm", "local", "globalChatgpt01", "globalChatgpt02", "globalGemini01", "globalGemini02", "framework", "langchain",
     "fabric", "True", "False", "multi",
 ]
 
@@ -497,6 +497,7 @@ def Processing(userInput: str) -> Any:
 def Output(assistantOutput: Any) -> None:
     """Emit the assistant's output according to the current mode-output setting."""
     # PrintFunctionNames("cli Output...")
+    logger.info(f"[AgentOutput] {assistantOutput}")
     logger.info(f"[Info] assistantOutput: {assistantOutput}")
 
     modeOutput = GetModeValue("mode-output")
@@ -535,6 +536,7 @@ def Main() -> None:
     # print(f"userInput after input: {userInput}")
     # if userInput is not None or userInput != "":
     if userInput and len(userInput.strip()) > 0: 
+        logger.info(f"[UserInput] {userInput}")
         # print(f"userInput before procesing: {userInput}")
         assistantOutput = Processing(userInput)
         if assistantOutput is not None:
@@ -544,4 +546,9 @@ def Main() -> None:
 WelcomeUser()
 
 while True:
-    Main()
+    try:
+        Main()
+    except Exception as e:
+        # Show the error and keep the REPL alive (e.g. LLM rate limits, network errors).
+        # KeyboardInterrupt / SystemExit are not Exceptions, so Ctrl+C and exit still work.
+        logger.exception(f"[Error] {type(e).__name__}: {e}")

@@ -89,13 +89,19 @@ def UpdateAgent(modeLLM):
             llm = ChatOllama(model="llama3.2", streaming=True, max_tokens=500, temperature=0, max_retries=1)
             # llm = ChatOllama(model="llama3.2:1b", temperature=0, verbose=True)
 
-        elif(modeLLM == "global"):
-            llm = ChatOpenAI(model="gpt-3.5-turbo", streaming=True, max_tokens=500, temperature=0, max_retries=1)
+        elif(modeLLM == "globalChatgpt01"):
+            llm = ChatOpenAI(model="gpt-5.5", streaming=True, max_tokens=500, temperature=0, max_retries=1)
+
+        elif(modeLLM == "globalChatgpt02"):
+            llm = ChatOpenAI(model="gpt-5.4", streaming=True, max_tokens=500, temperature=0, max_retries=1)
         
-        elif(modeLLM == "globalGemini"):
+        elif(modeLLM == "globalGemini01"):
             # llm = GoogleGenerativeAI(model="models/text-bison-001", google_api_key='AIzaSyBwIrjcMjKA1V3XJ_hCLurJx33wh33NWdk')
             # llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key='AIzaSyBPH-0Dd5e2Heu8lFs1rCci8ZdGxnr_ZvE')
             llm = ChatGoogleGenerativeAI(model="gemini-3.6-flash")  # reads GOOGLE_API_KEY env var
+
+        elif(modeLLM == "globalGemini02"):
+            llm = ChatGoogleGenerativeAI(model="gemini-3.5-flash-lite")  # reads GOOGLE_API_KEY env var
         
         # rebuild the agent with new llm and tools
         # agent = BuildAgent()

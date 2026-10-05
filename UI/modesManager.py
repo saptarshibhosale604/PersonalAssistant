@@ -21,12 +21,12 @@ Flow:
   modesManager: select mode value
       1 local        model running locally, jarvis like personality
       2 local-buddy  model running locally with best bud personality
-      3 global       model running on cloud / chatgpt
+      3 globalChatgpt01  model running on cloud / chatgpt (plan)
   Human: <number>
 
   modesManager:
   The value saved succesfully
-  mode-llm: global
+  mode-llm: globalChatgpt01
 
 Author: Data Engineer
 Date: 2025
@@ -230,7 +230,7 @@ class ConversationalUIManager:
 
         modesManager:
         The value saved succesfully
-        mode-llm: global
+        mode-llm: globalChatgpt01
     """
 
     @PrintFunctionName
@@ -385,7 +385,7 @@ def ShowHelp() -> None:
     print("  Example: typing '1' opens the 'mode-llm' value list.")
     print()
     print("- Sub-menu numbers select the actual value for that mode.")
-    print("  Example: typing '3' sets mode-llm to 'global'.")
+    print("  Example: typing '3' sets mode-llm to 'globalChatgpt01'.")
     print()
     print("- After a value is set, it's saved automatically and you'll")
     print("  see: 'The value saved succesfully' followed by the change.")

@@ -52,7 +52,8 @@ import Langchain.Tools.toolsManager as toolsManager
 # --------------------------------------------------------------------------- #
 # Constants
 # --------------------------------------------------------------------------- #
-DEFAULT_MAX_TOKENS = 500
+# DEFAULT_MAX_TOKENS = 500
+DEFAULT_MAX_TOKENS = 5000
 DEFAULT_TEMPERATURE = 0
 DEFAULT_MAX_RETRIES = 1
 BANNER_WIDTH = 60
@@ -91,11 +92,14 @@ TOOL_INTERRUPT_POLICY = {
     "sql_db_schema": True,
     "sql_db_list_tables": True,
     "sql_db_query_checker": True,
-    # toolsPi
-    "toolTestReadFile": True,
-    "toolTestWriteFile": True,
-    "toolTestEditFile": True,
-    "toolTestExecuteBash": True,
+    # toolsCodingAgent
+    "toolReadFile": True,
+    "toolWriteFile": True,
+    "toolEditFile": True,
+    "toolExecuteBash": True,
+    # toolsWebSearch
+    "toolSearchDuckDuckGo": True,
+    "toolSearchWikipedia": True,
 }
 
 
@@ -196,20 +200,32 @@ def UpdateAgent(modeLLM: str) -> None:
             temperature=DEFAULT_TEMPERATURE, max_retries=DEFAULT_MAX_RETRIES,
         )
 
-    elif modeLLM == "global":
+    elif modeLLM == "globalChatgpt01":
         LLM = ChatOpenAI(
-            # model="gpt-3.5-turbo", streaming=True, max_tokens=DEFAULT_MAX_TOKENS,
-            # model="gpt-5.5", streaming=True, max_tokens=DEFAULT_MAX_TOKENS, # plan generation
-            model="gpt-5.4", streaming=True, max_tokens=DEFAULT_MAX_TOKENS, # plan execution
+            model="gpt-5.5", streaming=True, max_tokens=DEFAULT_MAX_TOKENS,  # plan generation
             temperature=DEFAULT_TEMPERATURE, max_retries=DEFAULT_MAX_RETRIES,
         )
         TOOLS = toolsManager.Main("get")  # "get": fetch tools list
 
-    elif modeLLM == "globalGemini":
+    elif modeLLM == "globalChatgpt02":
+        LLM = ChatOpenAI(
+            model="gpt-5.4", streaming=True, max_tokens=DEFAULT_MAX_TOKENS,  # plan execution
+            temperature=DEFAULT_TEMPERATURE, max_retries=DEFAULT_MAX_RETRIES,
+        )
+        TOOLS = toolsManager.Main("get")  # "get": fetch tools list
+
+    elif modeLLM == "globalGemini01":
         LLM = ChatGoogleGenerativeAI(
             # model="gemini-2.0-flash",
             # google_api_key="AIzaSyBPH-0Dd5e2Heu8lFs1rCci8ZdGxnr_ZvE",  # hardcoded key, do not use; now read from GOOGLE_API_KEY env var
-            model="gemini-3.6-flash", max_tokens=DEFAULT_MAX_TOKENS,
+            model="gemini-3.6-flash", max_tokens=DEFAULT_MAX_TOKENS,  # best: planning + complex tool tasks
+            temperature=DEFAULT_TEMPERATURE, max_retries=DEFAULT_MAX_RETRIES,
+        )
+        TOOLS = toolsManager.Main("get")  # "get": fetch tools list
+
+    elif modeLLM == "globalGemini02":
+        LLM = ChatGoogleGenerativeAI(
+            model="gemini-3.5-flash-lite", max_tokens=DEFAULT_MAX_TOKENS,  # 2nd best: fast, quick Q&A + simple tools
             temperature=DEFAULT_TEMPERATURE, max_retries=DEFAULT_MAX_RETRIES,
         )
         TOOLS = toolsManager.Main("get")  # "get": fetch tools list
@@ -392,6 +408,7 @@ def StreamAndAccumulate(messages: list, configMemory: dict) -> str:
     print()
     FormatMessageTypes("")
     print()
+    logger.info(f"[AgentOutput] {response}")
     return response
 
 @PrintFunctionName
@@ -415,6 +432,7 @@ def StreamAndAccumulateResume(messages: list, configMemory: dict, decisions) -> 
     print()
     FormatMessageTypes("")
     print()
+    logger.info(f"[AgentOutput] {response}")
     return response
 
 
@@ -435,6 +453,7 @@ def StreamResumeAndAccumulate(decisions: list, configMemory: dict) -> str:
     print()
     FormatMessageTypes("")
     print()
+    logger.info(f"[AgentOutput] {response}")
     return response
 
 
@@ -474,7 +493,7 @@ def Main(userInput: str, threadId, modeLLM: str, modeStream: str) -> str:
     """Route a user input to the appropriate LLM/agent execution strategy.
 
     `modeLLM` selects the backend/personality (e.g. "local", "local-buddy",
-    "local-4b", "global"...). `modeStream` ("true"/"false") only affects the
+    "local-4b", "globalChatgpt01"...). `modeStream` ("true"/"false") only affects the
     "local-4b" mode, choosing between an auto-approving streaming loop and an
     interactive invoke-based approval loop.
     """

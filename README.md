@@ -199,6 +199,45 @@ Gemma4, effective 4B version. Supports image input, reasoning, and tool calling.
 - https://lmstudio.ai/models/google/gemma-4-e4b 6.3gb
 - https://huggingface.co/lmstudio-community/Qwen3.5-4B-GGUF 3.3gb
 
+# Gemini models (tested 2026-10-05 via Testing/testGemini.py)
+- Run: `python Testing/testGemini.py` (needs GOOGLE_API_KEY, set in ~/.bashrc)
+## Working (9)
+- gemini-3.5-flash-lite          1.0s  fastest
+- gemini-3.1-flash-lite          1.2s
+- gemini-3-flash-preview         1.4s
+- gemini-3.1-flash-lite-preview  1.6s
+- gemini-flash-lite-latest       1.9s
+- gemini-robotics-er-2-preview   1.9s
+- gemini-3.6-flash               2.9s  current default in agent.py / LLM/llm.py
+- gemini-flash-latest            5.0s
+- gemini-3.5-flash              12.5s  sometimes 503 (high demand)
+## Not working (32)
+- 503 high demand, retry later: gemini-3.7-flash, gemini-3.8-flash
+- 429 quota exceeded: gemini-pro-latest, gemini-3.1-pro-preview(-customtools), *-image models, gemini-omni-*, gemini-2.5-computer-use-preview, gemini-2.5-pro-preview-tts
+- 404 retired / not found: all 2.5 / 2.0 / 1.5 models, gemini-3-pro(-preview), gemini-3-flash, gemini-3.5-pro, gemini-1.5-pro-latest
+- Empty reply (audio models, not for text chat): *-tts, gemini-3.5-transcribe
+- Note: thinking models need max_tokens >= ~1024, or they return an empty reply
+## Comparison & recommendation (plan -> review -> execute)
+- Test: tool calling (single / 3 parallel / reasoning) -> all 9 working models passed
+- Test: system prompt "plan first, no tools until 'execute'", task = backup finance.csv with timestamp, keep 5 newest, cron Sun 9pm
+
+| Model | Plan time | Tools before execute? | Plan quality | Execution |
+|---|---|---|---|---|
+| gemini-3.6-flash | 10.0s | no | best: full script + test step + no-duplicate cron; 1 bash bug (empty else) | ran plan in 1 shell call |
+| gemini-3.5-flash-lite | 2.4s | no | good: full script + test step + risks; cron appended without dedupe | ran plan in 1 shell call |
+| gemini-3.1-flash-lite | 2.1s | no | vague: no exact script, /home/<user> placeholder | only ran mkdir |
+| gemini-3-flash-preview | 6.3s | no | exact command per step | followed step-by-step (4 calls), but made up /home/pi path |
+| gemini-flash-latest | - | - | 503 high demand | - |
+
+- Use cases
+    - gemini-3.6-flash: default; planning + complex tool tasks
+    - gemini-3.5-flash-lite: fast mode; quick Q&A, simple tools (~1-2s)
+    - gemini-3.1-flash-lite: avoid, plans too vague to review
+    - *-preview / *-latest / robotics-er: avoid, get retired / silently change / specialised (robotics, 131k context)
+    - gemini-3.5-flash: avoid, slow (10-23s) + 503s
+- Preferred: gemini-3.6-flash (mode-llm globalGemini01, now the default in UI/config.py); fallback gemini-3.5-flash-lite (mode-llm globalGemini02)
+- Caveat: even 3.6-flash wrote a bash syntax error, 3-flash-preview made up a path -> always review plan + keep HITL approval
+
 # DONE
 - mode multi input true is not working
 - remove tool calling for local llm
@@ -241,8 +280,12 @@ Gemma4, effective 4B version. Supports image input, reasoning, and tool calling.
 - A, bug, streaming is not wokring in local-4b and stream mode on
 
 # TODO 
+- a, bug, understand the current project and summarise it in summary.md
+    is not working with globalGemini02 try with 01, its just not giving any output
+    might be token variable DEFAULT-MAX-TOKEN
 - a, bug, toolShell giving error if calls multiple cmds
     - temp fix: run one cmd at a time in user input
+- B, improve, plan-first mode (agent plans, waits for "execute") in agent.py system prompt
 - A, improve, clean the code
 - B, improve, change the mode-vars from true, false to on, off
 - A, bug, mode context no not working

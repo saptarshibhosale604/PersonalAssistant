@@ -34,7 +34,7 @@ def _sanitize_path(file_path: str) -> Path:
     return resolved
 
 
-@tool("toolTestReadFile", description="Read content from a file in the workspace directory.")
+@tool("toolReadFile", description="Read content from a file in the workspace directory.")
 def ReadFile(file_path: str, start_line: Optional[int] = None, end_line: Optional[int] = None) -> str:
     """Reads content from a file inside the allowed workspace.
     Supports reading specific line ranges to conserve context memory.
@@ -59,7 +59,7 @@ def ReadFile(file_path: str, start_line: Optional[int] = None, end_line: Optiona
         return f"Error reading file: {str(e)}"
 
 
-@tool("toolTestWriteFile", description="Create or overwrite a file in the workspace directory.")
+@tool("toolWriteFile", description="Create or overwrite a file in the workspace directory.")
 def WriteFile(file_path: str, content: str) -> str:
     """Creates a new file or completely overwrites an existing file."""
     try:
@@ -76,7 +76,7 @@ def WriteFile(file_path: str, content: str) -> str:
         return f"Error writing to file: {str(e)}"
 
 
-@tool("toolTestEditFile", description="Perform an inline text replacement on a file in the workspace directory.")
+@tool("toolEditFile", description="Perform an inline text replacement on a file in the workspace directory.")
 def EditFile(file_path: str, old_string: str, new_string: str) -> str:
     """Replaces exact occurrences of old_string with new_string inside a file."""
     try:
@@ -106,7 +106,7 @@ def EditFile(file_path: str, old_string: str, new_string: str) -> str:
         return f"Error editing file: {str(e)}"
 
 
-@tool("toolTestExecuteBash", description="Execute non-interactive shell commands inside the workspace directory.")
+@tool("toolExecuteBash", description="Execute non-interactive shell commands inside the workspace directory.")
 def ExecuteBash(command: str, timeout: int = 30) -> str:
     """Runs a bash command in the background with timeouts and context safeguards."""
     try:
