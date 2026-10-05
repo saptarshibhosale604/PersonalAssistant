@@ -1,12 +1,13 @@
 ## Langchain/agent
-# langchain_openai
+langchain
+langchain_openai
 # langgraph
 # langgraph.prebuilt
-# langchain_community
+langchain_community
 # langchain_google_community
 # langchain-experimental
-# langchain_ollama
-# langchain_google_genai 
+langchain_ollama
+langchain_google_genai 
 # nest_asyncio
 # duckduckgo-search // need to download from the docker terminal
 
