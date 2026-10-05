@@ -4,8 +4,8 @@ import time
 
 debug01 = False
 
-os.environ["API_KEY"] = 'AIzaSyBhxh85Q70JQ933qu6cEcbh4EuK1gtIbpI'
-genai.configure(api_key=os.environ["API_KEY"])
+# os.environ["API_KEY"] = 'AIzaSyBhxh85Q70JQ933qu6cEcbh4EuK1gtIbpI'
+genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
 
 # Model Configuration
 model_config = {
@@ -23,7 +23,7 @@ I will give you text to check grammar of the sentence. Provide corrected sentenc
 # Message
 message = "Hello, how is you"
 
-model = genai.GenerativeModel('gemini-1.5-pro-latest', 
+model = genai.GenerativeModel('gemini-3.6-flash', 
                               generation_config=model_config)
                               # system_instruction=instruction)
 # response = model.generate_content(message)

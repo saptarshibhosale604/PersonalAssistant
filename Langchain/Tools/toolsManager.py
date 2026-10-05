@@ -32,6 +32,7 @@ TOOLS_MODULES = {
     "toolsDataAnalysis": "Langchain.Tools.toolsDataAnalysis",
     "toolsFinanceAssist": "Langchain.Tools.ToolsFinanceAssist.toolsFinanceAssist",
     "toolsProjectBuilder": "Langchain.Tools.ToolsProjectBuilder.toolsProjectBuilder",
+    "toolsCodingAgent": "Langchain.Tools.toolsCodingAgent",
 }
 
 # Default configuration

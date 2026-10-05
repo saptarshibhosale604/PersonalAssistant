@@ -185,6 +185,11 @@ python -m UI.cli
 ## Virtual env, venv
 ssbrpi06@raspberrypi:~/PersonalAssistant $ python3 -m venv venv
 ssbrpi06@raspberrypi:~/PersonalAssistant $ source venv/bin/activate
+source venv/bin/activate
+python -m UI.cli
+export OPENAI_API_KEY="sk-proj-your-actual-api-key-here"
+export OPENAI_API_KEY=""
+pip install langchain langchain_community langchain_ollama langchain_openai
 
 
 # lm studio:

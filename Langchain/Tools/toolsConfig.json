@@ -1,9 +1,10 @@
 {
-    "toolsGeneral": true,
+    "toolsGeneral": false,
     "toolsTest": false,
     "toolsPii": false,
     "toolsDataAnalysis": false,
     "toolsFinanceAssist": false,
     "toolsProjectBuilder": false,
-    "toolsAskCloud": true
+    "toolsAskCloud": false,
+    "toolsCodingAgent": true
 }

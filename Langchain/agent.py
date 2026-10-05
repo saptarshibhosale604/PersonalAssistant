@@ -26,13 +26,13 @@ def RemoveSpaces(inputString: str) -> str:
 # SECURITY NOTE: these are live credentials committed directly in source.
 # Rotate/revoke them and load from a secrets manager or .env file instead
 # (see "Optional Suggestions" in the accompanying review).
-OPENAI_KEY = (
-    "sk-proj-zP6XLa1m5gtlBcXJCaHZGmAvXEvUrP 5ATJSPBfLRdEuF-vSroLAG4V0zBdpwPz9PTXe9rM0-CgT3BlbkFJ83"
-    " AZyS7Zds5OT4G7S7MJslTok1O8P7ftX6Zz_IvdtMsy_CnjJeBoOv-o-G5t13-1Yw20ei_BwA"
-)  # myTestKey08, saptarshibhosale604@gmail.com
+# OPENAI_KEY = (
+#     "sk-proj-zP6XLa1m5gtlBcXJCaHZGmAvXEvUrP 5ATJSPBfLRdEuF-vSroLAG4V0zBdpwPz9PTXe9rM0-CgT3BlbkFJ83"
+#     " AZyS7Zds5OT4G7S7MJslTok1O8P7ftX6Zz_IvdtMsy_CnjJeBoOv-o-G5t13-1Yw20ei_BwA"
+# )  # myTestKey08, saptarshibhosale604@gmail.com
 TAVILY_KEY = "tvly-kX76LCz C36oih0u9COcf6oa 53A47MX0g"
 
-os.environ["OPENAI_API_KEY"] = RemoveSpaces(OPENAI_KEY)
+# os.environ["OPENAI_API_KEY"] = RemoveSpaces(OPENAI_KEY)
 os.environ["TAVILY_API_KEY"] = RemoveSpaces(TAVILY_KEY)
 
 # Imported after the API-key env vars are set above, since some provider
@@ -41,6 +41,7 @@ from langchain.agents import create_agent
 from langchain.agents.middleware import HumanInTheLoopMiddleware
 from langchain_ollama.chat_models import ChatOllama
 from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import Command
 
@@ -90,6 +91,11 @@ TOOL_INTERRUPT_POLICY = {
     "sql_db_schema": True,
     "sql_db_list_tables": True,
     "sql_db_query_checker": True,
+    # toolsPi
+    "toolTestReadFile": True,
+    "toolTestWriteFile": True,
+    "toolTestEditFile": True,
+    "toolTestExecuteBash": True,
 }
 
 
@@ -192,19 +198,24 @@ def UpdateAgent(modeLLM: str) -> None:
 
     elif modeLLM == "global":
         LLM = ChatOpenAI(
-            model="gpt-3.5-turbo", streaming=True, max_tokens=DEFAULT_MAX_TOKENS,
+            # model="gpt-3.5-turbo", streaming=True, max_tokens=DEFAULT_MAX_TOKENS,
+            # model="gpt-5.5", streaming=True, max_tokens=DEFAULT_MAX_TOKENS, # plan generation
+            model="gpt-5.4", streaming=True, max_tokens=DEFAULT_MAX_TOKENS, # plan execution
             temperature=DEFAULT_TEMPERATURE, max_retries=DEFAULT_MAX_RETRIES,
         )
         TOOLS = toolsManager.Main("get")  # "get": fetch tools list
 
     elif modeLLM == "globalGemini":
-        # NOTE: ChatGoogleGenerativeAI is not imported in this module; this
-        # branch raises NameError if selected. Preserved as-is from the
-        # original implementation (see "Issues Found" in the review).
         LLM = ChatGoogleGenerativeAI(
-            model="gemini-2.0-flash",
-            google_api_key="AIzaSyBPH-0Dd5e2Heu8lFs1rCci8ZdGxnr_ZvE",
+            # model="gemini-2.0-flash",
+            # google_api_key="AIzaSyBPH-0Dd5e2Heu8lFs1rCci8ZdGxnr_ZvE",  # hardcoded key, do not use; now read from GOOGLE_API_KEY env var
+            model="gemini-3.6-flash", max_tokens=DEFAULT_MAX_TOKENS,
+            temperature=DEFAULT_TEMPERATURE, max_retries=DEFAULT_MAX_RETRIES,
         )
+        TOOLS = toolsManager.Main("get")  # "get": fetch tools list
+
+    else:
+        logger.warning(f"Unknown mode-llm '{modeLLM}' (names are case-sensitive); keeping previous LLM: {type(LLM).__name__}")
 
     AGENT = BuildAgent()
 
@@ -325,14 +336,15 @@ def ExtractStreamContent(streamMode: str, content) -> str:
         messageType = getattr(messageChunk, "type", messageChunk.__class__.__name__)
         if messageType == "tool":
             FormatMessageTypes("ToolMessage")
-            print(f"{messageChunk.content}", end="", flush=True)
+            print(f"{messageChunk.text}", end="", flush=True)
             print()
             FormatMessageTypes("")
             print()
         else:
-            print(f"{messageChunk.content}", end="", flush=True)
+            print(f"{messageChunk.text}", end="", flush=True)
 
-        return messageChunk.content or ""
+        # .text flattens provider content blocks (e.g. Gemini returns a list) into a plain string
+        return messageChunk.text or ""
 
     elif streamMode == "updates":
 
@@ -514,7 +526,7 @@ def Main(userInput: str, threadId, modeLLM: str, modeStream: str) -> str:
             print(f"02 state:{state}")
 
             if not state.interrupts:
-                return result["messages"][-1].content
+                return result["messages"][-1].text
 
             interrupt = state.interrupts[0]
             actions = interrupt.value["action_requests"]

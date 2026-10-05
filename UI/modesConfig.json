@@ -1,8 +1,8 @@
 {
-  "mode-llm": "global",
+  "mode-llm": "globalGemini",
   "mode-stream": "true",
   "mode-conversation": "wakeUp",
-  "mode-input": "text",
+  "mode-input": "multi",
   "mode-output": "text",
   "mode-context": "yes",
   "mode-framework": "langchain",

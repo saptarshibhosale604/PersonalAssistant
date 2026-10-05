@@ -94,7 +94,8 @@ def UpdateAgent(modeLLM):
         
         elif(modeLLM == "globalGemini"):
             # llm = GoogleGenerativeAI(model="models/text-bison-001", google_api_key='AIzaSyBwIrjcMjKA1V3XJ_hCLurJx33wh33NWdk')
-            llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key='AIzaSyBPH-0Dd5e2Heu8lFs1rCci8ZdGxnr_ZvE')
+            # llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key='AIzaSyBPH-0Dd5e2Heu8lFs1rCci8ZdGxnr_ZvE')
+            llm = ChatGoogleGenerativeAI(model="gemini-3.6-flash")  # reads GOOGLE_API_KEY env var
         
         # rebuild the agent with new llm and tools
         # agent = BuildAgent()

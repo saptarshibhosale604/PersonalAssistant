@@ -25,7 +25,8 @@ modeConfigInitializationJson = {
             'local-4b': 'Model running locally, qwen3.5:4b',
             'local-4b-no-tools': 'Model running locally, qwen3.5:4b, without any agent tools',
             'local-buddy': 'Model running locally with Best bud personality',
-            'global': 'Model running on cloud / chatgpt'
+            'global': 'Model running on cloud / chatgpt',
+            'globalGemini': 'Model running on cloud / Google Gemini'
         }
     },
     'mode-stream': {
