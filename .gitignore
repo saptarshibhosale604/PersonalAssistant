@@ -10,6 +10,7 @@ __pycache__
 Log/*
 
 !Log/custom_logger.py
+!Log/log_utils.py
 
 Temp/*
 
