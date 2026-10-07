@@ -139,8 +139,19 @@ def ExecuteBash(command: str, timeout: int = 30) -> str:
         return f"Error executing command: {str(e)}"
 
 
+@tool("toolAskHumanInput", description="Prompt the human user for input, clarification, confirmation, or additional instructions during execution.")
+def AskHumanInput(prompt_message: str) -> str:
+    """Pauses agent execution and prompts the human user in the terminal/UI for input or decision making."""
+    try:
+        print(f"\n[AGENT REQUESTS INPUT]: {prompt_message}")
+        user_response = input("Human Input Required > ").strip()
+        return f"Human response: {user_response}"
+    except Exception as e:
+        return f"Error obtaining human input: {str(e)}"
+
+
 # Category-based tool collections matching otherTools.py format
-toolsAdvance = [ExecuteBash]  # Tools requiring human confirmation/sensitive operations
+toolsAdvance = [ExecuteBash, AskHumanInput]  # Tools requiring human confirmation/sensitive operations / interactive prompt
 toolsIntermediate = [ReadFile, WriteFile, EditFile]
 toolsBasic = []
 

@@ -97,6 +97,7 @@ TOOL_INTERRUPT_POLICY = {
     "toolWriteFile": True,
     "toolEditFile": True,
     "toolExecuteBash": True,
+    "toolAskHumanInput": True,
     # toolsProjectContextManager
     "ReadProjectContext": True,
     # toolsWebSearch
