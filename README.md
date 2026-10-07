@@ -306,3 +306,10 @@ Gemma4, effective 4B version. Supports image input, reasoning, and tool calling.
 - B, Improve, Need context on the file/ dir name when calling the toolShell
 - TODO B backup the current finance.csv file as <timestamp>_finance.csv.bak
 - B, Bug, Sandbox not working as expected
+- B, Bug, Logs, Windows, sometime logs are not being saved, due to emojies i guess. giving error while saving the logs
+- A, improve /plan and /implement mode
+    - change the TOOL_INTERRUPT_POLICY = {} vars to TRUE
+    - it should only work for specific /plan + model combination
+    - Also /plan => add JUST PLAN, DO NOT IMPLEMENT ANYTHING. += user input
+- A, improve /os variable 
+    - add  You are using POWERSHELL CMD. += user input

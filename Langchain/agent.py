@@ -67,42 +67,42 @@ BUDDY_SYSTEM_PROMPT = (
     "Your name is RPI. The user name is SSB, who is your best buddy"
 )
 
-# Tools that require explicit human approval before execution.
+# # Tools that require explicit human approval before execution.
 TOOL_INTERRUPT_POLICY = {
-    # toolsTest
-    "toolTestGetWeather": True,
-    "toolTestCalculateExpression": True,
-    "toolTestCreatePoem": True,
-    # toolsPii
-    "toolMyName": True,
-    "toolMyPetsName": True,
-    # toolsGeneral
-    "toolShell": True,
-    "toolPowershell": True,
-    "toolSetCronRemainder": True,
-    "toolWebSearch": True,
-    # toolsDataAnalysis
-    "execute_pyspark_code": True,
-    "analyze_csv_data": True,
-    # toolsFinanceAssist V01
-    "ToolReadFinanceData": True,
-    "ToolWriteFinanceData": True,
-    # toolsFinanceAssist V02
-    "sql_db_query": True,
-    "sql_db_schema": True,
-    "sql_db_list_tables": True,
-    "sql_db_query_checker": True,
-    # toolsCodingAgent
-    "toolReadFile": True,
-    "toolWriteFile": True,
-    "toolEditFile": True,
-    "toolExecuteBash": True,
-    "toolAskHumanInput": True,
-    # toolsProjectContextManager
-    "ReadProjectContext": True,
-    # toolsWebSearch
-    "toolSearchDuckDuckGo": True,
-    "toolSearchWikipedia": True,
+#     # toolsTest
+    # "toolTestGetWeather": True,
+    # "toolTestCalculateExpression": True,
+#     "toolTestCreatePoem": True,
+#     # toolsPii
+#     "toolMyName": True,
+#     "toolMyPetsName": True,
+#     # toolsGeneral
+#     "toolShell": True,
+#     "toolPowershell": True,
+#     "toolSetCronRemainder": True,
+#     "toolWebSearch": True,
+#     # toolsDataAnalysis
+#     "execute_pyspark_code": True,
+#     "analyze_csv_data": True,
+#     # toolsFinanceAssist V01
+#     "ToolReadFinanceData": True,
+#     "ToolWriteFinanceData": True,
+#     # toolsFinanceAssist V02
+#     "sql_db_query": True,
+#     "sql_db_schema": True,
+#     "sql_db_list_tables": True,
+#     "sql_db_query_checker": True,
+#     # toolsCodingAgent
+#     "toolReadFile": True,
+#     "toolWriteFile": True,
+#     "toolEditFile": True,
+#     "toolExecuteBash": True,
+#     "toolAskHumanInput": True,
+#     # toolsProjectContextManager
+#     "ReadProjectContext": True,
+#     # toolsWebSearch
+#     "toolSearchDuckDuckGo": True,
+#     "toolSearchWikipedia": True,
 }
 
 

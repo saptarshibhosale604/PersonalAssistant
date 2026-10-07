@@ -18,9 +18,9 @@ Temp/*
 
 Langchain/Tools/ToolsProjectBuilder/Project*
 Langchain/Tools/ToolAskGPT/Results
-Langchain/Tools/ToolsAskCloud/ToolAskGPT/Results/
+Langchain/Tools/ToolAskCloud/ToolAskGPT/Results/
 Langchain/Tools/ToolAskGPT/state.json
-Langchain/Tools/ToolsAskCloud/ToolAskGPT/state.json
+Langchain/Tools/ToolAskCloud/ToolAskGPT/state.json
 
 UI/InfoExtractor/Output
 UI/InfoExtractor/lib
@@ -30,3 +30,16 @@ state.json.bak
 
 UI/modesConfigSandbox.json
 UI/modesConfig.json
+
+# Temporary scratch files & backups added per cleanup_plan.md
+delete*.txt
+temp.*
+*.bak
+
+# State files generated dynamically
+state.json
+**/state.json
+**/state.json.bak
+
+# Runtime logs and user session data
+Log/*.log
