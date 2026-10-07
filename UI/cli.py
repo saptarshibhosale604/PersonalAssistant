@@ -43,7 +43,7 @@ MODE_SANDBOX = "false"
 
 COMMANDS = [
     "mode", "input", "text", "speech", "output", "context", "yes", "no",
-    "llm", "local", "globalChatgpt01", "globalChatgpt02", "globalGemini01", "globalGemini02", "globalGroq01", "globalGroq02", "globalOpenRouter01", "globalOpenRouter02", "globalHuggingFace01", "globalHuggingFace02", "framework", "langchain",
+    "llm", "local", "globalChatgpt01", "globalChatgpt02", "globalGemini01", "globalGemini02", "globalMistral01", "globalMistral02", "globalGroq01", "globalGroq02", "globalOpenRouter01", "globalOpenRouter02", "globalHuggingFace01", "globalHuggingFace02", "framework", "langchain",
     "fabric", "True", "False", "multi",
 ]
 

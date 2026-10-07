@@ -43,6 +43,7 @@ from langchain_ollama.chat_models import ChatOllama
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
+from langchain_mistralai import ChatMistralAI
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import Command
 
@@ -230,6 +231,22 @@ def UpdateAgent(modeLLM: str) -> None:
     elif modeLLM == "globalGemini02":
         LLM = ChatGoogleGenerativeAI(
             model="gemini-3.5-flash-lite", max_tokens=DEFAULT_MAX_TOKENS,  # 2nd best: fast, quick Q&A + simple tools
+            temperature=DEFAULT_TEMPERATURE, max_retries=DEFAULT_MAX_RETRIES,
+        )
+        TOOLS = toolsManager.Main("get")  # "get": fetch tools list
+
+    elif modeLLM == "globalMistral01":
+        LLM = ChatMistralAI(
+            model="mistral-small-latest", api_key=os.environ.get("MISTRAL_API_KEY"),
+            max_tokens=DEFAULT_MAX_TOKENS,
+            temperature=DEFAULT_TEMPERATURE, max_retries=DEFAULT_MAX_RETRIES,
+        )
+        TOOLS = toolsManager.Main("get")  # "get": fetch tools list
+
+    elif modeLLM == "globalMistral02":
+        LLM = ChatMistralAI(
+            model="ministral-8b-latest", api_key=os.environ.get("MISTRAL_API_KEY"),
+            max_tokens=DEFAULT_MAX_TOKENS,
             temperature=DEFAULT_TEMPERATURE, max_retries=DEFAULT_MAX_RETRIES,
         )
         TOOLS = toolsManager.Main("get")  # "get": fetch tools list

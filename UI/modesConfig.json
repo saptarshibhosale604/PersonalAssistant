@@ -1,5 +1,5 @@
 {
-  "mode-llm": "globalOpenRouter02",
+  "mode-llm": "globalMistral02",
   "mode-stream": "true",
   "mode-conversation": "wakeUp",
   "mode-input": "text",

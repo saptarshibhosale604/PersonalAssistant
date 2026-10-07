@@ -8,6 +8,8 @@
 # Features
 - LLM model
     - Chatgpt, with tools
+    - Google Gemini, with tools
+    - Mistral AI, with tools
     - Local LLM, no tools
 - can specify which tools to be interrupted and which tools dont need human in the loop
 - context remembering
@@ -189,7 +191,11 @@ source venv/bin/activate
 python -m UI.cli
 export OPENAI_API_KEY="sk-proj-your-actual-api-key-here"
 export OPENAI_API_KEY=""
-pip install langchain langchain_community langchain_ollama langchain_openai
+pip install langchain langchain_community langchain_ollama langchain_openai langchain_google_genai langchain_huggingface langchain_mistralai
+
+# Cloud API keys used by model modes
+export GOOGLE_API_KEY="your-google-key"
+export MISTRAL_API_KEY="your-mistral-key"
 
 
 # lm studio:

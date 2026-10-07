@@ -9,6 +9,7 @@ langchain_community
 langchain_ollama
 langchain_google_genai 
 langchain_huggingface
+langchain_mistralai
 # nest_asyncio
 # duckduckgo-search // need to download from the docker terminal
 
