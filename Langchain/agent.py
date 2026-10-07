@@ -234,6 +234,24 @@ def UpdateAgent(modeLLM: str) -> None:
         )
         TOOLS = toolsManager.Main("get")  # "get": fetch tools list
 
+    elif modeLLM == "globalGroq01":
+        LLM = ChatOpenAI(
+            model="openai/gpt-oss-120b", base_url="https://api.groq.com/openai/v1",
+            api_key=os.environ.get("GROQ_API_KEY"), streaming=True,
+            max_tokens=DEFAULT_MAX_TOKENS, temperature=DEFAULT_TEMPERATURE,
+            max_retries=DEFAULT_MAX_RETRIES,
+        )
+        TOOLS = toolsManager.Main("get")  # "get": fetch tools list
+
+    elif modeLLM == "globalGroq02":
+        LLM = ChatOpenAI(
+            model="qwen/qwen3.8-27b", base_url="https://api.groq.com/openai/v1",
+            api_key=os.environ.get("GROQ_API_KEY"), streaming=True,
+            max_tokens=DEFAULT_MAX_TOKENS, temperature=DEFAULT_TEMPERATURE,
+            max_retries=DEFAULT_MAX_RETRIES,
+        )
+        TOOLS = toolsManager.Main("get")  # "get": fetch tools list
+
     elif modeLLM == "globalHuggingFace01":
         llm_endpoint = HuggingFaceEndpoint(
             repo_id="mistralai/Mistral-7B-Instruct-v0.3",

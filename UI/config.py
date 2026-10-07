@@ -29,6 +29,8 @@ modeConfigInitializationJson = {
             'globalChatgpt02': 'Model running on cloud / chatgpt gpt-5.4, for plan execution',
             'globalGemini01': 'Model running on cloud / Google gemini-3.6-flash, best (planning + complex tools)',
             'globalGemini02': 'Model running on cloud / Google gemini-3.5-flash-lite, 2nd best (fast, simple tasks)',
+            'globalGroq01': 'Model running on cloud / Groq openai/gpt-oss-120b, strong reasoning/planning',
+            'globalGroq02': 'Model running on cloud / Groq qwen/qwen3.8-27b, fast fallback for general tasks',
             'globalHuggingFace01': 'Model running on cloud / Hugging Face model 01 (Mistral / Llama)',
             'globalHuggingFace02': 'Model running on cloud / Hugging Face model 02 (Qwen / Phi)'
         }

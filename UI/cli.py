@@ -43,7 +43,7 @@ MODE_SANDBOX = "false"
 
 COMMANDS = [
     "mode", "input", "text", "speech", "output", "context", "yes", "no",
-    "llm", "local", "globalChatgpt01", "globalChatgpt02", "globalGemini01", "globalGemini02", "globalHuggingFace01", "globalHuggingFace02", "framework", "langchain",
+    "llm", "local", "globalChatgpt01", "globalChatgpt02", "globalGemini01", "globalGemini02", "globalGroq01", "globalGroq02", "globalHuggingFace01", "globalHuggingFace02", "framework", "langchain",
     "fabric", "True", "False", "multi",
 ]
 
@@ -365,8 +365,16 @@ def Completer(text: str, state: int) -> Optional[str]:
 def FormatMessageTypes(text: str) -> None:
     """Print a section separator line with the given label centered in it."""
     # PrintFunctionNames("cli FormatMessageTypes...")
-    padding = (FORMAT_MESSAGE_WIDTH - len(text) - 4) // 2
-    print("=" * padding + " " + text + " " + "=" * padding)
+    if(text == "HumanMessage"):
+        padding = (FORMAT_MESSAGE_WIDTH - len(text) - 4) // 2
+        print("=" * padding + " " + "----------" + " " + "=" * padding + " " + "=" * padding + " " + "=" * padding)
+        print("=" * padding + " " + "----------" + " " + "=" * padding)
+        print("=" * padding + " " + text + " " + "=" * padding)
+        print("=" * padding + " " + "----------" + " " + "=" * padding)
+        print("=" * padding + " " + "----------" + " " + "=" * padding + " " + "=" * padding + " " + "=" * padding)
+    else:
+        padding = (FORMAT_MESSAGE_WIDTH - len(text) - 4) // 2
+        print("=" * padding + " " + text + " " + "=" * padding)
 
 
 @PrintFunctionName

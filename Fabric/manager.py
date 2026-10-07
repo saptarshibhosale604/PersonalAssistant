@@ -27,6 +27,7 @@ from langchain.agents import create_agent
 # from langchain.agents.middleware import HumanInTheLoopMiddleware
 from langchain_openai import ChatOpenAI
 from langchain_ollama.chat_models import ChatOllama
+from langchain_google_genai import ChatGoogleGenerativeAI
 from datetime import datetime
 import re
 # from langgraph.types import Command
@@ -102,6 +103,20 @@ def UpdateAgent(modeLLM):
 
         elif(modeLLM == "globalGemini02"):
             llm = ChatGoogleGenerativeAI(model="gemini-3.5-flash-lite")  # reads GOOGLE_API_KEY env var
+
+        elif(modeLLM == "globalGroq01"):
+            llm = ChatOpenAI(
+                model="openai/gpt-oss-120b", base_url="https://api.groq.com/openai/v1",
+                api_key=os.environ.get("GROQ_API_KEY"), streaming=True,
+                max_tokens=500, temperature=0, max_retries=1,
+            )
+
+        elif(modeLLM == "globalGroq02"):
+            llm = ChatOpenAI(
+                model="qwen/qwen3.8-27b", base_url="https://api.groq.com/openai/v1",
+                api_key=os.environ.get("GROQ_API_KEY"), streaming=True,
+                max_tokens=500, temperature=0, max_retries=1,
+            )
         
         # rebuild the agent with new llm and tools
         # agent = BuildAgent()
