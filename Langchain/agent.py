@@ -42,6 +42,7 @@ from langchain.agents.middleware import HumanInTheLoopMiddleware
 from langchain_ollama.chat_models import ChatOllama
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import Command
 
@@ -231,6 +232,28 @@ def UpdateAgent(modeLLM: str) -> None:
             model="gemini-3.5-flash-lite", max_tokens=DEFAULT_MAX_TOKENS,  # 2nd best: fast, quick Q&A + simple tools
             temperature=DEFAULT_TEMPERATURE, max_retries=DEFAULT_MAX_RETRIES,
         )
+        TOOLS = toolsManager.Main("get")  # "get": fetch tools list
+
+    elif modeLLM == "globalHuggingFace01":
+        llm_endpoint = HuggingFaceEndpoint(
+            repo_id="mistralai/Mistral-7B-Instruct-v0.3",
+            task="text-generation",
+            max_new_tokens=DEFAULT_MAX_TOKENS,
+            temperature=DEFAULT_TEMPERATURE,
+            max_retries=DEFAULT_MAX_RETRIES,
+        )
+        LLM = ChatHuggingFace(llm=llm_endpoint)
+        TOOLS = toolsManager.Main("get")  # "get": fetch tools list
+
+    elif modeLLM == "globalHuggingFace02":
+        llm_endpoint = HuggingFaceEndpoint(
+            repo_id="meta-llama/Meta-Llama-3-8B-Instruct",
+            task="text-generation",
+            max_new_tokens=DEFAULT_MAX_TOKENS,
+            temperature=DEFAULT_TEMPERATURE,
+            max_retries=DEFAULT_MAX_RETRIES,
+        )
+        LLM = ChatHuggingFace(llm=llm_endpoint)
         TOOLS = toolsManager.Main("get")  # "get": fetch tools list
 
     else:
