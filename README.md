@@ -237,6 +237,7 @@ Gemma4, effective 4B version. Supports image input, reasoning, and tool calling.
     - gemini-3.5-flash: avoid, slow (10-23s) + 503s
 - Preferred: gemini-3.6-flash (mode-llm globalGemini01, now the default in UI/config.py); fallback gemini-3.5-flash-lite (mode-llm globalGemini02)
 - Groq modes added: globalGroq01 -> openai/gpt-oss-120b, globalGroq02 -> qwen/qwen3.8-27b (requires GROQ_API_KEY, uses https://api.groq.com/openai/v1 OpenAI-compatible endpoint)
+- OpenRouter modes added: globalOpenRouter01 -> nvidia/nemotron-3-ultra:free, globalOpenRouter02 -> nvidia/nemotron-3.5-lightning:free (requires OPENROUTER_API_KEY, uses https://openrouter.ai/api/v1 OpenAI-compatible endpoint)
 - Caveat: even 3.6-flash wrote a bash syntax error, 3-flash-preview made up a path -> always review plan + keep HITL approval
 
 # DONE
@@ -314,3 +315,4 @@ Gemma4, effective 4B version. Supports image input, reasoning, and tool calling.
     - Also /plan => add JUST PLAN, DO NOT IMPLEMENT ANYTHING. += user input
 - A, improve /os variable 
     - add  You are using POWERSHELL CMD. += user input
+- B, improve, logs should include input output tokens, model used

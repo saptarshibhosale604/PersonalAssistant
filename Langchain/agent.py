@@ -252,6 +252,24 @@ def UpdateAgent(modeLLM: str) -> None:
         )
         TOOLS = toolsManager.Main("get")  # "get": fetch tools list
 
+    elif modeLLM == "globalOpenRouter01":
+        LLM = ChatOpenAI(
+            model="nvidia/nemotron-3-ultra-550b-a55b:free", base_url="https://openrouter.ai/api/v1",
+            api_key=os.environ.get("OPENROUTER_API_KEY"), streaming=True,
+            max_tokens=DEFAULT_MAX_TOKENS, temperature=DEFAULT_TEMPERATURE,
+            max_retries=DEFAULT_MAX_RETRIES,
+        )
+        TOOLS = toolsManager.Main("get")  # "get": fetch tools list
+
+    elif modeLLM == "globalOpenRouter02":
+        LLM = ChatOpenAI(
+            model="nvidia/nemotron-3.5-lightning:free", base_url="https://openrouter.ai/api/v1",
+            api_key=os.environ.get("OPENROUTER_API_KEY"), streaming=True,
+            max_tokens=DEFAULT_MAX_TOKENS, temperature=DEFAULT_TEMPERATURE,
+            max_retries=DEFAULT_MAX_RETRIES,
+        )
+        TOOLS = toolsManager.Main("get")  # "get": fetch tools list
+
     elif modeLLM == "globalHuggingFace01":
         llm_endpoint = HuggingFaceEndpoint(
             repo_id="mistralai/Mistral-7B-Instruct-v0.3",

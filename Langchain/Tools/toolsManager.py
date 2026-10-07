@@ -69,15 +69,15 @@ def LoadToolsConfig() -> None:
 
     try:
         if os.path.exists(CONFIG_FILE):
-            with open(CONFIG_FILE, 'r') as configFile:
+            with open(CONFIG_FILE, 'r', encoding='utf-8') as configFile:
                 toolsConfig = json.load(configFile)
-            print(f"✓ Tools configuration loaded from {CONFIG_FILE}")
+            print(f"[OK] Tools configuration loaded from {CONFIG_FILE}")
         else:
             toolsConfig = DEFAULT_CONFIG.copy()
             SaveToolsConfig()
-            print(f"✓ Created default configuration file: {CONFIG_FILE}")
+            print(f"[OK] Created default configuration file: {CONFIG_FILE}")
     except (IOError, json.JSONDecodeError) as error:
-        print(f"✗ Error loading configuration: {str(error)}")
+        print(f"[ERROR] Error loading configuration: {str(error)}")
         print("  Using default configuration...")
         toolsConfig = DEFAULT_CONFIG.copy()
 
@@ -344,10 +344,10 @@ def Main(inputChoice="none") -> List[Any]:
             return []
 
     except KeyboardInterrupt:
-        print("\n\n✗ Program interrupted by user")
+        print("\n\n[Interrupted] Program interrupted by user")
         sys.exit(1)
     except Exception as error:
-        print(f"\n✗ Unexpected error in main: {str(error)}")
+        print(f"\n[Error] Unexpected error in main: {str(error)}")
         sys.exit(1)
 
 
