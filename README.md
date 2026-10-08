@@ -327,3 +327,4 @@ Gemma4, effective 4B version. Supports image input, reasoning, and tool calling.
 - B, improve, .env file/system
 - B, bug, input("Is this approved or rejected?(Default: approved): ") also add rejected path
 - B, improve, show tool arg in json beutifier
+- A, bug, /update is not working, mode update is working after the OS mode addition
