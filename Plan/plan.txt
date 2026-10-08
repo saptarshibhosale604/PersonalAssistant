@@ -1,0 +1,58 @@
+# OS Mode Integration Plan
+
+## Objective
+Add a new configuration mode `os` that can take the values `linux` or `windows`. The mode controls whether a specific prefix is added to the first user input in a session.
+
+## Mode Behavior
+- **os = windows**: At the start of each session, prepend the string `You are using POWERSHELL CMD. \n` to the very first user input. Subsequent inputs are left unchanged.
+- **os = linux**: No extra prefix is added. The session behaves as the default (no prefix).
+- **os unspecified or unknown**: Default to windows behavior (prefix added on first input).
+
+## Plan Components
+
+1. **Configuration**
+   - Introduce a variable/environment setting `OS` that holds either `"linux"` or `"windows"`.
+   - If `OS` is not set, the system may default to `"windows"` or detect the underlying OS, but the plan assumes it will be explicitly set.
+
+2. **Session Initialization**
+   - At the beginning of a new session, read `OS`.
+   - Set a boolean flag `prefixAdded` to `false` to track whether the window's prefix has been applied.
+
+3. **Input Handling Wrapper**
+   - Create a function/getter that captures user input.
+   - On each session, if `OS` is `"windows"` **and** `prefixAdded` is `false`:
+       * Read the raw user input.
+       * Prepend `You are using POWERSHELL CMD. \n` to the input.
+       * Output the modified input to the program.
+       * Set `prefixAdded` to `true`.
+   - If `OS` is `"linux"` or `prefixAdded` is already `true`, simply pass the user input through unchanged.
+
+4. **State Management**
+   - The `prefixAdded` flag lives in memory for the duration of the session; it resets when a new session starts.
+
+5. **Edge Cases**
+   - If `OS` contains an unexpected value, treat it as `"windows"` (apply prefix).
+   - Ensure the prefix is only added once per session, even if the input routine is called multiple times.
+
+6. **Pseudocode Overview**
+   ```
+   function getUserInput():
+       if OS == "windows" and not prefixAdded:
+           raw = readInput()
+           modified = "You are using POWERSHELL CMD. \n" + raw
+           prefixAdded = true
+           return modified
+       else:
+           return readInput()
+   ```
+
+7. **Testing Strategy**
+   - Verify that with `OS=windows`, the first input starts with the exact prefix.
+   - Verify that subsequent inputs do not have the prefix.
+   - Verify that with `OS=linux`, no prefix appears on any input.
+   - Verify default behavior when `OS` is unset.
+
+## Deliverables
+- Documentation of the `OS` configuration option.
+- Input wrapper implementation (pseudocode or actual code depending on language).
+- Session initialization logic that reads `OS` and sets the `prefixAdded` flag.

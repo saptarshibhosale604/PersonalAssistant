@@ -322,3 +322,8 @@ Gemma4, effective 4B version. Supports image input, reasoning, and tool calling.
 - A, improve /os variable 
     - add  You are using POWERSHELL CMD. += user input
 - B, improve, logs should include input output tokens, model used
+- B, improve, /resume to resume any session/ thread with new / same model
+- C, improve. /exit to exit
+- B, improve, .env file/system
+- B, bug, input("Is this approved or rejected?(Default: approved): ") also add rejected path
+- B, improve, show tool arg in json beutifier

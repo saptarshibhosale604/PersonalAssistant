@@ -40,7 +40,8 @@ defaultConfig = {
     'mode-framework': 'langchain',
     'mode-sandbox': 'false',
     'mode-tools': 'update',
-    'mode-reset': 'now'
+    'mode-reset': 'now',
+    'mode-os': 'windows'
 }
 
 modeConfigInitializationJson = {
@@ -126,6 +127,13 @@ modeConfigInitializationJson = {
         'allowed': {
             'now': 'Mode reset now',
         }
+    },
+    'mode-os': {
+        'current': 'windows',
+        'allowed': {
+            'windows': 'Windows OS - prepend POWERSHELL CMD prefix to first input',
+            'linux': 'Linux OS - no prefix added'
+        }
     }
 }
 
@@ -138,7 +146,8 @@ presetDevelopment = {
     'mode-context': 'yes',
     'mode-framework': 'langchain',
     'mode-tools': 'get',
-    'mode-reset': 'now'
+    'mode-reset': 'now',
+    'mode-os': 'windows'
 }
 
 # Preset 2: Production Mode
@@ -150,7 +159,8 @@ presetProduction = {
     'mode-context': 'yes',
     'mode-framework': 'fabric',
     'mode-tools': 'update',
-    'mode-reset': 'now'
+    'mode-reset': 'now',
+    'mode-os': 'windows'
 }
 
 # Preset 3: Testing Mode
@@ -162,7 +172,8 @@ presetTesting = {
     'mode-context': 'no',
     'mode-framework': 'langchain',
     'mode-tools': 'get',
-    'mode-reset': 'now'
+    'mode-reset': 'now',
+    'mode-os': 'windows'
 }
 
 

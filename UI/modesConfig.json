@@ -1,5 +1,5 @@
 {
-  "mode-llm": "globalMistral02",
+  "mode-llm": "globalGroq01",
   "mode-stream": "true",
   "mode-conversation": "wakeUp",
   "mode-input": "text",
@@ -8,5 +8,6 @@
   "mode-framework": "langchain",
   "mode-sandbox": "false",
   "mode-tools": "update",
-  "mode-reset": "now"
+  "mode-reset": "now",
+  "mode-os": "windows"
 }

@@ -44,7 +44,7 @@ MODE_SANDBOX = "false"
 COMMANDS = [
     "mode", "input", "text", "speech", "output", "context", "yes", "no",
     "llm", "local", "globalChatgpt01", "globalChatgpt02", "globalGemini01", "globalGemini02", "globalMistral01", "globalMistral02", "globalGroq01", "globalGroq02", "globalOpenRouter01", "globalOpenRouter02", "globalHuggingFace01", "globalHuggingFace02", "framework", "langchain",
-    "fabric", "True", "False", "multi",
+    "fabric", "True", "False", "multi", "os", "windows", "linux",
 ]
 
 FORMAT_MESSAGE_WIDTH = 60  # Total width used when printing section separators
@@ -218,7 +218,7 @@ def BasicCmds02(userInput: str) -> bool:
     # Update mode values
     # --------------------------------------------------
 
-    elif command in ("/input", "/llm", "/stream"):
+    elif command in ("/input", "/llm", "/stream", "/os"):
         UpdateModeValue(f"mode-{command[1:]}", value)
         return True
 
@@ -262,13 +262,15 @@ def BasicCmds02(userInput: str) -> bool:
         return True
 
     # --------------------------------------------------
-    # 
+    # New Session - Reset OS prefix flag
     # --------------------------------------------------
 
     elif command == "/new":
         # tools = toolsManager.Main(value)
         print("toolsManager: New session")
-        THREAD_ID += 1  
+        global THREAD_ID, _os_prefix_added
+        THREAD_ID += 1
+        _os_prefix_added = False  # Reset OS prefix flag for new session
         # FormatToolsPrinting(tools)
         return True
 
@@ -308,7 +310,7 @@ def BasicCmds(userInput: str) -> bool:
 
         print(f"BasicCmds {modeName} ==> {modeValue}")
 
-        if modeName in ("mode-input", "mode-llm", "mode-stream"):
+        if modeName in ("mode-input", "mode-llm", "mode-stream", "mode-os"):
             UpdateModeValue(modeName, modeValue)
             return True
 
@@ -430,11 +432,16 @@ def PromptInjection(userInput: str) -> bool:
         
 # ---- Input / Output ----
 
+# Global flag to track if OS prefix has been added in current session
+_os_prefix_added = False
+
 # @log_call
 @PrintFunctionName
 def Input() -> str:
     """Read user input according to the current mode-input setting."""
     # PrintFunctionNames("cli Input...")
+    global _os_prefix_added
+    
     if MODE_SANDBOX == "true":
         FormatMessageTypes("HumanMessage:Sandbox")
     else:
@@ -465,6 +472,18 @@ def Input() -> str:
     else:
         logger.info(f"Error: Invalid modeInput: {modeInput}")
         userInput = None
+
+    # Apply OS mode prefix for Windows on first input
+    if userInput and len(userInput.strip()) > 0:
+        modeOS = GetModeValue("mode-os")
+        if modeOS == "windows" and not _os_prefix_added:
+            userInput = "You are using POWERSHELL CMD. \n" + userInput
+            _os_prefix_added = True
+            logger.info(f"[OS Mode] Applied Windows prefix to first input")
+        elif modeOS == "linux":
+            # Linux mode - no prefix added
+            pass
+        # If modeOS is unknown/unset, default to windows behavior (handled above)
 
     # logger.debug(f"userInput: {userInput}")
     FormatMessageTypes("")
