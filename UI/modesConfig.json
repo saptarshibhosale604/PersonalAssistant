@@ -1,5 +1,5 @@
 {
-  "mode-llm": "globalGroq01",
+  "mode-llm": "globalGemini02",
   "mode-stream": "true",
   "mode-conversation": "wakeUp",
   "mode-input": "text",

@@ -17,7 +17,7 @@ import Langchain.agent as Agent
 import Langchain.Tools.toolsManager as toolsManager
 import UI.modesManager as modesManager
 import UserContext.userContext as UserContext
-from Log.custom_logger import logger
+from Log.custom_logger import logger, log_path
 from Log.log_utils import PrintFunctionName
 
 # Optional / alternate I/O backends (kept for reference, not currently wired in):
@@ -177,6 +177,7 @@ def BasicCmds02(userInput: str) -> bool:
         /sandbox <true|false>
         /tools <update|get>
         /reset
+        /exit
 
     Returns True if handled, otherwise False.
     """
@@ -211,6 +212,7 @@ def BasicCmds02(userInput: str) -> bool:
         logger.info("  /sandbox <true|false>")
         logger.info("  /tools <update|get>")
         logger.info("  /reset")
+        logger.info("  /exit")
         GetAllModeValues()
         return True
 
@@ -281,6 +283,15 @@ def BasicCmds02(userInput: str) -> bool:
     elif command == "/reset":
         DropModeConfigFile()
         return True
+
+    # --------------------------------------------------
+    # Exit
+    # --------------------------------------------------
+
+    elif command == "/exit":
+        logger.info("Exiting Personal Assistant CLI...")
+        logger.info(f"Log file: {os.path.abspath(log_path)}")
+        sys.exit(0)
 
     return False
 
