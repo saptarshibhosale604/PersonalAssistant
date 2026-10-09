@@ -394,3 +394,4 @@ Gemma4, effective 4B version. Supports image input, reasoning, and tool calling.
 - C, Bug, OUTPUT_FILE = f"{date_str}_output.csv" not able to output the ifle in this
 - B, improve , create a skill / llm template for this: git push the changes by seeing diff: globalGroq01
 - c, mode config for each session
+- b, improve, logging, need tools call per user input, and per session

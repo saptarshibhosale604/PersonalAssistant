@@ -9,6 +9,7 @@ human-in-the-loop (HITL) approval middleware.
 import os
 
 from Log.log_utils import PrintFunctionName
+from Log.turn_logger import add_tool_call, add_tool_message, add_usage
 
 @PrintFunctionName
 def RemoveSpaces(inputString: str) -> str:
@@ -321,6 +322,7 @@ def PrintPostProcessingLLMVariables(content) -> None:
     """
     Print final AIMessage metadata in a human-readable format.
     Intended for use with stream_mode='updates'.
+    Also records token usage to the turn logger.
     """
 
     try:
@@ -355,9 +357,13 @@ def PrintPostProcessingLLMVariables(content) -> None:
 
         print()
 
-        print(f"Input Tokens       : {usageMetadata.get('input_tokens', 0)}")
-        print(f"Output Tokens      : {usageMetadata.get('output_tokens', 0)}")
-        print(f"Total Tokens       : {usageMetadata.get('total_tokens', 0)}")
+        input_tokens = usageMetadata.get('input_tokens')
+        output_tokens = usageMetadata.get('output_tokens')
+        total_tokens = usageMetadata.get('total_tokens')
+        
+        print(f"Input Tokens       : {input_tokens if input_tokens is not None else 'n/a'}")
+        print(f"Output Tokens      : {output_tokens if output_tokens is not None else 'n/a'}")
+        print(f"Total Tokens       : {total_tokens if total_tokens is not None else 'n/a'}")
                 
         evalDurationNs = responseMetadata.get("eval_duration", 0)
         outputTokens = usageMetadata.get("output_tokens", 0)
@@ -388,10 +394,16 @@ def PrintPostProcessingLLMVariables(content) -> None:
             f"{responseMetadata.get('eval_duration', 0) / 1_000_000_000:.2f}s"
         )
 
+        total_duration_ns = responseMetadata.get('total_duration', 0)
         print(
             f"Total Duration     : "
-            f"{responseMetadata.get('total_duration', 0) / 1_000_000_000:.2f}s"
+            f"{total_duration_ns / 1_000_000_000:.2f}s"
         )
+
+        # Record token usage to turn logger
+        model_name = responseMetadata.get('model_name', '')
+        duration_s = total_duration_ns / 1_000_000_000 if total_duration_ns > 0 else None
+        add_usage(input_tokens, output_tokens, total_tokens, duration_s, model_name)
 
         if getattr(message, "tool_calls", None):
             print()
@@ -437,6 +449,8 @@ def ExtractStreamContent(streamMode: str, content) -> str:
             print()
             FormatMessageTypes("")
             print()
+            # Log tool message to turn logger
+            add_tool_message(getattr(messageChunk, "name", "unknown_tool"), messageChunk.text)
         else:
             print(f"{messageChunk.text}", end="", flush=True)
 
@@ -458,6 +472,8 @@ def ExtractStreamContent(streamMode: str, content) -> str:
         for actionRequest in firstInterrupt.value["action_requests"]:
             toolName = actionRequest["name"]
             args = actionRequest.get("args", actionRequest.get("arguments", {}))
+            # Log tool call to turn logger
+            add_tool_call(toolName, args)
             print(f"\n{'-' * BANNER_WIDTH}")
             logger.info(
                 f"tool_name: {toolName},\nargs: {args},\n"
@@ -540,14 +556,23 @@ def StreamResumeAndAccumulate(decisions: list, configMemory: dict) -> str:
 
 @PrintFunctionName
 def PrintLlmMetrics(lastMessage) -> None:
-    """Print token usage and duration metrics for the most recent LLM response."""
+    """Print token usage and duration metrics for the most recent LLM response.
+    Also records token usage to the turn logger.
+    """
     usage = lastMessage.usage_metadata
     responseMetadata = lastMessage.response_metadata
 
+    input_tokens = usage.get('input_tokens')
+    output_tokens = usage.get('output_tokens')
+    total_tokens = usage.get('total_tokens')
+    total_duration_ns = responseMetadata.get('total_duration', 0)
+    model_name = responseMetadata.get('model_name', '')
+    duration_s = total_duration_ns / 1_000_000_000 if total_duration_ns > 0 else None
+
     print("-" * BANNER_WIDTH)
     print("\nLLM Metrics Extraction:")
-    print(f"Input Tokens: {usage.get('input_tokens', 'N/A')}")
-    print(f"Output Tokens: {usage.get('output_tokens', 'N/A')}")
+    print(f"Input Tokens: {input_tokens if input_tokens is not None else 'N/A'}")
+    print(f"Output Tokens: {output_tokens if output_tokens is not None else 'N/A'}")
 
     evalDurationNs = responseMetadata.get("eval_duration", 0)
     outputTokens = usage.get("output_tokens", 0)
@@ -559,14 +584,38 @@ def PrintLlmMetrics(lastMessage) -> None:
     )
 
     print(f"Tokens / Second    : {tokensPerSecond:.2f}")
-    totalDurationMs = responseMetadata.get("total_duration", "N/A")
-    if isinstance(totalDurationMs, (int, float)):
-        print(f"Total Duration (ms): {totalDurationMs / 1000:.2f} seconds")
+    if isinstance(total_duration_ns, (int, float)) and total_duration_ns > 0:
+        print(f"Total Duration (ms): {total_duration_ns / 1_000_000_000:.2f} seconds")
     else:
-        print(f"Total Duration (ms): {totalDurationMs}")
+        print(f"Total Duration (ms): {total_duration_ns}")
 
     print(f"Prompt Eval Count (tokens): {usage.get('prompt_eval_count', 'N/A')}")
     print(f"Evaluation Count: {usage.get('eval_count', 'N/A')}")
+
+    # Record token usage to turn logger
+    add_usage(input_tokens, output_tokens, total_tokens, duration_s, model_name)
+
+
+@PrintFunctionName
+def StreamingResponse(userInput: str, threadId, modeLLM: str, modeContext: str) -> str:
+    """
+    Streaming response generator for web app.
+    Yields chunks of the agent's response as they are generated.
+    """
+    UpdateAgent(modeLLM)
+
+    threadIdStr = "thread-" + str(threadId)
+    configMemory = {"configurable": {"thread_id": threadIdStr}}
+
+    # For web app, we use streaming mode with auto-approval
+    for streamMode, chunk in AGENT.stream(
+        {"messages": [{"role": "user", "content": userInput}]},
+        stream_mode=["updates", "messages"],
+        config=configMemory
+    ):
+        chunkText = ExtractStreamContent(streamMode, chunk)
+        if chunkText:
+            yield chunkText
 
 
 @PrintFunctionName

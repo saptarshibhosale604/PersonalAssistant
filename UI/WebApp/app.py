@@ -5,6 +5,7 @@ import Langchain.agent as Agent
 # from flask import Response, stream_with_context, request
 from flask import Response, stream_with_context
 import Langchain.agent as Agent
+from Log.turn_logger import begin_turn, end_turn, set_agent_output, get_current_turn
 
 
 app = Flask(__name__)
@@ -363,12 +364,20 @@ def stream_user_input_message():
 	# else:
 		# outputResponse = "This is a fixed response for test01"
 
-	def generate():	
-		for chunk in Agent.StreamingResponse(user_message, threadId, modeLLM, modeContext):
-			# if(chunk == "the"):
-			# 	chunk = "the <br>"
-			chunk = chunk.replace('\n', '<br>')
-			yield f"data: {chunk}\n\n"
+	# Begin turn logging for web app
+	# Use a simple counter for web requests (could be improved with session tracking)
+	turn = begin_turn(threadId + 1, user_message)
+	
+	def generate():
+		try:
+			for chunk in Agent.StreamingResponse(user_message, threadId, modeLLM, modeContext):
+				# if(chunk == "the"):
+				# 	chunk = "the <br>"
+				chunk = chunk.replace('\n', '<br>')
+				yield f"data: {chunk}\n\n"
+		finally:
+			# End turn logging
+			end_turn()
 
 	return Response(stream_with_context(generate()), mimetype='text/event-stream')
 

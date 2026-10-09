@@ -19,6 +19,7 @@ import UI.modesManager as modesManager
 import UserContext.userContext as UserContext
 from Log.custom_logger import logger, log_path
 from Log.log_utils import PrintFunctionName
+from Log.turn_logger import begin_turn, end_turn, set_agent_output, add_usage
 
 # Optional / alternate I/O backends (kept for reference, not currently wired in):
 # import readline
@@ -475,9 +476,9 @@ def Input() -> str:
     elif modeInput == "file":
         userInput = ReadUserInputFile()
         print(userInput)
-        userChoice = input("Change to mode input text (N/y): ")
+        userChoice = input("Change to mode input text (y/N): ")
         if userChoice == "y":
-            userInput = "mode input text"
+            userInput = "/input text"
     elif modeInput == "speech":
         userInput = STT.Main()  # Speech To Text
     else:
@@ -573,11 +574,26 @@ def Main() -> None:
     # print(f"userInput after input: {userInput}")
     # if userInput is not None or userInput != "":
     if userInput and len(userInput.strip()) > 0: 
-        logger.info(f"[UserInput] {userInput}")
-        # print(f"userInput before procesing: {userInput}")
-        assistantOutput = Processing(userInput)
-        if assistantOutput is not None:
-            Output(assistantOutput)
+        # Begin turn logging
+        turn = begin_turn(USER_INPUT_COUNT, userInput)
+        
+        try:
+            # print(f"userInput before procesing: {userInput}")
+            assistantOutput = Processing(userInput)
+            if assistantOutput is not None:
+                Output(assistantOutput)
+                # Set agent output for turn logging
+                set_agent_output(str(assistantOutput))
+        except Exception as e:
+            # Mark turn as having an error, but still log it
+            from Log.turn_logger import get_current_turn
+            current_turn = get_current_turn()
+            if current_turn:
+                current_turn.set_error(f"{type(e).__name__}: {e}")
+            raise
+        finally:
+            # Always end the turn to write the log block
+            end_turn()
 
 
 WelcomeUser()
