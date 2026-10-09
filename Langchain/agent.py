@@ -410,6 +410,8 @@ def PrintPostProcessingLLMVariables(content) -> None:
             print("Tool Calls:")
             for index, toolCall in enumerate(message.tool_calls, start=1):
                 print(f"  {index}. {toolCall}")
+                # Log tool call to turn logger (covers both auto-run and HITL tools)
+                add_tool_call(toolCall.get("name", "unknown_tool"), toolCall.get("args", {}))
 
         # print()
         # print("-" * 80)
@@ -451,6 +453,8 @@ def ExtractStreamContent(streamMode: str, content) -> str:
             print()
             # Log tool message to turn logger
             add_tool_message(getattr(messageChunk, "name", "unknown_tool"), messageChunk.text)
+            # Tool results are not part of the agent's reply text
+            return ""
         else:
             print(f"{messageChunk.text}", end="", flush=True)
 
@@ -472,8 +476,6 @@ def ExtractStreamContent(streamMode: str, content) -> str:
         for actionRequest in firstInterrupt.value["action_requests"]:
             toolName = actionRequest["name"]
             args = actionRequest.get("args", actionRequest.get("arguments", {}))
-            # Log tool call to turn logger
-            add_tool_call(toolName, args)
             print(f"\n{'-' * BANNER_WIDTH}")
             logger.info(
                 f"tool_name: {toolName},\nargs: {args},\n"
@@ -502,10 +504,28 @@ def StreamAndAccumulate(messages: list, configMemory: dict) -> str:
         chunkText = ExtractStreamContent(streamMode, chunk)
         if chunkText:
             response += chunkText
+    
+    # Fallback if streaming didn't accumulate text chunks but state has a final message
+    if not response:
+        try:
+            state = AGENT.get_state(configMemory)
+            if state and state.values and "messages" in state.values:
+                msgs = state.values["messages"]
+                if msgs:
+                    last_msg = msgs[-1]
+                    if hasattr(last_msg, "content") and last_msg.content:
+                        content = last_msg.content
+                        if isinstance(content, str):
+                            response = content
+                        elif isinstance(content, list):
+                            response = "".join([c.get("text", "") if isinstance(c, dict) else str(c) for c in content])
+        except Exception as e:
+            logger.debug(f"StreamAndAccumulate state fallback error: {e}")
+
     print()
     FormatMessageTypes("")
     print()
-    logger.info(f"[AgentOutput] {response}")
+    # logger.info(f"[AgentOutput] {response}")
     return response
 
 @PrintFunctionName
@@ -515,21 +535,33 @@ def StreamAndAccumulateResume(messages: list, configMemory: dict, decisions) -> 
     it under an AIMessage banner."""
     response = ""
     FormatMessageTypes("AIMessageResume")
-    # for streamMode, chunk in AGENT.invoke(
     for streamMode, chunk in AGENT.stream(
         Command(resume={"decisions": decisions}), stream_mode=["updates", "messages"], config=configMemory
-        # Command(resume={"decisions": decisions}), config=configMemory
     ):
-    # for streamMode, chunk in AGENT.stream(
-    #     {"messages": messages}, stream_mode=["updates", "messages"], config=configMemory
-    # ):
         chunkText = ExtractStreamContent(streamMode, chunk)
         if chunkText:
             response += chunkText
+
+    if not response:
+        try:
+            state = AGENT.get_state(configMemory)
+            if state and state.values and "messages" in state.values:
+                msgs = state.values["messages"]
+                if msgs:
+                    last_msg = msgs[-1]
+                    if hasattr(last_msg, "content") and last_msg.content:
+                        content = last_msg.content
+                        if isinstance(content, str):
+                            response = content
+                        elif isinstance(content, list):
+                            response = "".join([c.get("text", "") if isinstance(c, dict) else str(c) for c in content])
+        except Exception as e:
+            logger.debug(f"StreamAndAccumulateResume state fallback error: {e}")
+
     print()
     FormatMessageTypes("")
     print()
-    logger.info(f"[AgentOutput] {response}")
+    # logger.info(f"[AgentOutput] {response}")
     return response
 
 
@@ -547,10 +579,27 @@ def StreamResumeAndAccumulate(decisions: list, configMemory: dict) -> str:
         chunkText = ExtractStreamContent(streamMode, chunk)
         if chunkText:
             response += chunkText
+
+    if not response:
+        try:
+            state = AGENT.get_state(configMemory)
+            if state and state.values and "messages" in state.values:
+                msgs = state.values["messages"]
+                if msgs:
+                    last_msg = msgs[-1]
+                    if hasattr(last_msg, "content") and last_msg.content:
+                        content = last_msg.content
+                        if isinstance(content, str):
+                            response = content
+                        elif isinstance(content, list):
+                            response = "".join([c.get("text", "") if isinstance(c, dict) else str(c) for c in content])
+        except Exception as e:
+            logger.debug(f"StreamResumeAndAccumulate state fallback error: {e}")
+
     print()
     FormatMessageTypes("")
     print()
-    logger.info(f"[AgentOutput] {response}")
+    # logger.info(f"[AgentOutput] {response}")
     return response
 
 
@@ -726,8 +775,7 @@ def Main(userInput: str, threadId, modeLLM: str, modeStream: str) -> str:
             else:
                 return agentResponse
 
-            logger.debug(f"[Info] agentCallingCountPerUserInput: {agentCallingCount}")
-            agentResponse = ""
+            # logger.debug(f"[Info] agentCallingCountPerUserInput: {agentCallingCount}")
 
     elif modeLLM == "local-4b-no-tools" and modeStream == "true":
         # NOTE: leftover debug pause from the original implementation; blocks
@@ -751,8 +799,7 @@ def Main(userInput: str, threadId, modeLLM: str, modeStream: str) -> str:
             else:
                 return agentResponse
 
-            logger.debug(f"agentCallingCountPerUserInput: {agentCallingCount}")
-            agentResponse = ""
+            # logger.debug(f"agentCallingCountPerUserInput: {agentCallingCount}")
     elif "global" in modeLLM:
         agentCallingCount = 0
         agentResponse = ""
@@ -772,5 +819,4 @@ def Main(userInput: str, threadId, modeLLM: str, modeStream: str) -> str:
             else:
                 return agentResponse
 
-            logger.debug(f"agentCallingCountPerUserInput: {agentCallingCount}")
-            agentResponse = ""
+            # logger.debug(f"agentCallingCountPerUserInput: {agentCallingCount}")

@@ -395,3 +395,4 @@ Gemma4, effective 4B version. Supports image input, reasoning, and tool calling.
 - B, improve , create a skill / llm template for this: git push the changes by seeing diff: globalGroq01
 - c, mode config for each session
 - b, improve, logging, need tools call per user input, and per session
+- b, mode input file => enter => agent processing => mode input text

@@ -203,17 +203,17 @@ def BasicCmds02(userInput: str) -> bool:
 
     if command in ("/", "/help"):
         FormatMessageTypes("SystemMessage")
-        logger.info("Help:")
-        logger.info("Available commands:")
-        logger.info("  /input <value>")
-        logger.info("  /llm <value>")
-        logger.info("  /stream <value>")
-        logger.info("  /get")
-        logger.info("  /update")
-        logger.info("  /sandbox <true|false>")
-        logger.info("  /tools <update|get>")
-        logger.info("  /reset")
-        logger.info("  /exit")
+        print("Help:")
+        print("Available commands:")
+        print("  /input <value>")
+        print("  /llm <value>")
+        print("  /stream <value>")
+        print("  /get")
+        print("  /update")
+        print("  /sandbox <true|false>")
+        print("  /tools <update|get>")
+        print("  /reset")
+        print("  /exit")
         GetAllModeValues()
         return True
 
@@ -311,9 +311,9 @@ def BasicCmds(userInput: str) -> bool:
 
     if parts[0] == "help":
         FormatMessageTypes("SystemMessage")
-        logger.info("Help:")
-        logger.info("Type 'help' for list of commands")
-        logger.info("Type 'mode update' for update the modes")
+        print("Help:")
+        print("Type 'help' for list of commands")
+        print("Type 'mode update' for update the modes")
         GetAllModeValues()
 
     elif len(parts) <= 3 and parts[0] == "mode":
@@ -491,7 +491,7 @@ def Input() -> str:
         if modeOS == "windows" and not _os_prefix_added and not userInput.strip().startswith("/"):
             userInput = "You are using POWERSHELL CMD. \n" + userInput
             _os_prefix_added = True
-            logger.info(f"[OS Mode] Applied Windows prefix to first input")
+            # logger.info(f"[OS Mode] Applied Windows prefix to first input")
         elif modeOS == "linux":
             # Linux mode - no prefix added
             pass
@@ -535,8 +535,8 @@ def Processing(userInput: str) -> Any:
 def Output(assistantOutput: Any) -> None:
     """Emit the assistant's output according to the current mode-output setting."""
     # PrintFunctionNames("cli Output...")
-    logger.info(f"[AgentOutput] {assistantOutput}")
-    logger.info(f"[Info] assistantOutput: {assistantOutput}")
+    # logger.info(f"[AgentOutput] {assistantOutput}")
+    # logger.info(f"[Info] assistantOutput: {assistantOutput}")
 
     modeOutput = GetModeValue("mode-output")
     if modeOutput == "text":
@@ -554,7 +554,8 @@ def WelcomeUser() -> None:
     """Print a welcome banner and show the help command output."""
     # PrintFunctionNames("cli WelcomeUser...")
     # logger.debug("WelcomeUser()")
-    logger.info("Welcome to Personal Assistant CLI")
+    # logger.info("Welcome to Personal Assistant CLI")
+    print("Welcome to Personal Assistant CLI")
 
     assistantOutput = Processing("help")
     if assistantOutput is not None:
@@ -568,7 +569,7 @@ def Main() -> None:
     global USER_INPUT_COUNT
 
     USER_INPUT_COUNT += 1
-    logger.debug(f"[Debug] UserInputCount: {USER_INPUT_COUNT}")
+    # logger.debug(f"[Debug] UserInputCount: {USER_INPUT_COUNT}")
 
     userInput = Input()
     # print(f"userInput after input: {userInput}")
@@ -584,6 +585,12 @@ def Main() -> None:
                 Output(assistantOutput)
                 # Set agent output for turn logging
                 set_agent_output(str(assistantOutput))
+            else:
+                # Fallback if processing returned None but an agent output or response was captured during execution
+                from Log.turn_logger import get_current_turn
+                current_turn = get_current_turn()
+                if current_turn and not current_turn.agent_output:
+                    current_turn.set_agent_output("(No output or command handled)")
         except Exception as e:
             # Mark turn as having an error, but still log it
             from Log.turn_logger import get_current_turn
