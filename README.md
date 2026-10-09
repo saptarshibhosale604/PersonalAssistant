@@ -384,3 +384,4 @@ Gemma4, effective 4B version. Supports image input, reasoning, and tool calling.
 - B, improve, show tool arg in json beutifier
 - A, bug, /update is not working, mode update is working after the OS mode addition
 - C, Bug, OUTPUT_FILE = f"{date_str}_output.csv" not able to output the ifle in this
+- B, improve , create a skill / llm template for this: git push the changes by seeing diff: globalGroq01

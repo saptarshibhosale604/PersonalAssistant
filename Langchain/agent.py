@@ -237,7 +237,9 @@ def UpdateAgent(modeLLM: str) -> None:
 
     elif modeLLM == "globalMistral01":
         LLM = ChatMistralAI(
-            model="mistral-small-latest", api_key=os.environ.get("MISTRAL_API_KEY"),
+            # model="mistral-small-latest", api_key=os.environ.get("MISTRAL_API_KEY"),
+            # model="ministral-14b-2512", api_key=os.environ.get("MISTRAL_API_KEY"),
+            model="labs-leanstral-2603", api_key=os.environ.get("MISTRAL_API_KEY"),
             max_tokens=DEFAULT_MAX_TOKENS,
             temperature=DEFAULT_TEMPERATURE, max_retries=DEFAULT_MAX_RETRIES,
         )

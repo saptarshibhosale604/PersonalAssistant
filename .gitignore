@@ -45,3 +45,7 @@ state.json
 Log/*.log
 
 Langchain/Tools/ToolsAskCloud/ToolAskGPT/Results
+
+LocalTesting
+
+UI/modesConfig.json
