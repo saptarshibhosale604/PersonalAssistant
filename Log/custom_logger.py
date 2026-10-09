@@ -3,7 +3,7 @@ from datetime import datetime
 import os
 
 # log_dir = "/root/ProjectRpi/Rpi/PersonalAssistant/Log"
-log_dir = r"E:\WORK\PROJECT\git\PersonalAssistant\Log\SessionLog"
+log_dir = "./Log/SessionLog"
 os.makedirs(log_dir, exist_ok=True)
 
 # Generate unique session identifier using timestamp and process ID
@@ -32,9 +32,10 @@ if not logger.handlers:
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
 
-# Optional: maintain a 'latest.log' symlink or copy for easy tailing
+# Optional: maintain a 'latest.log' symlink or copy in Log/ (parent of log_dir) for easy tailing
 try:
-    latest_path = os.path.join(log_dir, "latest.log")
+    parent_dir = os.path.dirname(log_dir)
+    latest_path = os.path.join(parent_dir, "latest.log")
     if os.path.islink(latest_path):
         os.unlink(latest_path)
     elif os.path.exists(latest_path):
@@ -43,10 +44,10 @@ try:
     if os.name == 'nt':
         # On Windows, copy or write a pointer, or create symlink if permitted
         try:
-            os.symlink(session_filename, latest_path)
+            os.symlink(os.path.join("SessionLog", session_filename), latest_path)
         except OSError:
             pass
     else:
-        os.symlink(session_filename, latest_path)
+        os.symlink(os.path.join("SessionLog", session_filename), latest_path)
 except Exception:
     pass

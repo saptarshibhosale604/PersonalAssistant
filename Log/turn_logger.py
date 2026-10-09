@@ -166,7 +166,8 @@ def _get_json_logger() -> logging.Logger:
     
     if not json_logger.handlers:
         from Log.custom_logger import log_dir
-        json_path = os.path.join(log_dir, "structured_latest.log")
+        parent_dir = os.path.dirname(log_dir)
+        json_path = os.path.join(parent_dir, "structured_latest.log")
         handler = logging.FileHandler(json_path, encoding='utf-8')
         handler.setFormatter(logging.Formatter('%(message)s'))  # Raw JSON lines
         json_logger.addHandler(handler)
