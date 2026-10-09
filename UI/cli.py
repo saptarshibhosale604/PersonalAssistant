@@ -184,6 +184,7 @@ def BasicCmds02(userInput: str) -> bool:
     """
     global MODE_SANDBOX
     global THREAD_ID
+    global _os_prefix_added
 
     userInput = userInput.strip()
 
@@ -212,6 +213,7 @@ def BasicCmds02(userInput: str) -> bool:
         print("  /update")
         print("  /sandbox <true|false>")
         print("  /tools <update|get>")
+        print("  /resume <log file name>")
         print("  /reset")
         print("  /exit")
         GetAllModeValues()
@@ -275,6 +277,72 @@ def BasicCmds02(userInput: str) -> bool:
         THREAD_ID += 1
         _os_prefix_added = False  # Reset OS prefix flag for new session
         # FormatToolsPrinting(tools)
+        return True
+
+    # --------------------------------------------------
+    # Resume Session
+    # --------------------------------------------------
+
+    elif command == "/resume":
+        session_log_dir = "./Log/SessionLog"
+        if not os.path.exists(session_log_dir):
+            print(f"SessionLog directory not found: {session_log_dir}")
+            return True
+
+        # Get all log files sorted by modification time (newest first)
+        log_files = sorted(
+            [f for f in os.listdir(session_log_dir) if f.endswith(".log")],
+            key=lambda x: os.path.getmtime(os.path.join(session_log_dir, x)),
+            reverse=True
+        )
+
+        if not value:
+            print("Usage: /resume <log file name>")
+            print("\nAvailable recent session logs:")
+            for idx, log_file in enumerate(log_files[:10], start=1):
+                print(f"  {idx}. {log_file}")
+            print("\nTip: You can pass part of the filename or exact name.")
+            return True
+
+        # Search for matching log file
+        matched_log = None
+        for log_file in log_files:
+            if value in log_file.lower():
+                matched_log = log_file
+                break
+
+        if not matched_log:
+            print(f"Error: No session log found matching '{value}'.")
+            print("Available recent session logs:")
+            for idx, log_file in enumerate(log_files[:5], start=1):
+                print(f"  {idx}. {log_file}")
+            return True
+
+        log_file_path = os.path.join(session_log_dir, matched_log)
+        print(f"Loading session from log: {matched_log}...")
+        
+        try:
+            with open(log_file_path, "r", encoding="utf-8", errors="ignore") as f:
+                log_content = f.read()
+            
+            # Increment THREAD_ID to start a fresh thread context referencing this session or load summary if desired
+            THREAD_ID += 1
+            _os_prefix_added = False
+            
+            FormatMessageTypes("SystemMessage")
+            print(f"Successfully resumed session from: {matched_log}")
+            print(f"New Thread ID: {THREAD_ID}")
+            print(f"Log path: {os.path.abspath(log_file_path)}")
+            
+            # Display last 500 characters or preview of log content
+            preview = log_content[-1000:] if len(log_content) > 1000 else log_content
+            print("\n--- Session Preview / Tail ---")
+            print(preview)
+            print("------------------------------\n")
+            
+        except Exception as e:
+            print(f"Error reading log file {matched_log}: {e}")
+
         return True
 
     # --------------------------------------------------

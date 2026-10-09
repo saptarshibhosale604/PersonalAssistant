@@ -399,3 +399,9 @@ Gemma4, effective 4B version. Supports image input, reasoning, and tool calling.
 - b, improve, at the start create this file E:\WORK\PROJECT\git\PersonalAssistant\Log\userInput.txt
 - b, imporove, add this in You are using POWERSHELL CMD. tools descritoin instead of adding in the user input
 - c, improve, add this in the logging REQUESTED_TOOLS_NUMBER_PER_USER_INPUT
+- a, improve, add nvidia models. https://build.nvidia.com/settings/api-keys
+- c, improve,  `/new` will exit and run python -m cmd again
+- b, improve, 
+langchain_google_genai.chat_models.GoogleRateLimitError: Error calling model 'gemini-3.5-flash-lite' (RESOURCE_EXHAUSTED): 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 250000, model: gemini-3.5-flash-lite\nPlease retry in 3.593849451s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_input_token_count', 'quotaId': 'GenerateContentInputTokensPerModelPerMinute-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-3.5-flash-lite'}, 'quotaValue': '250000'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '3s'}]}}
+During task with name 'model' and id '6d56c7a6-9072-30c8-1b46-c81c9978249f'
+if this bug and time <= 30 sec then retry
