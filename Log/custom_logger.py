@@ -1,15 +1,33 @@
 import logging
 from datetime import datetime
 import os
+import re
 
 # log_dir = "/root/ProjectRpi/Rpi/PersonalAssistant/Log"
 log_dir = "./Log/SessionLog"
 os.makedirs(log_dir, exist_ok=True)
 
-# Generate unique session identifier using timestamp and process ID
+# Determine next sequential 4-digit ID
+existing_files = os.listdir(log_dir)
+max_id = -1
+# Pattern matching new format: session_0000_2026-10-08_11-08-02.log or similar
+# Also handles old format gracefully if present: session_2026-10-08_11-08-02_26640.log
+for filename in existing_files:
+    match = re.match(r'^session_(\d{4})_', filename)
+    if match:
+        try:
+            file_id = int(match.group(1))
+            if file_id > max_id:
+                max_id = file_id
+        except ValueError:
+            pass
+
+next_id = max_id + 1 if max_id >= 0 else 0
+session_id_str = f"{next_id:04d}"
+
+# Generate session timestamp
 session_timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-pid = os.getpid()
-session_filename = f"session_{session_timestamp}_{pid}.log"
+session_filename = f"session_{session_id_str}_{session_timestamp}.log"
 log_path = os.path.join(log_dir, session_filename)
 
 # Create a custom logger
