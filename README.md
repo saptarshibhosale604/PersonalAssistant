@@ -396,3 +396,4 @@ Gemma4, effective 4B version. Supports image input, reasoning, and tool calling.
 - c, mode config for each session
 - b, improve, logging, need tools call per user input, and per session
 - b, mode input file => enter => agent processing => mode input text
+- b, improve, at the start create this file E:\WORK\PROJECT\git\PersonalAssistant\Log\userInput.txt

@@ -464,7 +464,7 @@ def Input() -> str:
     if modeInput == "text":
         userInput = input("")
     elif modeInput == "multi":
-        logger.info(
+        print(
             "Paste your multiline input\n"
             "To exit the mode multi type 'text'\n"
             "To submit input Ctrl-Z (Windows) or Ctrl-D (Linux/macOS) then Enter:"
