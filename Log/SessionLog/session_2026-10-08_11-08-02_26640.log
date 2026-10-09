@@ -1,0 +1,19 @@
+2026-10-08 11:08:03,453 - INFO - Welcome to Personal Assistant CLI
+2026-10-08 11:08:03,455 - INFO - Help:
+2026-10-08 11:08:03,455 - INFO - Type 'help' for list of commands
+2026-10-08 11:08:03,456 - INFO - Type 'mode update' for update the modes
+2026-10-08 11:08:03,459 - DEBUG - [Debug] UserInputCount: 1
+2026-10-08 11:08:26,239 - INFO - [OS Mode] Applied Windows prefix to first input
+2026-10-08 11:08:26,239 - INFO - [UserInput] You are using POWERSHELL CMD. 
+hii
+2026-10-08 11:08:30,084 - INFO - [AgentOutput] Hello! How can I help you today?
+2026-10-08 11:08:30,084 - DEBUG - agentCallingCountPerUserInput: 1
+2026-10-08 11:08:30,084 - INFO - [AgentOutput] 
+2026-10-08 11:08:30,084 - INFO - [Info] assistantOutput: 
+2026-10-08 11:08:30,085 - DEBUG - [Debug] UserInputCount: 2
+2026-10-08 11:09:24,814 - INFO - [UserInput] who are you?
+2026-10-08 11:09:26,463 - INFO - [AgentOutput] I am an AI assistant here to help you with your development, coding, and problem-solving tasks. How can I assist you today?
+2026-10-08 11:09:26,463 - DEBUG - agentCallingCountPerUserInput: 1
+2026-10-08 11:09:26,464 - INFO - [AgentOutput] 
+2026-10-08 11:09:26,464 - INFO - [Info] assistantOutput: 
+2026-10-08 11:09:26,465 - DEBUG - [Debug] UserInputCount: 3
