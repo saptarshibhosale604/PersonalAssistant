@@ -46,6 +46,7 @@ state.json
 
 # Runtime logs and user session data
 Log/*.log
+Log/SessionLog/*log
 
 Langchain/Tools/ToolsAskCloud/ToolAskGPT/Results
 
