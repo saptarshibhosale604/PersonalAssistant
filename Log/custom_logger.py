@@ -3,7 +3,7 @@ from datetime import datetime
 import os
 
 # log_dir = "/root/ProjectRpi/Rpi/PersonalAssistant/Log"
-log_dir = "./Log"
+log_dir = r"E:\WORK\PROJECT\git\PersonalAssistant\Log\SessionLog"
 os.makedirs(log_dir, exist_ok=True)
 
 # Generate unique session identifier using timestamp and process ID
