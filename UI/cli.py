@@ -290,8 +290,8 @@ def BasicCmds02(userInput: str) -> bool:
     # --------------------------------------------------
 
     elif command == "/exit":
-        logger.info("Exiting Personal Assistant CLI...")
-        logger.info(f"Log file: {os.path.abspath(log_path)}")
+        print("Exiting Personal Assistant CLI...")
+        print(f"Log file: {os.path.abspath(log_path)}")
         sys.exit(0)
 
     return False

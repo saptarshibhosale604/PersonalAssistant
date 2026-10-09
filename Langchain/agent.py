@@ -477,7 +477,7 @@ def ExtractStreamContent(streamMode: str, content) -> str:
             toolName = actionRequest["name"]
             args = actionRequest.get("args", actionRequest.get("arguments", {}))
             print(f"\n{'-' * BANNER_WIDTH}")
-            logger.info(
+            print(
                 f"tool_name: {toolName},\nargs: {args},\n"
                 f"requestedToolsNumberPerUserInput: {REQUESTED_TOOLS_NUMBER_PER_USER_INPUT}\n"
                 f"requestedToolsNumberPerAgentInterrupt: {REQUESTED_TOOLS_NUMBER_PER_AGENT_INTERRUPT}"

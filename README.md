@@ -397,3 +397,5 @@ Gemma4, effective 4B version. Supports image input, reasoning, and tool calling.
 - b, improve, logging, need tools call per user input, and per session
 - b, mode input file => enter => agent processing => mode input text
 - b, improve, at the start create this file E:\WORK\PROJECT\git\PersonalAssistant\Log\userInput.txt
+- b, imporove, add this in You are using POWERSHELL CMD. tools descritoin instead of adding in the user input
+- c, improve, add this in the logging REQUESTED_TOOLS_NUMBER_PER_USER_INPUT
