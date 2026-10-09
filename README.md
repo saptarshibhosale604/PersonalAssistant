@@ -23,6 +23,7 @@
 | Provider | Mode / Model / Key | Observed issue | Limit / quota details | Notes / Action |
 |---|---|---|---|---|
 | OpenRouter | `globalOpenRouter01` | Slow token generation | Not specified | General performance issue observed |
+| Google Gemini | `globalGemini01` / `gemini-3.6-flash` | `429 RESOURCE_EXHAUSTED` | `5` free-tier generate-content requests per minute (Free Tier Quota Exceeded) | Switch to `globalGemini02` (`gemini-3.5-flash-lite`) or retry after ~7s; upgrade plan or use local Ollama |
 | Google Gemini | `globalGemini02` / `gemini-3.5-flash-lite` | `429 RESOURCE_EXHAUSTED` | `15` free-tier generate-content requests per minute per project per model | Retry suggested after ~16s; check billing/quota dashboard |
 | Groq | Session total | Token limit reached risk | `8000` tokens per session | Keep prompts/responses short |
 | Groq | `qwen/qwen3.8-27b` | Input token rate limit | `7000` input tokens per minute (ITPM) | Reduce prompt size |
@@ -30,11 +31,18 @@
 | OpenRouter | `globalOpenRouter02` | `429 Rate limit exceeded` | `50` requests per day on free tier | Add credits or wait for daily reset |
 | Mistral AI | `mistral-small-latest` | `429 Rate limit exceeded` | Limit not specified in error | Temporary throttling / retry later |
 
-### Free plans available
+### Free Gemini API Tier Strategy & Workarounds
+When using the **Free Tier** of Google Gemini API (such as Google AI Studio free keys), you encounter strict limits like:
+`langchain_google_genai.chat_models.GoogleRateLimitError: Error calling model 'gemini-3.6-flash' (RESOURCE_EXHAUSTED): 429 RESOURCE_EXHAUSTED.`
+- **Free Tier Limits:** 5 requests/min for `gemini-3.6-flash`, 15 requests/min for `gemini-3.5-flash-lite`.
+- **Mitigation:**
+  1. Use `globalGemini02` (`gemini-3.5-flash-lite`) as a higher-rate fallback.
+  2. Implement automatic retry backoff (waiting ~7s to 16s as specified in `RetryInfo`).
+  3. Switch to free local models via Ollama or Groq free tier when quota is exhausted.
 
 | Provider | Free plan status | Summary | Link |
 |---|---|---|---|
-| Google AI Studio (Gemini) | Available | High-rate-limit free API tier for Gemini Flash / Flash-Lite style models without upfront payment | https://ai.google.dev/ |
+| Google AI Studio (Gemini) | Available | High-rate-limit free API tier for Gemini Flash / Flash-Lite style models without upfront payment | https://ai.google.dev/gemini-api/docs/api-key?authuser=1 |
 | Groq Cloud | Available | High-speed inference with free usage for open models | https://console.groq.com/keys |
 | OpenRouter | Available | Aggregates many models, including models with `:free` suffix | https://openrouter.ai/workspaces/default/keys |
 | Mistral AI (La Plateforme) | Available | Free tier for testing models like Mistral Small / Codestral / Nemo | https://admin.mistral.ai/organization/api-keys |
@@ -385,3 +393,4 @@ Gemma4, effective 4B version. Supports image input, reasoning, and tool calling.
 - A, bug, /update is not working, mode update is working after the OS mode addition
 - C, Bug, OUTPUT_FILE = f"{date_str}_output.csv" not able to output the ifle in this
 - B, improve , create a skill / llm template for this: git push the changes by seeing diff: globalGroq01
+- c, mode config for each session

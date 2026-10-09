@@ -484,17 +484,16 @@ def Input() -> str:
         logger.info(f"Error: Invalid modeInput: {modeInput}")
         userInput = None
 
-    # Apply OS mode prefix for Windows on first input
+    # Apply OS mode prefix for Windows on first input (only if it's not a slash command)
     if userInput and len(userInput.strip()) > 0:
         modeOS = GetModeValue("mode-os")
-        if modeOS == "windows" and not _os_prefix_added:
+        if modeOS == "windows" and not _os_prefix_added and not userInput.strip().startswith("/"):
             userInput = "You are using POWERSHELL CMD. \n" + userInput
             _os_prefix_added = True
             logger.info(f"[OS Mode] Applied Windows prefix to first input")
         elif modeOS == "linux":
             # Linux mode - no prefix added
             pass
-        # If modeOS is unknown/unset, default to windows behavior (handled above)
 
     # logger.debug(f"userInput: {userInput}")
     FormatMessageTypes("")
