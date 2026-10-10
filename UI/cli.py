@@ -14,6 +14,7 @@ from typing import Any, Iterable, Optional
 # ---- Local imports ----
 # import Fabric.manager as Fabric
 import Langchain.agent as Agent
+import Langchain.sessionResume as sessionResume
 import Langchain.Tools.toolsManager as toolsManager
 import UI.modesManager as modesManager
 import UserContext.userContext as UserContext
@@ -304,12 +305,10 @@ def BasicCmds02(userInput: str) -> bool:
             print("\nTip: You can pass part of the filename or exact name.")
             return True
 
-        # Search for matching log file
-        matched_log = None
-        for log_file in log_files:
-            if value in log_file.lower():
-                matched_log = log_file
-                break
+        # Search for matching log file: prefer the session id prefix, then any substring
+        matched_log = next((f for f in log_files if f.lower().startswith(f"session_{value}_")), None)
+        if not matched_log:
+            matched_log = next((f for f in log_files if value in f.lower()), None)
 
         if not matched_log:
             print(f"Error: No session log found matching '{value}'.")
@@ -325,16 +324,25 @@ def BasicCmds02(userInput: str) -> bool:
             with open(log_file_path, "r", encoding="utf-8", errors="ignore") as f:
                 log_content = f.read()
             
-            # Increment THREAD_ID to start a fresh thread context referencing this session or load summary if desired
+            # Increment THREAD_ID to start a fresh thread context referencing this session
             THREAD_ID += 1
             _os_prefix_added = False
             
+            # Seed the past turns into agent memory for the new thread ID
+            new_thread_id_str = "thread-" + str(THREAD_ID)
+            turns = sessionResume.ParseSessionLog(log_file_path)
+            turns_loaded = Agent.SeedThreadHistory(THREAD_ID, GetModeValue("mode-llm"), turns)
+            print(f"[Resume] Loaded {turns_loaded} turns into {new_thread_id_str}")
+            if GetModeValue("mode-context") == "no":
+                print("[Resume] Warning: mode-context is 'no', so the next input starts a new thread "
+                      "and will not see the resumed history. Set mode-context to 'yes'.")
+
             FormatMessageTypes("SystemMessage")
             print(f"Successfully resumed session from: {matched_log}")
-            print(f"New Thread ID: {THREAD_ID}")
+            print(f"New Thread ID: {THREAD_ID} ({new_thread_id_str})")
             print(f"Log path: {os.path.abspath(log_file_path)}")
             
-            # Display last 500 characters or preview of log content
+            # Display last 1000 characters or preview of log content
             preview = log_content[-1000:] if len(log_content) > 1000 else log_content
             print("\n--- Session Preview / Tail ---")
             print(preview)

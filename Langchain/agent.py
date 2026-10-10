@@ -45,6 +45,7 @@ from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 from langchain_mistralai import ChatMistralAI
+from langchain_core.messages import AIMessage, HumanMessage
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import Command
 
@@ -149,9 +150,12 @@ def BuildAgent():
             description_prefix="Tool execution pending approval",
         )
     ]
-    return create_agent(model=LLM, tools=TOOLS, middleware=middleware, checkpointer=InMemorySaver())
+    return create_agent(model=LLM, tools=TOOLS, middleware=middleware, checkpointer=CHECKPOINTER)
 
 
+# Shared across agent rebuilds so thread memory survives LLM mode changes
+# (and history seeded by /resume is not lost on the first UpdateAgent call).
+CHECKPOINTER = InMemorySaver()
 AGENT = BuildAgent()
 
 
@@ -316,6 +320,31 @@ def UpdateAgent(modeLLM: str) -> None:
         logger.warning(f"Unknown mode-llm '{modeLLM}' (names are case-sensitive); keeping previous LLM: {type(LLM).__name__}")
 
     AGENT = BuildAgent()
+
+
+@PrintFunctionName
+def SeedThreadHistory(threadId, modeLLM: str, turns: list) -> int:
+    """Write past (userInput, agentOutput) turns into the memory of `thread-<threadId>`.
+
+    Used by /resume so the next user input sees the resumed session as history.
+    Returns the number of turns seeded.
+    """
+    if not turns:
+        return 0
+
+    UpdateAgent(modeLLM)
+
+    messages = []
+    for userInput, agentOutput in turns:
+        messages.append(HumanMessage(content=userInput))
+        messages.append(AIMessage(content=agentOutput))
+
+    configMemory = {"configurable": {"thread_id": "thread-" + str(threadId)}}
+    # as_node="model": treat the update as model output; the last message is an
+    # AIMessage without tool calls, so nothing is left pending for the next run.
+    AGENT.update_state(configMemory, {"messages": messages}, as_node="model")
+    return len(turns)
+
 
 @PrintFunctionName
 def PrintPostProcessingLLMVariables(content) -> None:

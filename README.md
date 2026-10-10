@@ -349,6 +349,9 @@ Gemma4, effective 4B version. Supports image input, reasoning, and tool calling.
     - crate a sh file with git authentication cmds
 - B, Imorve, mode reset : reset modes to default
 - A, bug, streaming is not wokring in local-4b and stream mode on
+- B, improve, /resume to resume any session/ thread with new / same model
+    - /resume <id> parses the session log (Langchain/sessionResume.py) and seeds past turns into agent memory
+    - agent.py uses one shared CHECKPOINTER, so memory survives agent rebuilds and /llm switches
 
 # TODO 
 - a, bug, understand the current project and summarise it in summary.md
@@ -381,11 +384,11 @@ Gemma4, effective 4B version. Supports image input, reasoning, and tool calling.
 - A, improve /plan and /implement mode
     - change the TOOL_INTERRUPT_POLICY = {} vars to TRUE
     - it should only work for specific /plan + model combination
-    - Also /plan => add JUST PLAN, DO NOT IMPLEMENT ANYTHING. += user input
+    - Also /plan => add JUST PLAN, DO NOT IMPLEMENT ANYTHING. save file to ./Plan directory += user input
+    - /implement => save in implement file
 - A, improve /os variable
     - add  You are using POWERSHELL CMD. += user input
 - B, improve, logs should include input output tokens, model used
-- B, improve, /resume to resume any session/ thread with new / same model
 - C, improve. /exit to exit
 - B, improve, .env file/system
 - B, bug, input("Is this approved or rejected?(Default: approved): ") also add rejected path
@@ -405,3 +408,26 @@ Gemma4, effective 4B version. Supports image input, reasoning, and tool calling.
 langchain_google_genai.chat_models.GoogleRateLimitError: Error calling model 'gemini-3.5-flash-lite' (RESOURCE_EXHAUSTED): 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 250000, model: gemini-3.5-flash-lite\nPlease retry in 3.593849451s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_input_token_count', 'quotaId': 'GenerateContentInputTokensPerModelPerMinute-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-3.5-flash-lite'}, 'quotaValue': '250000'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '3s'}]}}
 During task with name 'model' and id '6d56c7a6-9072-30c8-1b46-c81c9978249f'
 if this bug and time <= 30 sec then retry
+- b, bug, while reading a /input file, due to emoji probably
+[Error] UnicodeDecodeError: 'charmap' codec can't decode byte 0x8f in position 6297: character maps to <undefined>
+Traceback (most recent call last):
+  File "E:\WORK\PROJECT\git\PersonalAssistant\UI\cli.py", line 678, in <module>
+    Main()
+    ~~~~^^
+  File "E:\WORK\PROJECT\git\PersonalAssistant\Log\log_utils.py", line 15, in wrapper
+    return func(*args, **kwargs)
+  File "E:\WORK\PROJECT\git\PersonalAssistant\UI\cli.py", line 642, in Main
+    userInput = Input()
+  File "E:\WORK\PROJECT\git\PersonalAssistant\Log\log_utils.py", line 15, in wrapper
+    return func(*args, **kwargs)
+  File "E:\WORK\PROJECT\git\PersonalAssistant\UI\cli.py", line 545, in Input
+    userInput = ReadUserInputFile()
+  File "E:\WORK\PROJECT\git\PersonalAssistant\Log\log_utils.py", line 15, in wrapper
+    return func(*args, **kwargs)
+  File "E:\WORK\PROJECT\git\PersonalAssistant\UI\cli.py", line 468, in ReadUserInputFile
+    return inputFile.read()
+           ~~~~~~~~~~~~~~^^
+  File "C:\Users\LENOVO\AppData\Local\Python\pythoncore-3.14-64\Lib\encodings\cp1252.py", line 23, in decode
+    return codecs.charmap_decode(input,self.errors,decoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeDecodeError: 'charmap' codec can't decode byte 0x8f in position 6297: character maps to <undefined>
