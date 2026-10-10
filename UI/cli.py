@@ -215,6 +215,7 @@ def BasicCmds02(userInput: str) -> bool:
         print("  /sandbox <true|false>")
         print("  /tools <update|get>")
         print("  /resume <log file name>")
+        print("  /skill")
         print("  /reset")
         print("  /exit")
         GetAllModeValues()
@@ -350,6 +351,62 @@ def BasicCmds02(userInput: str) -> bool:
             
         except Exception as e:
             print(f"Error reading log file {matched_log}: {e}")
+
+        return True
+
+    # --------------------------------------------------
+    # Skill Manager
+    # --------------------------------------------------
+
+    elif command == "/skill":
+        skill_dir = "./Skill"
+        if not os.path.exists(skill_dir):
+            os.makedirs(skill_dir, exist_ok=True)
+            print(f"Created missing skill directory: {skill_dir}")
+
+        while True:
+            # Scan skills in Skill/ directory
+            skill_files = sorted([f for f in os.listdir(skill_dir) if os.path.isfile(os.path.join(skill_dir, f))])
+            
+            print("\nskillManager: select the mode:")
+            print("'q' to quit from the skillManager\n")
+            
+            if not skill_files:
+                print("  (No skill files found in Skill/ directory)")
+            else:
+                for idx, skill_file in enumerate(skill_files, start=1):
+                    print(f"{idx}. skill {skill_file}")
+            
+            print()
+            choice = input("Enter skill number or 'q': ").strip()
+            
+            if choice.lower() == 'q':
+                print("skillManager: Goodbye!")
+                return True
+            
+            if choice.isdigit():
+                choice_idx = int(choice) - 1
+                if 0 <= choice_idx < len(skill_files):
+                    selected_skill_name = skill_files[choice_idx]
+                    skill_path = os.path.join(skill_dir, selected_skill_name)
+                    try:
+                        with open(skill_path, "r", encoding="utf-8", errors="ignore") as sf:
+                            skill_content = sf.read()
+                        
+                        print(f"\n[Skill Selected: {selected_skill_name}]")
+                        print("-" * 40)
+                        print(skill_content)
+                        print("-" * 40)
+                        
+                        # Pass skill content directly into Processing
+                        Processing(skill_content)
+                        return True
+                    except Exception as e:
+                        print(f"Error reading skill file '{selected_skill_name}': {e}")
+                else:
+                    print(f"Invalid selection: {choice}. Please enter a number between 1 and {len(skill_files)}.")
+            else:
+                print("Invalid input. Please enter a valid number or 'q'.")
 
         return True
 
