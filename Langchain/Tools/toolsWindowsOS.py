@@ -1,3 +1,4 @@
+import urllib.parse
 import os
 import platform
 import subprocess
@@ -141,15 +142,94 @@ def SetSystemVolume(
     except Exception as e:
         return f"Error setting system volume: {str(e)}"
 
+
+@tool("open_brave_youtube_music", description="Opens Brave browser directly to the YouTube Music home page.")
+def OpenBraveYouTubeMusic() -> str:
+    """Opens Brave browser directly to YouTube Music home."""
+    try:
+        url = "https://music.youtube.com"
+        brave_paths = [
+            r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe",
+            r"C:\Program Files (x86)\BraveSoftware\Brave-Browser\Application\brave.exe",
+            os.path.expandvars(r"%LOCALAPPDATA%\BraveSoftware\Brave-Browser\Application\brave.exe")
+        ]
+        
+        launched = False
+        for path in brave_paths:
+            if os.path.exists(path):
+                subprocess.Popen([path, url])
+                launched = True
+                break
+                
+        if not launched:
+            subprocess.run(["cmd", "/c", "start", url], shell=True)
+            
+        return "Successfully opened Brave to YouTube Music home."
+    except Exception as e:
+        return f"Error opening YouTube Music in Brave: {str(e)}"
+
+@tool("play_youtube_music", description="Opens Brave browser to play a specific song, artist, or music query directly on YouTube.")
+def PlayYouTubeMusic(
+    query: Annotated[str, "Song name, artist, or music search query"],
+    use_youtube_music: Annotated[bool, "Use YouTube Music (True) or standard YouTube (False)"] = False
+) -> str:
+    """Opens Brave browser to play music directly on YouTube using yt-dlp video ID lookup."""
+    try:
+        result = subprocess.run(
+            ["yt-dlp", f"ytsearch1:{query}", "--get-id"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=10
+        )
+        video_ids = result.stdout.strip().splitlines()
+        
+        if video_ids:
+            vid = video_ids[0]
+            url = f"https://www.youtube.com/watch?v={vid}"
+        else:
+            encoded_query = urllib.parse.quote(query)
+            url = f"https://www.youtube.com/results?search_query={encoded_query}"
+            
+        brave_paths = [
+            r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe",
+            r"C:\Program Files (x86)\BraveSoftware\Brave-Browser\Application\brave.exe",
+            os.path.expandvars(r"%LOCALAPPDATA%\BraveSoftware\Brave-Browser\Application\brave.exe")
+        ]
+        
+        launched = False
+        for path in brave_paths:
+            if os.path.exists(path):
+                subprocess.Popen([path, url])
+                launched = True
+                break
+                
+        if not launched:
+            subprocess.run(["cmd", "/c", "start", url], shell=True)
+            
+        return f"Successfully opened YouTube and playing: '{query}'"
+    except Exception as e:
+        try:
+            encoded_query = urllib.parse.quote(query)
+            url = f"https://www.youtube.com/results?search_query={encoded_query}"
+            subprocess.run(["cmd", "/c", "start", url], shell=True)
+            return f"Successfully opened YouTube with search query: '{query}'"
+        except Exception as inner_e:
+            return f"Error playing YouTube video in Brave: {str(inner_e)}"
+
+
 toolsWindowsOS = [
     GetSystemInfo,
     ListRunningProcesses,
     GetDiskUsage,
     ListDirectoryContents,
     SetScreenBrightness,
-    SetSystemVolume
+    SetSystemVolume,
+    OpenBraveYouTubeMusic,
+    PlayYouTubeMusic
 ]
 
 def ToolsList():
     global toolsWindowsOS
     return toolsWindowsOS
+
