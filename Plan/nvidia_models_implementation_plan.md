@@ -13,9 +13,6 @@ This plan outlines the steps required to add two free-tier models from [NVIDIA B
 ### A. Langchain/agent.py
 Add elif modeLLM == "globalNvidia01": and elif modeLLM == "globalNvidia02": using ChatOpenAI configured with NVIDIA's OpenAI-compatible NIM endpoint (ase_url="https://integrate.api.nvidia.com/v1" and pi_key=os.environ.get("NVIDIA_API_KEY")).
 
-### B. Fabric/manager.py
-Add corresponding elif clauses so Fabric execution mode supports both NVIDIA models.
-
 ### C. UI/cli.py
 Register "globalNvidia01" and "globalNvidia02" in the valid CLI LLM options list.
 

@@ -53,3 +53,4 @@ Langchain/Tools/ToolsAskCloud/ToolAskGPT/Results
 LocalTesting
 
 .env
+Langchain/Tools/toolsConfig.json

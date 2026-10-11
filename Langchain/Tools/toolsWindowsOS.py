@@ -143,30 +143,30 @@ def SetSystemVolume(
         return f"Error setting system volume: {str(e)}"
 
 
-@tool("open_brave_youtube_music", description="Opens Brave browser directly to the YouTube Music home page.")
-def OpenBraveYouTubeMusic() -> str:
-    """Opens Brave browser directly to YouTube Music home."""
-    try:
-        url = "https://music.youtube.com"
-        brave_paths = [
-            r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe",
-            r"C:\Program Files (x86)\BraveSoftware\Brave-Browser\Application\brave.exe",
-            os.path.expandvars(r"%LOCALAPPDATA%\BraveSoftware\Brave-Browser\Application\brave.exe")
-        ]
+# @tool("open_brave_youtube_music", description="Opens Brave browser directly to the YouTube Music home page.")
+# def OpenBraveYouTubeMusic() -> str:
+#     """Opens Brave browser directly to YouTube Music home."""
+#     try:
+#         url = "https://music.youtube.com"
+#         brave_paths = [
+#             r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe",
+#             r"C:\Program Files (x86)\BraveSoftware\Brave-Browser\Application\brave.exe",
+#             os.path.expandvars(r"%LOCALAPPDATA%\BraveSoftware\Brave-Browser\Application\brave.exe")
+#         ]
         
-        launched = False
-        for path in brave_paths:
-            if os.path.exists(path):
-                subprocess.Popen([path, url])
-                launched = True
-                break
+#         launched = False
+#         for path in brave_paths:
+#             if os.path.exists(path):
+#                 subprocess.Popen([path, url])
+#                 launched = True
+#                 break
                 
-        if not launched:
-            subprocess.run(["cmd", "/c", "start", url], shell=True)
+#         if not launched:
+#             subprocess.run(["cmd", "/c", "start", url], shell=True)
             
-        return "Successfully opened Brave to YouTube Music home."
-    except Exception as e:
-        return f"Error opening YouTube Music in Brave: {str(e)}"
+#         return "Successfully opened Brave to YouTube Music home."
+#     except Exception as e:
+#         return f"Error opening YouTube Music in Brave: {str(e)}"
 
 @tool("play_youtube_music", description="Opens Brave browser to play a specific song, artist, or music query directly on YouTube.")
 def PlayYouTubeMusic(
@@ -225,7 +225,7 @@ toolsWindowsOS = [
     ListDirectoryContents,
     SetScreenBrightness,
     SetSystemVolume,
-    OpenBraveYouTubeMusic,
+    # OpenBraveYouTubeMusic,
     PlayYouTubeMusic
 ]
 

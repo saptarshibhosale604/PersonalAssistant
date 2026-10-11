@@ -294,6 +294,24 @@ def UpdateAgent(modeLLM: str) -> None:
         )
         TOOLS = toolsManager.Main("get")  # "get": fetch tools list
 
+    elif modeLLM == "globalNvidia01":
+        LLM = ChatOpenAI(
+            model="meta/llama-3.1-70b-instruct", base_url="https://integrate.api.nvidia.com/v1",
+            api_key=os.environ.get("NVIDIA_API_KEY"), streaming=True,
+            max_tokens=DEFAULT_MAX_TOKENS, temperature=DEFAULT_TEMPERATURE,
+            max_retries=DEFAULT_MAX_RETRIES,
+        )
+        TOOLS = toolsManager.Main("get")  # "get": fetch tools list
+
+    elif modeLLM == "globalNvidia02":
+        LLM = ChatOpenAI(
+            model="mistralai/mistral-large-2-instruct", base_url="https://integrate.api.nvidia.com/v1",
+            api_key=os.environ.get("NVIDIA_API_KEY"), streaming=True,
+            max_tokens=DEFAULT_MAX_TOKENS, temperature=DEFAULT_TEMPERATURE,
+            max_retries=DEFAULT_MAX_RETRIES,
+        )
+        TOOLS = toolsManager.Main("get")  # "get": fetch tools list
+
     elif modeLLM == "globalHuggingFace01":
         llm_endpoint = HuggingFaceEndpoint(
             repo_id="mistralai/Mistral-7B-Instruct-v0.3",
