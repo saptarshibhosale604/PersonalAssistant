@@ -1,12 +1,13 @@
 {
-    "toolsGeneral": false,
+    "toolsGeneral": true,
     "toolsTest": false,
     "toolsPii": false,
     "toolsDataAnalysis": false,
     "toolsFinanceAssist": false,
     "toolsProjectBuilder": false,
     "toolsAskCloud": false,
-    "toolsCodingAgent": true,
+    "toolsCodingAgent": false,
     "toolsWebSearch": true,
-    "toolsProjectContextManager": true
+    "toolsProjectContextManager": true,
+    "toolsWindowsOS": true
 }
