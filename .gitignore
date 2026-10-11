@@ -51,3 +51,5 @@ Log/SessionLog/*log
 Langchain/Tools/ToolsAskCloud/ToolAskGPT/Results
 
 LocalTesting
+
+.env
