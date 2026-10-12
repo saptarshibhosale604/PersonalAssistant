@@ -7,6 +7,8 @@ human-in-the-loop (HITL) approval middleware.
 """
 
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 from Log.log_utils import PrintFunctionName
 from Log.turn_logger import add_tool_call, add_tool_message, add_usage

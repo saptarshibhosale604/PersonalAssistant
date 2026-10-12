@@ -11,6 +11,10 @@ import os
 import sys
 from typing import Any, Iterable, Optional
 
+# ---- Environment Configuration ----
+from dotenv import load_dotenv
+load_dotenv()
+
 # ---- Local imports ----
 # import Fabric.manager as Fabric
 import Langchain.agent as Agent
