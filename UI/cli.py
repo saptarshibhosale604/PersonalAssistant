@@ -218,6 +218,9 @@ def BasicCmds02(userInput: str) -> bool:
         print("  /skill")
         print("  /reset")
         print("  /exit")
+        print()
+        print(f"Log file: {os.path.abspath(log_path)}")
+        print()
         GetAllModeValues()
         return True
 
@@ -447,6 +450,9 @@ def BasicCmds(userInput: str) -> bool:
         print("Help:")
         print("Type 'help' for list of commands")
         print("Type 'mode update' for update the modes")
+        print()
+        print(f"Log file: {os.path.abspath(log_path)}")
+        print()
         GetAllModeValues()
 
     elif len(parts) <= 3 and parts[0] == "mode":

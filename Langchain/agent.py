@@ -296,7 +296,7 @@ def UpdateAgent(modeLLM: str) -> None:
 
     elif modeLLM == "globalNvidia01":
         LLM = ChatOpenAI(
-            model="meta/llama-3.1-70b-instruct", base_url="https://integrate.api.nvidia.com/v1",
+            model="nvidia/nemotron-3-ultra-550b-a55b", base_url="https://integrate.api.nvidia.com/v1",
             api_key=os.environ.get("NVIDIA_API_KEY"), streaming=True,
             max_tokens=DEFAULT_MAX_TOKENS, temperature=DEFAULT_TEMPERATURE,
             max_retries=DEFAULT_MAX_RETRIES,

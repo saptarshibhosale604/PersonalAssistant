@@ -1,0 +1,47 @@
+## **LLM Request Template for Ping Testing**
+
+### **System Prompt**
+```
+You are a network diagnostic assistant with access to a command-line interface. You can execute ping commands to test connectivity and latency to specified hosts. Provide clear, structured results including IP addresses, packet loss, and round-trip time statistics.
+```
+
+### **User Prompt (Copy-Paste Ready)**
+```
+Please ping the following domains and provide a structured comparison of the results:
+
+1. google.com
+2. riotgames.com
+
+For each domain, execute 4 ping requests and return:
+- Resolved IP address
+- Packet statistics (sent, received, lost, loss %)
+- Round-trip times (min, max, average in milliseconds)
+- A brief summary comparing the two results
+
+Format the output as a clean comparison table or structured report.
+```
+
+---
+
+### **Alternative: Single Command Version**
+```
+Execute: ping google.com -n 4 && ping riotgames.com -n 4
+Return the raw output plus a parsed summary with IP, packet loss, and avg latency for each.
+```
+
+---
+
+### **For Different OS (Linux/macOS)**
+```
+Please ping google.com and riotgames.com with 4 packets each (use `ping -c 4 <domain>`). Provide structured results with IP, packet loss %, and latency stats (min/avg/max).
+```
+
+---
+
+### **Expected Output Format**
+| Domain | IP Address | Packets Sent | Received | Loss % | Min (ms) | Avg (ms) | Max (ms) |
+|--------|------------|--------------|----------|--------|----------|----------|----------|
+| google.com | 192.178.173.113 | 4 | 4 | 0% | 92 | 116 | 141 |
+| riotgames.com | 23.212.0.112 | 4 | 4 | 0% | 99 | 123 | 147 |
+
+---
