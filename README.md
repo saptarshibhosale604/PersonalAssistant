@@ -431,3 +431,6 @@ Traceback (most recent call last):
     return codecs.charmap_decode(input,self.errors,decoding_table)[0]
            ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 UnicodeDecodeError: 'charmap' codec can't decode byte 0x8f in position 6297: character maps to <undefined>
+
+
+- no tool call visible for globalNvidia01
