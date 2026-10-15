@@ -79,7 +79,10 @@ def webhook():
 
     if event in ("message", "message.any"):
         # Ignore messages sent by us
-        from_me = payload.get("fromMe", False)
+        # from_me = payload.get("fromMe", False)
+        from_me = payload.get("fromMe", True)
+        print(f"\n\n\n\nfrom_me: {from_me}\n\n\n\n")
+        # print(f"\n[WhatsApp Incoming] From {sender}: {body}")
         if from_me:
             return jsonify({"status": "ignored", "reason": "outgoing message"}), 200
 
@@ -106,12 +109,13 @@ def webhook():
                 return jsonify({"status": "ignored", "reason": "unauthorized sender"}), 200
 
             # Invoke the assistant agent using threadId and modeLLM as expected by Agent.Main
-            ai_response = Agent.Main(
-                userInput=body,
-                threadId=WHATSAPP_THREAD_ID,
-                modeLLM="globalGemini02",
-                modeStream="true"
-            )
+            ai_response = f"Hello there {sender}"
+            # ai_response = Agent.Main(
+            #     userInput=body,
+            #     threadId=WHATSAPP_THREAD_ID,
+            #     modeLLM="globalGemini02",
+            #     modeStream="true"
+            # )
             
             if not ai_response:
                 ai_response = "I processed your request, but received no response text."
