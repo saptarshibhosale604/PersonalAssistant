@@ -74,6 +74,7 @@ def send_whatsapp_message(chat_id: str, text: str):
 @app.route("/webhook", methods=["POST"])
 def webhook():
     """Receive incoming webhook events from WAHA."""
+    print("\n")
     data = request.json
     if not data:
         return jsonify({"status": "ignored", "reason": "empty body"}), 400
@@ -85,7 +86,7 @@ def webhook():
 
     if event in ("message", "message.any"):
         from_me = payload.get("fromMe", False)
-        print(f"\n[WhatsApp Event] from_me: {from_me}")
+        print(f"[WhatsApp Event] from_me: {from_me}")
 
         sender = payload.get("from", "")
         recipient = payload.get("to", "")
@@ -97,8 +98,13 @@ def webhook():
                 return jsonify({"status": "ignored", "reason": "duplicate event"}), 200
             SEEN_MESSAGE_IDS.append(message_id)
 
-        # Incoming messages: reply to the sender. Own messages: reply into the chat they were sent to.
-        chat_id = recipient if from_me else sender
+        # Incoming messages from 3rd parties: Do not reply, only log if needed.
+        if not from_me:
+            logger.info(f"[WhatsApp External Incoming] From 3rd party {sender}: {body} (Ignored)")
+            return jsonify({"status": "ignored", "reason": "external 3rd party message"}), 200
+
+        # Own messages: reply into the chat they were sent to.
+        chat_id = recipient
 
         if from_me:
             # Only "Message yourself" chat drives the bot; ignore what you type to other people
@@ -114,7 +120,6 @@ def webhook():
         if not body:
             return jsonify({"status": "ignored", "reason": "empty message body"}), 200
 
-        print(f"\n[WhatsApp Incoming/Self] From Me: {from_me} | From {sender}: {body}")
         logger.info(f"[WhatsApp Incoming/Self] From Me: {from_me} | From {sender}: {body}")
 
         # Default model / settings (e.g. gemini-3.6-flash)
@@ -130,13 +135,14 @@ def webhook():
                 return jsonify({"status": "ignored", "reason": "unauthorized sender"}), 200
 
             # Invoke the assistant agent using threadId and modeLLM as expected by Agent.Main
-            ai_response = f"Hello there {sender}"
-            # ai_response = Agent.Main(
-            #     userInput=body,
-            #     threadId=WHATSAPP_THREAD_ID,
-            #     modeLLM="globalGemini02",
-            #     modeStream="true"
-            # )
+            logger.info(f"[WhatsApp External Incoming] From 3rd party {sender}: {body} (Ignored - Assistant only replies to self-chat)")
+            # ai_response = f"Hello there {sender}" # just for testing
+            ai_response = Agent.Main(
+                userInput=body,
+                threadId=WHATSAPP_THREAD_ID,
+                modeLLM="globalGemini02",
+                modeStream="true"
+            )
             
             if not ai_response:
                 ai_response = "I processed your request, but received no response text."

@@ -56,3 +56,8 @@ LocalTesting
 sessions/
 UI/WhatsApp/sessions/
 
+
+# env files
+.env
+Langchain/Tools/toolsConfig.json
+Langchain\Tools\toolsConfig.json
