@@ -1,5 +1,8 @@
 from flask import Flask, render_template, request, jsonify
 import time
+import os
+from dotenv import load_dotenv
+load_dotenv()
 import Langchain.agent as Agent
 
 # from flask import Response, stream_with_context, request

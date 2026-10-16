@@ -35,6 +35,7 @@ TOOLS_MODULES = {
     "toolsCodingAgent": "Langchain.Tools.toolsCodingAgent",
     "toolsWebSearch": "Langchain.Tools.toolsWebSearch",
     "toolsProjectContextManager": "Langchain.Tools.toolsProjectContextManager",
+    "toolsWindowsOS": "Langchain.Tools.toolsWindowsOS",
 }
 
 # Default configuration
@@ -44,7 +45,8 @@ DEFAULT_CONFIG = {
     "toolsPii": True,
     "toolsDataAnalysis": False,  # Commented out by default
     "toolsFinanceAssist": True,
-    "toolsProjectContextManager": True
+    "toolsProjectContextManager": True,
+    "toolsWindowsOS": True
 }
 
 # Global state for tools configuration

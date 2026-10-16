@@ -51,3 +51,13 @@ Log/SessionLog/*log
 Langchain/Tools/ToolsAskCloud/ToolAskGPT/Results
 
 LocalTesting
+
+# Runtime sessions
+sessions/
+UI/WhatsApp/sessions/
+
+
+# env files
+.env
+Langchain/Tools/toolsConfig.json
+Langchain\Tools\toolsConfig.json

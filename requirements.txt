@@ -1,17 +1,12 @@
-## Langchain/agent
+python-dotenv
 langchain
 langchain_openai
-# langgraph
-# langgraph.prebuilt
 langchain_community
-# langchain_google_community
-# langchain-experimental
 langchain_ollama
 langchain_google_genai 
 langchain_huggingface
 langchain_mistralai
-# nest_asyncio
-# duckduckgo-search // need to download from the docker terminal
+langsmith
 
 ## TextToSpeech
 # gtts

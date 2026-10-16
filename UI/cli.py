@@ -11,6 +11,10 @@ import os
 import sys
 from typing import Any, Iterable, Optional
 
+# ---- Environment Configuration ----
+from dotenv import load_dotenv
+load_dotenv()
+
 # ---- Local imports ----
 # import Fabric.manager as Fabric
 import Langchain.agent as Agent
@@ -45,7 +49,7 @@ MODE_SANDBOX = "false"
 
 COMMANDS = [
     "mode", "input", "text", "speech", "output", "context", "yes", "no",
-    "llm", "local", "globalChatgpt01", "globalChatgpt02", "globalGemini01", "globalGemini02", "globalMistral01", "globalMistral02", "globalGroq01", "globalGroq02", "globalOpenRouter01", "globalOpenRouter02", "globalHuggingFace01", "globalHuggingFace02", "framework", "langchain",
+    "llm", "local", "globalChatgpt01", "globalChatgpt02", "globalGemini01", "globalGemini02", "globalMistral01", "globalMistral02", "globalGroq01", "globalGroq02", "globalOpenRouter01", "globalOpenRouter02", "globalNvidia01", "globalNvidia02", "globalHuggingFace01", "globalHuggingFace02", "framework", "langchain",
     "fabric", "True", "False", "multi", "os", "windows", "linux",
 ]
 
@@ -218,6 +222,9 @@ def BasicCmds02(userInput: str) -> bool:
         print("  /skill")
         print("  /reset")
         print("  /exit")
+        print()
+        print(f"Log file: {os.path.abspath(log_path)}")
+        print()
         GetAllModeValues()
         return True
 
@@ -447,6 +454,9 @@ def BasicCmds(userInput: str) -> bool:
         print("Help:")
         print("Type 'help' for list of commands")
         print("Type 'mode update' for update the modes")
+        print()
+        print(f"Log file: {os.path.abspath(log_path)}")
+        print()
         GetAllModeValues()
 
     elif len(parts) <= 3 and parts[0] == "mode":
@@ -594,29 +604,34 @@ def Input() -> str:
 
     modeInput = GetModeValue("mode-input")
 
-    if modeInput == "text":
-        userInput = input("")
-    elif modeInput == "multi":
-        print(
-            "Paste your multiline input\n"
-            "To exit the mode multi type 'text'\n"
-            "To submit input Ctrl-Z (Windows) or Ctrl-D (Linux/macOS) then Enter:"
-        )
-        # userInput = sys.stdin.read()
-        userInput = sys.stdin.read().strip()
-        if userInput == "text":
-            userInput = "/input text"
-    elif modeInput == "file":
-        userInput = ReadUserInputFile()
-        print(userInput)
-        userChoice = input("Change to mode input text (y/N): ")
-        if userChoice == "y":
-            userInput = "/input text"
-    elif modeInput == "speech":
-        userInput = STT.Main()  # Speech To Text
-    else:
-        logger.info(f"Error: Invalid modeInput: {modeInput}")
-        userInput = None
+    try:
+        if modeInput == "text":
+            userInput = input("")
+        elif modeInput == "multi":
+            print(
+                "Paste your multiline input\n"
+                "To exit the mode multi type 'text'\n"
+                "To submit input Ctrl-Z (Windows) or Ctrl-D (Linux/macOS) then Enter:"
+            )
+            # userInput = sys.stdin.read()
+            userInput = sys.stdin.read().strip()
+            if userInput == "text":
+                userInput = "/input text"
+        elif modeInput == "file":
+            userInput = ReadUserInputFile()
+            print(userInput)
+            userChoice = input("Change to mode input text (y/N): ")
+            if userChoice == "y":
+                userInput = "/input text"
+        elif modeInput == "speech":
+            userInput = STT.Main()  # Speech To Text
+        else:
+            logger.info(f"Error: Invalid modeInput: {modeInput}")
+            userInput = None
+    except KeyboardInterrupt:
+        print("\nExiting Personal Assistant CLI...")
+        print(f"Log file: {os.path.abspath(log_path)}")
+        sys.exit(0)
 
     # Apply OS mode prefix for Windows on first input (only if it's not a slash command)
     if userInput and len(userInput.strip()) > 0:
@@ -741,6 +756,10 @@ WelcomeUser()
 while True:
     try:
         Main()
+    except KeyboardInterrupt:
+        print("\nExiting Personal Assistant CLI...")
+        print(f"Log file: {os.path.abspath(log_path)}")
+        sys.exit(0)
     except Exception as e:
         # Show the error and keep the REPL alive (e.g. LLM rate limits, network errors).
         # KeyboardInterrupt / SystemExit are not Exceptions, so Ctrl+C and exit still work.

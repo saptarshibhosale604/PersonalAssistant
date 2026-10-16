@@ -117,6 +117,20 @@ def UpdateAgent(modeLLM):
                 api_key=os.environ.get("GROQ_API_KEY"), streaming=True,
                 max_tokens=500, temperature=0, max_retries=1,
             )
+
+        elif(modeLLM == "globalNvidia01"):
+            llm = ChatOpenAI(
+                model="meta/llama-3.1-70b-instruct", base_url="https://integrate.api.nvidia.com/v1",
+                api_key=os.environ.get("NVIDIA_API_KEY"), streaming=True,
+                max_tokens=500, temperature=0, max_retries=1,
+            )
+
+        elif(modeLLM == "globalNvidia02"):
+            llm = ChatOpenAI(
+                model="mistralai/mistral-large-2-instruct", base_url="https://integrate.api.nvidia.com/v1",
+                api_key=os.environ.get("NVIDIA_API_KEY"), streaming=True,
+                max_tokens=500, temperature=0, max_retries=1,
+            )
         
         # rebuild the agent with new llm and tools
         # agent = BuildAgent()

@@ -7,6 +7,8 @@ human-in-the-loop (HITL) approval middleware.
 """
 
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 from Log.log_utils import PrintFunctionName
 from Log.turn_logger import add_tool_call, add_tool_message, add_usage
@@ -289,6 +291,24 @@ def UpdateAgent(modeLLM: str) -> None:
         LLM = ChatOpenAI(
             model="nvidia/nemotron-3.5-lightning:free", base_url="https://openrouter.ai/api/v1",
             api_key=os.environ.get("OPENROUTER_API_KEY"), streaming=True,
+            max_tokens=DEFAULT_MAX_TOKENS, temperature=DEFAULT_TEMPERATURE,
+            max_retries=DEFAULT_MAX_RETRIES,
+        )
+        TOOLS = toolsManager.Main("get")  # "get": fetch tools list
+
+    elif modeLLM == "globalNvidia01":
+        LLM = ChatOpenAI(
+            model="nvidia/nemotron-3-ultra-550b-a55b", base_url="https://integrate.api.nvidia.com/v1",
+            api_key=os.environ.get("NVIDIA_API_KEY"), streaming=True,
+            max_tokens=DEFAULT_MAX_TOKENS, temperature=DEFAULT_TEMPERATURE,
+            max_retries=DEFAULT_MAX_RETRIES,
+        )
+        TOOLS = toolsManager.Main("get")  # "get": fetch tools list
+
+    elif modeLLM == "globalNvidia02":
+        LLM = ChatOpenAI(
+            model="mistralai/mistral-large-2-instruct", base_url="https://integrate.api.nvidia.com/v1",
+            api_key=os.environ.get("NVIDIA_API_KEY"), streaming=True,
             max_tokens=DEFAULT_MAX_TOKENS, temperature=DEFAULT_TEMPERATURE,
             max_retries=DEFAULT_MAX_RETRIES,
         )

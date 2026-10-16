@@ -36,6 +36,8 @@ modeConfigInitializationJson = {
             'globalGroq02': 'Model running on cloud / Groq qwen/qwen3.8-27b, fast fallback for general tasks',
             'globalOpenRouter01': 'Model running on cloud / OpenRouter nvidia/nemotron-3-ultra-550b-a55b:free stronger planning + tool use',
             'globalOpenRouter02': 'Model running on cloud / OpenRouter nvidia/nemotron-3.5-lightning:free, faster fallback / general tasks',
+            'globalNvidia01': 'Model running on cloud / NVIDIA Build meta/llama-3.1-70b-instruct (Complex reasoning & tool use)',
+            'globalNvidia02': 'Model running on cloud / NVIDIA Build mistralai/mistral-large-2-instruct (General tasks & generation)',
             'globalHuggingFace01': 'Model running on cloud / Hugging Face model 01 (Mistral / Llama)',
             'globalHuggingFace02': 'Model running on cloud / Hugging Face model 02 (Qwen / Phi)'
         }
