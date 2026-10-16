@@ -52,5 +52,7 @@ Langchain/Tools/ToolsAskCloud/ToolAskGPT/Results
 
 LocalTesting
 
-.env
-Langchain/Tools/toolsConfig.json
+# Runtime sessions
+sessions/
+UI/WhatsApp/sessions/
+
