@@ -10,6 +10,7 @@ import os
 import sys
 import json
 import requests
+from collections import deque
 from flask import Flask, request, jsonify
 from dotenv import load_dotenv
 
@@ -38,8 +39,15 @@ WHATSAPP_THREAD_ID = 9999
 # We can allow specific numbers, or set ALLOWED_SENDER = "" to allow all senders.
 ALLOWED_SENDER = os.getenv("WAHA_ALLOWED_SENDER", "")
 
+# Recently seen message IDs (dedupe when WAHA delivers both "message" and "message.any")
+SEEN_MESSAGE_IDS = deque(maxlen=200)
+# Recently sent bot replies; our own replies come back as fromMe events and must be skipped
+BOT_SENT_TEXTS = deque(maxlen=50)
+
 def send_whatsapp_message(chat_id: str, text: str):
     """Send text message back to WhatsApp via WAHA API."""
+    # Record before sending: the fromMe webhook for this reply can arrive before the POST returns
+    BOT_SENT_TEXTS.append(text)
     url = f"{WAHA_BASE_URL}/api/sendText"
     payload = {
         "chatId": chat_id,
@@ -72,29 +80,42 @@ def webhook():
 
     logger.debug(f"[WhatsApp Webhook] Received event: {json.dumps(data)[:300]}")
 
-    # WAHA webhook structure for incoming message
-    # Event types: 'message', 'message.any', etc.
     event = data.get("event")
     payload = data.get("payload", {})
 
     if event in ("message", "message.any"):
-        # Ignore messages sent by us
-        # from_me = payload.get("fromMe", False)
-        from_me = payload.get("fromMe", True)
-        print(f"\n\n\n\nfrom_me: {from_me}\n\n\n\n")
-        # print(f"\n[WhatsApp Incoming] From {sender}: {body}")
-        if from_me:
-            return jsonify({"status": "ignored", "reason": "outgoing message"}), 200
+        from_me = payload.get("fromMe", False)
+        print(f"\n[WhatsApp Event] from_me: {from_me}")
 
         sender = payload.get("from", "")
+        recipient = payload.get("to", "")
         body = payload.get("body", "")
-        chat_id = payload.get("chatId", sender)
+        message_id = payload.get("id")
+
+        if message_id:
+            if message_id in SEEN_MESSAGE_IDS:
+                return jsonify({"status": "ignored", "reason": "duplicate event"}), 200
+            SEEN_MESSAGE_IDS.append(message_id)
+
+        # Incoming messages: reply to the sender. Own messages: reply into the chat they were sent to.
+        chat_id = recipient if from_me else sender
+
+        if from_me:
+            # Only "Message yourself" chat drives the bot; ignore what you type to other people
+            me = data.get("me") or {}
+            my_ids = {me.get("id"), me.get("lid")} - {None}
+            if recipient not in my_ids:
+                return jsonify({"status": "ignored", "reason": "own message to another chat"}), 200
+            # Skip the bot's own replies echoed back as fromMe events (prevents infinite loop)
+            if body in BOT_SENT_TEXTS:
+                BOT_SENT_TEXTS.remove(body)
+                return jsonify({"status": "ignored", "reason": "bot's own echo message"}), 200
 
         if not body:
             return jsonify({"status": "ignored", "reason": "empty message body"}), 200
 
-        print(f"\n[WhatsApp Incoming] From {sender}: {body}")
-        logger.info(f"[WhatsApp Incoming] From {sender}: {body}")
+        print(f"\n[WhatsApp Incoming/Self] From Me: {from_me} | From {sender}: {body}")
+        logger.info(f"[WhatsApp Incoming/Self] From Me: {from_me} | From {sender}: {body}")
 
         # Default model / settings (e.g. gemini-3.6-flash)
         model_name = "gemini-3.6-flash"
