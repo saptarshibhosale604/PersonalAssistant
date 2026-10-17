@@ -36,6 +36,7 @@ TOOLS_MODULES = {
     "toolsWebSearch": "Langchain.Tools.toolsWebSearch",
     "toolsProjectContextManager": "Langchain.Tools.toolsProjectContextManager",
     "toolsWindowsOS": "Langchain.Tools.toolsWindowsOS",
+    "toolsJobSwitchAssist": "Langchain.Tools.ToolsJobSwitchAssist.toolsJobSwitchAssist",
 }
 
 # Default configuration
@@ -46,7 +47,8 @@ DEFAULT_CONFIG = {
     "toolsDataAnalysis": False,  # Commented out by default
     "toolsFinanceAssist": True,
     "toolsProjectContextManager": True,
-    "toolsWindowsOS": True
+    "toolsWindowsOS": True,
+    "toolsJobSwitchAssist": True
 }
 
 # Global state for tools configuration
