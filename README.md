@@ -1,3 +1,8 @@
+## Implementation Status: Personal PII & Cloud Security Workflow
+- **Status:** COMPLETED
+- **Details:** Updated `.gitignore` to explicitly exclude personal databases (e.g. `job_applications.json`), session logs, user context folders, and environment files (`.env`, `toolsConfig.json`) to prevent any accidental exposure of PII or credentials.
+- **Workflow Guide:** Follow `Plan/personal_pii_security_workflow.md` for zero-risk multi-device synchronization and private data backup.
+
 # TECH USED
 - Raspberry pi
 - Docker containers
@@ -434,3 +439,4 @@ UnicodeDecodeError: 'charmap' codec can't decode byte 0x8f in position 6297: cha
 
 
 - no tool call visible for globalNvidia01
+- waha logger is not loggin outgoing messages, llm summary

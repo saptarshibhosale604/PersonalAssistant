@@ -61,3 +61,14 @@ UI/WhatsApp/sessions/
 .env
 Langchain/Tools/toolsConfig.json
 Langchain\Tools\toolsConfig.json
+
+# Personal Assistant PII and Local Data
+Langchain/Tools/ToolsJobSwitchAssist/job_applications.json
+UserContext/
+Log/
+sessions/
+CloudPII/
+job_applications.json
+UserContext/
+Log/
+sessions/
