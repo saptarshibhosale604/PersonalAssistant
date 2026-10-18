@@ -1,8 +1,8 @@
 # Plan: Syncing CloudPII to MEGA Cloud Provider
 
-## Step 1: Prepare and Encrypt Your PII Data Locally
-- Sanitize / mask data where possible.
-- Compress and encrypt archives using AES-256 (e.g., via 7-Zip or GPG).
+## Step 1: Prepare and Sanitize Your PII Data Locally
+- Sanitize / mask sensitive PII data where possible.
+- **Note:** Local gzip/encryption is omitted because MEGA uses client-side zero-knowledge encryption (AES-128/AES-256) by default before files leave your device.
 
 ## Step 2: Install and Configure MEGAcmd
 - Install MEGAcmd CLI tool.
@@ -12,8 +12,8 @@
 - Configure folder synchronization using mega-sync.
 - Verify status with mega-sync.
 
-## Step 4: Automate via Cron / Task Scheduler
-- Set up automated daily exports and backups.
+## Step 4: Background Service & Continuous Syncing (Completed)
+- MEGAcmd runs a background server (`MEGAcmdServer`) which automatically keeps the active `mega-sync` running in real time without needing additional cron/Task Scheduler jobs.
 
 ## Security Best Practices
 - Enable 2FA on the MEGA account.
