@@ -165,7 +165,71 @@ def FormatToolsPrinting(tools: Iterable[Any]) -> None:
 
 
 @PrintFunctionName
-def BasicCmds02(userInput: str) -> bool:
+def BasicCmdsSkill(userInput: str) -> bool:
+    """
+    Handle skill execution via slash commands:
+        /<skillName> <userInput (Optional)>
+
+    <skillName> is the file name in the './Skill' directory.
+    Combines: <content in the skillName file> \n <userInput if provided>
+    and passes the combined text to Agent (via Processing).
+
+    Returns True if a matching skill file was found and processed, otherwise False.
+    """
+    userInput = userInput.strip()
+
+    if not userInput.startswith("/"):
+        return False
+
+    # Remove leading slash and split into parts
+    cmd_body = userInput[1:].strip()
+    if not cmd_body:
+        return False
+
+    parts = cmd_body.split(maxsplit=1)
+    skill_name = parts[0].lower()
+    optional_user_input = parts[1] if len(parts) > 1 else ""
+
+    skill_dir = "./Skill"
+    if not os.path.exists(skill_dir):
+        return False
+
+    # Scan files in Skill/ directory case-insensitively or exact match
+    skill_files = [f for f in os.listdir(skill_dir) if os.path.isfile(os.path.join(skill_dir, f))]
+    
+    # Find matching skill file (case-insensitive check for skill_name)
+    matched_file = next((f for f in skill_files if f.lower() == skill_name), None)
+    if not matched_file:
+        return False
+
+    skill_path = os.path.join(skill_dir, matched_file)
+    try:
+        with open(skill_path, "r", encoding="utf-8", errors="ignore") as sf:
+            skill_content = sf.read().strip()
+
+        # Combine skill content and optional user input
+        if optional_user_input:
+            combined_input = f"{skill_content}\n{optional_user_input}"
+        else:
+            combined_input = skill_content
+
+        print(f"\n[Executing Skill: {matched_file}]")
+        if optional_user_input:
+            print(f"[User Input Provided]: {optional_user_input}")
+        print("-" * 40)
+        print(combined_input)
+        print("-" * 40)
+
+        # Pass combined input to Processing (which invokes Agent)
+        Processing(combined_input)
+        return True
+    except Exception as e:
+        print(f"Error reading skill file '{matched_file}': {e}")
+        return False
+
+
+@PrintFunctionName
+def BasicCmdsSlash(userInput: str) -> bool:
     """
     Handle basic CLI commands.
 
@@ -201,7 +265,7 @@ def BasicCmds02(userInput: str) -> bool:
     command = parts[0].lower()
     value = parts[1].lower() if len(parts) > 1 else None
 
-    print(f"BasicCmds02 {command} ==> {value}")
+    print(f"BasicCmdsSlash {command} ==> {value}")
 
     # --------------------------------------------------
     # Help
@@ -220,6 +284,7 @@ def BasicCmds02(userInput: str) -> bool:
         print("  /tools <update|get>")
         print("  /resume <log file name>")
         print("  /skill")
+        print("  /<skillName> <userInput>")
         print("  /reset")
         print("  /exit")
         print()
@@ -437,14 +502,14 @@ def BasicCmds02(userInput: str) -> bool:
     return False
 
 @PrintFunctionName
-def BasicCmds(userInput: str) -> bool:
+def BasicCmdsMode(userInput: str) -> bool:
     """
     Handle basic CLI commands (help, mode changes).
 
     Returns True if the input was recognized and handled as a basic
     command, False if it should be passed on for further processing.
     """
-    # PrintFunctionNames("cli BasicCmds...")
+    # PrintFunctionNames("cli BasicCmdsMode...")
     global MODE_SANDBOX
 
     parts = userInput.lower().split()
@@ -463,7 +528,7 @@ def BasicCmds(userInput: str) -> bool:
         modeName = "mode-" + parts[1]
         modeValue = parts[2] if len(parts) > 2 and parts[2] else None
 
-        print(f"BasicCmds {modeName} ==> {modeValue}")
+        print(f"BasicCmdsMode {modeName} ==> {modeValue}")
 
         if modeName in ("mode-input", "mode-llm", "mode-stream", "mode-os"):
             UpdateModeValue(modeName, modeValue)
@@ -655,9 +720,11 @@ def Processing(userInput: str) -> Any:
     # PrintFunctionNames("cli Processing...")
     global THREAD_ID
 
-    if BasicCmds(userInput):
+    if BasicCmdsMode(userInput):
         return None
-    if BasicCmds02(userInput):
+    if BasicCmdsSkill(userInput):
+        return None
+    if BasicCmdsSlash(userInput):
         return None
 
     PromptInjection(userInput)
