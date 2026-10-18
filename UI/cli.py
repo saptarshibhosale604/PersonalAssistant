@@ -275,18 +275,21 @@ def BasicCmdsSlash(userInput: str) -> bool:
         FormatMessageTypes("SystemMessage")
         print("Help:")
         print("Available commands:")
-        print("  /input <value>")
-        print("  /llm <value>")
-        print("  /stream <value>")
-        print("  /get")
-        print("  /update")
-        print("  /sandbox <true|false>")
-        print("  /tools <update|get>")
-        print("  /resume <log file name>")
-        print("  /skill")
-        print("  /<skillName> <userInput>")
-        print("  /reset")
-        print("  /exit")
+        print("  /help or /               : Displays the complete list of available project CLI control commands and current logs.")
+        print("  /input <value>           : Sets the primary user input mechanism (e.g., text, speech) in the configuration.")
+        print("  /llm <value>             : Switches the active Large Language Model provider or model in real-time.")
+        print("  /stream <value>          : Enables or disables streaming token output directly in the console.")
+        print("  /os <value>              : Specifies target operating system behavior (Windows/Linux) for system execution tools.")
+        print("  /get                     : Prints all active assistant modes and configuration values.")
+        print("  /update                  : Launches the interactive TUI configuration manager to edit system modes.")
+        print("  /sandbox <true|false>    : Switches between production and sandbox mode configuration files.")
+        print("  /tools <update|get>      : Inspects or updates registered agent tools via the tools manager.")
+        print("  /new                     : Clears conversation memory thread IDs and resets session state for a fresh start.")
+        print("  /resume <log file name>  : Rehydrates conversation history and context memory from a previous session log.")
+        print("  /skill                   : Scans and displays available procedural skill routines stored in the './Skill' directory.")
+        print("  /<skillName> <userInput> : Executes a specific pre-defined skill prompt combined with your optional input.")
+        print("  /reset                   : Deletes and re-initializes the active mode configuration file.")
+        print("  /exit                    : Safely shuts down the Personal Assistant CLI application and flushes logs.")
         print()
         print(f"Log file: {os.path.abspath(log_path)}")
         print()
@@ -504,7 +507,7 @@ def BasicCmdsSlash(userInput: str) -> bool:
 @PrintFunctionName
 def BasicCmdsMode(userInput: str) -> bool:
     """
-    Handle basic CLI commands (help, mode changes).
+    Handle basic CLI commands (mode changes).
 
     Returns True if the input was recognized and handled as a basic
     command, False if it should be passed on for further processing.
@@ -514,15 +517,8 @@ def BasicCmdsMode(userInput: str) -> bool:
 
     parts = userInput.lower().split()
 
-    if parts[0] == "help":
-        FormatMessageTypes("SystemMessage")
-        print("Help:")
-        print("Type 'help' for list of commands")
-        print("Type 'mode update' for update the modes")
-        print()
-        print(f"Log file: {os.path.abspath(log_path)}")
-        print()
-        GetAllModeValues()
+    if False:
+        pass
 
     elif len(parts) <= 3 and parts[0] == "mode":
         modeName = "mode-" + parts[1]
@@ -772,7 +768,7 @@ def WelcomeUser() -> None:
     # logger.info("Welcome to Personal Assistant CLI")
     print("Welcome to Personal Assistant CLI")
 
-    assistantOutput = Processing("help")
+    assistantOutput = Processing("/help")
     if assistantOutput is not None:
         Output(assistantOutput)
 

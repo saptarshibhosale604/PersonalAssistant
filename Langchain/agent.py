@@ -7,6 +7,7 @@ human-in-the-loop (HITL) approval middleware.
 """
 
 import os
+import time
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -534,6 +535,7 @@ def ExtractStreamContent(streamMode: str, content) -> str:
             print(f"{messageChunk.text}", end="", flush=True)
             print()
             FormatMessageTypes("")
+            time.sleep(2)
             print()
             # Log tool message to turn logger
             add_tool_message(getattr(messageChunk, "name", "unknown_tool"), messageChunk.text)
