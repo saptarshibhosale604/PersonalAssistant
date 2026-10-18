@@ -25,18 +25,25 @@ CONFIG_FILE = "./Langchain/Tools/toolsConfig.json"
 
 # Tool module mapping
 TOOLS_MODULES = {
-    "toolsGeneral": "Langchain.Tools.toolsGeneral",
-    "toolsAskCloud": "Langchain.Tools.ToolsAskCloud.toolsAskCloud",
-    "toolsTest": "Langchain.Tools.toolsTest",
-    "toolsPii": "Langchain.Tools.toolsPii",
-    "toolsDataAnalysis": "Langchain.Tools.toolsDataAnalysis",
-    "toolsFinanceAssist": "Langchain.Tools.ToolsFinanceAssist.toolsFinanceAssist",
-    "toolsProjectBuilder": "Langchain.Tools.ToolsProjectBuilder.toolsProjectBuilder",
+    # Domain: Must ON tools
     "toolsCodingAgent": "Langchain.Tools.toolsCodingAgent",
     "toolsWebSearch": "Langchain.Tools.toolsWebSearch",
     "toolsProjectContextManager": "Langchain.Tools.toolsProjectContextManager",
+
+    # Domain: PC control
     "toolsWindowsOS": "Langchain.Tools.toolsWindowsOS",
+
+    # Domain: Personal control
     "toolsJobSwitchAssist": "Langchain.Tools.ToolsJobSwitchAssist.toolsJobSwitchAssist",
+    "toolsDataAnalysis": "Langchain.Tools.toolsDataAnalysis",
+    "toolsAskCloud": "Langchain.Tools.ToolsAskCloud.toolsAskCloud",
+    "toolsFinanceAssist": "Langchain.Tools.ToolsFinanceAssist.toolsFinanceAssist",
+    "toolsProjectBuilder": "Langchain.Tools.ToolsProjectBuilder.toolsProjectBuilder",
+
+    # Domain: Testing
+    # "toolsGeneral": "Langchain.Tools.toolsGeneral",
+    # "toolsTest": "Langchain.Tools.toolsTest",
+    # "toolsPii": "Langchain.Tools.toolsPii",
 }
 
 # Default configuration

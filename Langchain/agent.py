@@ -47,7 +47,9 @@ from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 from langchain_mistralai import ChatMistralAI
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import AIMessage, HumanMessage, convert_to_openai_messages
+from langchain_core.callbacks import BaseCallbackHandler
+import json
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import Command
 
@@ -59,10 +61,12 @@ import Langchain.Tools.toolsManager as toolsManager
 # Constants
 # --------------------------------------------------------------------------- #
 # DEFAULT_MAX_TOKENS = 500
-DEFAULT_MAX_TOKENS = 5000
+DEFAULT_MAX_TOKENS = 10000
 DEFAULT_TEMPERATURE = 0
-DEFAULT_MAX_RETRIES = 1
+DEFAULT_MAX_RETRIES = 3
 BANNER_WIDTH = 60
+DEBUG_LLM_PAYLOAD = False  # print the full first LLM request (system/history/tools) per turn
+SHOW_LLM_PAYLOAD_BANNER = False  # Set to False to hide the LLM PAYLOAD banner and contents
 
 JARVIS_SYSTEM_PROMPT = (
     "You are an assistance like a JARVIS from Iron Man. "
@@ -138,6 +142,37 @@ def FormatMessageTypes(text: str) -> None:
     """Print a centered '=== text ===' banner used to separate message blocks."""
     padding = (BANNER_WIDTH - len(text) - 4) // 2
     print("=" * padding + " " + text + " " + "=" * padding)
+
+
+class LlmPayloadDebugHandler(BaseCallbackHandler):
+    """Callback that dumps the exact request (params, tools, full message list
+    incl. system prompt + checkpointer history) of the first model call in a turn."""
+
+    def __init__(self):
+        self.printed = False
+
+    def on_chat_model_start(self, serialized, messages, *, invocation_params=None, **kwargs):
+        if self.printed:
+            return
+        self.printed = True
+
+        params = dict(invocation_params or {})
+        tools = params.pop("tools", [])
+        payloadMessages = convert_to_openai_messages(messages[0]) if messages else []
+
+        text = (
+            "--- MODEL / PARAMS ---\n"
+            + json.dumps(params, indent=2, ensure_ascii=False, default=str)
+            + f"\n--- TOOLS ({len(tools)}) ---\n"
+            + json.dumps(tools, indent=2, ensure_ascii=False, default=str)
+            + f"\n--- MESSAGES ({len(payloadMessages)}) ---\n"
+            + json.dumps(payloadMessages, indent=2, ensure_ascii=False, default=str)
+        )
+        # logger echoes DEBUG to the console and writes it to the session log file.
+        if SHOW_LLM_PAYLOAD_BANNER:
+            logger.debug(f"\n{' LLM PAYLOAD '.center(BANNER_WIDTH, '=')}\n{text}\n{' END LLM PAYLOAD '.center(BANNER_WIDTH, '=')}")
+        else:
+            logger.debug(text)
 
 
 @PrintFunctionName
@@ -546,9 +581,11 @@ def StreamAndAccumulate(messages: list, configMemory: dict) -> str:
     """Stream a fresh agent turn for the given messages, printing and
     accumulating the response text, wrapped in an AIMessage banner."""
     response = ""
+    # Callbacks propagate into the agent graph's model node, exposing the real request.
+    runConfig = {**configMemory, "callbacks": [LlmPayloadDebugHandler()]} if DEBUG_LLM_PAYLOAD else configMemory
     FormatMessageTypes("AIMessage")
     for streamMode, chunk in AGENT.stream(
-        {"messages": messages}, stream_mode=["updates", "messages"], config=configMemory
+        {"messages": messages}, stream_mode=["updates", "messages"], config=runConfig
     ):
         chunkText = ExtractStreamContent(streamMode, chunk)
         if chunkText:
