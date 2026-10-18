@@ -64,18 +64,6 @@ toolsConfig: Dict[str, bool] = {}
 
 @PrintFunctionName
 def LoadToolsConfig() -> None:
-    """
-    Load tools configuration from file or use defaults.
-
-    Attempts to load configuration from CONFIG_FILE. If file doesn't exist,
-    creates it with default settings. Updates the global toolsConfig variable.
-
-    Raises:
-        IOError: If unable to read/write configuration file
-
-    Side Effects:
-        Modifies global toolsConfig dictionary
-    """
     global toolsConfig
 
     try:
@@ -110,9 +98,9 @@ def SaveToolsConfig() -> None:
     try:
         with open(CONFIG_FILE, 'w') as configFile:
             json.dump(toolsConfig, configFile, indent=4)
-        print(f"✓ Tools configuration saved to {CONFIG_FILE}")
+        print(f"[OK] Tools configuration saved to {CONFIG_FILE}")
     except IOError as error:
-        print(f"✗ Error saving configuration: {str(error)}")
+        print(f"[ERROR] Error saving configuration: {str(error)}")
 
 
 import contextlib
@@ -208,17 +196,10 @@ def GetToolsList() -> List[Any]:
                     # Call ToolsList() function from the module
                     if hasattr(module, 'ToolsList'):
                         toolsList = module.ToolsList()
-                        # print("### finding the list here")
-                        # print(f"toolsList: {toolsList}")
+                        print(f"{toolTypeCounter} + Loaded {toolName}: {len(toolsList)} tools")
                         for toolsCounter, tool in enumerate(toolsList):
-                            # print(f"{i+1}. toolsList: {tool.name}: {tool.description[:10]}")
-
-                            print(f"    {toolTypeCounter}.{toolsCounter+1}. {tool.name}: {tool.description[:30]}")
+                            print(f"    {toolTypeCounter}.{toolsCounter+1}. {tool.name}: {tool.description}")
                         combinedToolsList.extend(toolsList)
-                        # print(f"combinedToolsList: {combinedToolsList}")
-                        # for i, tool in enumerate(combinedToolsList):
-                        #     print(f"{i+1}. combinedToolsList: {tool.name}: {tool.description[:10]}")
-                        print(f"{toolTypeCounter} ✓ Loaded {toolName}: {len(toolsList)} tools")
                     else:
                         print(f"{toolTypeCounter} ⚠ Warning: {toolName} has no ToolsList() function")
 
@@ -229,13 +210,13 @@ def GetToolsList() -> List[Any]:
                 except Exception as error:
                     print(f"{toolTypeCounter} ⚠ Warning: Error loading {toolName}: {str(error)}")
             else:
-                print(f"{toolTypeCounter} ⊘ Skipped {toolName} (disabled)")
+                print(f"{toolTypeCounter} - Skipped {toolName} (disabled)")
 
     except Exception as error:
-        print(f"✗ Error retrieving tools list: {str(error)}")
+        print(f"[ERROR] Error retrieving tools list: {str(error)}")
         return []
 
-    print(f"\n✓ Total tools loaded: {len(combinedToolsList)}")
+    print(f"\n- Total tools loaded: {len(combinedToolsList)}")
     return combinedToolsList
 
 
