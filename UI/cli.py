@@ -773,6 +773,39 @@ def WelcomeUser() -> None:
         Output(assistantOutput)
 
 
+def ProcessCLIInput(userInput: str) -> Any:
+    """
+    Programmatic entry point for external bridges (such as WAHA WhatsApp bridge)
+    to process user input through the CLI processing pipeline.
+    """
+    global USER_INPUT_COUNT
+    USER_INPUT_COUNT += 1
+
+    if userInput and len(userInput.strip()) > 0:
+        turn = begin_turn(USER_INPUT_COUNT, userInput)
+        try:
+            assistantOutput = Processing(userInput)
+            if assistantOutput is not None:
+                Output(assistantOutput)
+                set_agent_output(str(assistantOutput))
+                return assistantOutput
+            else:
+                from Log.turn_logger import get_current_turn
+                current_turn = get_current_turn()
+                if current_turn and not current_turn.agent_output:
+                    current_turn.set_agent_output("(No output or command handled)")
+                return "(No output or command handled)"
+        except Exception as e:
+            from Log.turn_logger import get_current_turn
+            current_turn = get_current_turn()
+            if current_turn:
+                current_turn.set_error(f"{type(e).__name__}: {e}")
+            raise
+        finally:
+            end_turn()
+    return None
+
+
 @PrintFunctionName
 def Main() -> None:
     """Run a single input -> processing -> output cycle."""
@@ -814,16 +847,16 @@ def Main() -> None:
             end_turn()
 
 
-WelcomeUser()
-
-while True:
-    try:
-        Main()
-    except KeyboardInterrupt:
-        print("\nExiting Personal Assistant CLI...")
-        print(f"Log file: {os.path.abspath(log_path)}")
-        sys.exit(0)
-    except Exception as e:
-        # Show the error and keep the REPL alive (e.g. LLM rate limits, network errors).
-        # KeyboardInterrupt / SystemExit are not Exceptions, so Ctrl+C and exit still work.
-        logger.exception(f"[Error] {type(e).__name__}: {e}")
+if __name__ == "__main__":
+    WelcomeUser()
+    while True:
+        try:
+            Main()
+        except KeyboardInterrupt:
+            print("\nExiting Personal Assistant CLI...")
+            print(f"Log file: {os.path.abspath(log_path)}")
+            sys.exit(0)
+        except Exception as e:
+            # Show the error and keep the REPL alive (e.g. LLM rate limits, network errors).
+            # KeyboardInterrupt / SystemExit are not Exceptions, so Ctrl+C and exit still work.
+            logger.exception(f"[Error] {type(e).__name__}: {e}")

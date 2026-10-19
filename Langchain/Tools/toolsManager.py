@@ -39,6 +39,8 @@ TOOLS_MODULES = {
     "toolsAskCloud": "Langchain.Tools.ToolsAskCloud.toolsAskCloud",
     "toolsFinanceAssist": "Langchain.Tools.ToolsFinanceAssist.toolsFinanceAssist",
     "toolsProjectBuilder": "Langchain.Tools.ToolsProjectBuilder.toolsProjectBuilder",
+    "toolsTravelAssist": "Langchain.Tools.toolsTravelAssist",
+    "toolsExcel": "Langchain.Tools.toolsExcel",
 
     # Domain: Testing
     # "toolsGeneral": "Langchain.Tools.toolsGeneral",
@@ -55,7 +57,8 @@ DEFAULT_CONFIG = {
     "toolsFinanceAssist": True,
     "toolsProjectContextManager": True,
     "toolsWindowsOS": True,
-    "toolsJobSwitchAssist": True
+    "toolsJobSwitchAssist": True,
+    "toolsExcel": True
 }
 
 # Global state for tools configuration

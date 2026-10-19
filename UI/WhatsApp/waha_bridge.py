@@ -22,6 +22,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 import Langchain.agent as Agent
 import UserContext.userContext as UserContext
+import UI.cli as CLI
 from Log.custom_logger import logger
 
 app = Flask(__name__)
@@ -134,18 +135,14 @@ def webhook():
                 print(f"[WhatsApp Ignored] Message from {sender} (not allowed sender {ALLOWED_SENDER})")
                 return jsonify({"status": "ignored", "reason": "unauthorized sender"}), 200
 
-            # Invoke the assistant agent using threadId and modeLLM as expected by Agent.Main
-            logger.info(f"[WhatsApp External Incoming] From 3rd party {sender}: {body} (Ignored - Assistant only replies to self-chat)")
-            # ai_response = f"Hello there {sender}" # just for testing
-            ai_response = Agent.Main(
-                userInput=body,
-                threadId=WHATSAPP_THREAD_ID,
-                modeLLM="globalGemini02",
-                modeStream="true"
-            )
+            # Invoke the CLI pipeline instead of calling Agent.Main directly
+            logger.info(f"[WhatsApp CLI Routing] Processing message via UI.cli: {body}")
+            ai_response = CLI.ProcessCLIInput(userInput=body)
             
             if not ai_response:
                 ai_response = "I processed your request, but received no response text."
+            else:
+                ai_response = str(ai_response)
 
             print(f"[WhatsApp Outbound] To {chat_id}: {ai_response[:100]}...")
             
