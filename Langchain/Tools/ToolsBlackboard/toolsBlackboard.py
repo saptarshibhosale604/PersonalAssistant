@@ -1,11 +1,72 @@
 import json
 import os
 import time
+import random
 from typing import List, Dict, Any, Annotated
 from langchain.tools import tool
 
 # Default output directory for Excalidraw JSON scenes
 EXCALIDRAW_EXPORT_DIR = "./Langchain/Tools/ToolsBlackboard/Drawings"
+
+def enrich_element(el: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Ensures every Excalidraw element has all required schema properties 
+    so Excalidraw never throws 'invalid file' errors.
+    """
+    base = {
+        "id": f"elem_{random.randint(10000, 99999)}",
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 100,
+        "height": 100,
+        "angle": 0,
+        "strokeColor": "#1e1e1e",
+        "backgroundColor": "transparent",
+        "fillStyle": "solid",
+        "strokeWidth": 2,
+        "strokeStyle": "solid",
+        "roughness": 1,
+        "opacity": 100,
+        "groupIds": [],
+        "frameId": None,
+        "roundness": None,
+        "seed": random.randint(1, 1000000),
+        "version": 1,
+        "versionNonce": random.randint(1, 1000000),
+        "isDeleted": False,
+        "boundElements": None,
+        "updated": int(time.time()),
+        "link": None,
+        "locked": False
+    }
+    
+    # Text-specific defaults if type is text
+    if el.get("type") == "text":
+        base.update({
+            "fontSize": 16,
+            "fontFamily": 1,
+            "text": "",
+            "textAlign": "center",
+            "verticalAlign": "middle",
+            "containerId": None,
+            "originalText": "",
+            "lineHeight": 1.2
+        })
+        
+    # Arrow-specific defaults if type is arrow
+    if el.get("type") == "arrow":
+        base.update({
+            "points": [[0, 0], [100, 0]],
+            "startBinding": None,
+            "endBinding": None,
+            "start": None,
+            "end": None
+        })
+
+    # Merge user provided properties over defaults
+    base.update(el)
+    return base
 
 @tool
 def create_excalidraw_drawings(
@@ -27,13 +88,16 @@ def create_excalidraw_drawings(
             
         file_path = os.path.join(EXCALIDRAW_EXPORT_DIR, f"{safe_title}.excalidraw")
         
+        # Enrich all elements to guarantee Excalidraw schema compliance
+        enriched_elements = [enrich_element(el) for el in elements]
+        
         scene_data = {
             "type": "excalidraw",
             "version": 2,
             "source": "https://excalidraw.com",
-            "elements": elements,
+            "elements": enriched_elements,
             "appState": {
-                "viewBackgroundColor": "#121212", # Dark background as requested!
+                "viewBackgroundColor": "#121212",
                 "gridSize": 20,
                 "theme": "dark"
             },
@@ -109,7 +173,6 @@ def detect_drawing_modifications(
             
         elements = scene_data.get("elements", [])
         
-        # Analyze elements for human modification signals (e.g. custom versions, update timestamps, or custom text)
         element_types = {}
         for el in elements:
             el_type = el.get("type", "unknown")
@@ -127,216 +190,9 @@ def detect_drawing_modifications(
     except Exception as e:
         return f"[ERROR] Failed to detect modifications for drawing '{drawing_title}': {str(e)}"
 
-# @tool
-# def generate_sample_architecture_diagram(
-#     system_name: Annotated[str, "Name of the system architecture to draw (e.g. 'Jarvis_AI_Pipeline')"]
-# ) -> str:
-#     """
-#     Generates a pre-configured architecture diagram (User -> Agent Router -> LLM/Tools -> Whiteboard) on Excalidraw with dark background styling.
-#     Use this tool whenever the user references anything related to whiteboard, blackboard, excalidraw, or drawings to generate sample architectural diagrams.
-#     """
-#     elements = [
-#         # Box 1: User
-#         {
-#             "type": "rectangle",
-#             "id": "box_user",
-#             "x": 100,
-#             "y": 200,
-#             "width": 140,
-#             "height": 80,
-#             "angle": 0,
-#             "strokeColor": "#6965db",
-#             "backgroundColor": "#1e1e2f",
-#             "fillStyle": "solid",
-#             "strokeWidth": 2,
-#             "strokeStyle": "solid",
-#             "roughness": 1,
-#             "opacity": 100,
-#             "boundElements": [{"id": "text_user", "type": "text"}],
-#             "updated": 1,
-#             "link": None,
-#             "locked": False
-#         },
-#         {
-#             "type": "text",
-#             "id": "text_user",
-#             "x": 120,
-#             "y": 230,
-#             "width": 100,
-#             "height": 20,
-#             "angle": 0,
-#             "strokeColor": "#ffffff",
-#             "backgroundColor": "transparent",
-#             "fillStyle": "solid",
-#             "strokeWidth": 1,
-#             "strokeStyle": "solid",
-#             "roughness": 1,
-#             "opacity": 100,
-#             "text": "User Prompt",
-#             "fontSize": 16,
-#             "fontFamily": 1,
-#             "textAlign": "center",
-#             "verticalAlign": "middle",
-#             "containerId": "box_user",
-#             "originalText": "User Prompt",
-#             "lineHeight": 1.2,
-#             "boundElements": None,
-#             "updated": 1,
-#             "link": None,
-#             "locked": False
-#         },
-#         # Box 2: Agent Router
-#         {
-#             "type": "rectangle",
-#             "id": "box_router",
-#             "x": 320,
-#             "y": 200,
-#             "width": 160,
-#             "height": 80,
-#             "angle": 0,
-#             "strokeColor": "#e056fd",
-#             "backgroundColor": "#2a1b3d",
-#             "fillStyle": "solid",
-#             "strokeWidth": 2,
-#             "strokeStyle": "solid",
-#             "roughness": 1,
-#             "opacity": 100,
-#             "boundElements": [{"id": "text_router", "type": "text"}],
-#             "updated": 1,
-#             "link": None,
-#             "locked": False
-#         },
-#         {
-#             "type": "text",
-#             "id": "text_router",
-#             "x": 340,
-#             "y": 230,
-#             "width": 120,
-#             "height": 20,
-#             "angle": 0,
-#             "strokeColor": "#ffffff",
-#             "backgroundColor": "transparent",
-#             "fillStyle": "solid",
-#             "strokeWidth": 1,
-#             "strokeStyle": "solid",
-#             "roughness": 1,
-#             "opacity": 100,
-#             "text": "LangChain Router",
-#             "fontSize": 16,
-#             "fontFamily": 1,
-#             "textAlign": "center",
-#             "verticalAlign": "middle",
-#             "containerId": "box_router",
-#             "originalText": "LangChain Router",
-#             "lineHeight": 1.2,
-#             "boundElements": None,
-#             "updated": 1,
-#             "link": None,
-#             "locked": False
-#         },
-#         # Box 3: Excalidraw Tool
-#         {
-#             "type": "rectangle",
-#             "id": "box_tool",
-#             "x": 560,
-#             "y": 200,
-#             "width": 160,
-#             "height": 80,
-#             "angle": 0,
-#             "strokeColor": "#00d2d3",
-#             "backgroundColor": "#133b3b",
-#             "fillStyle": "solid",
-#             "strokeWidth": 2,
-#             "strokeStyle": "solid",
-#             "roughness": 1,
-#             "opacity": 100,
-#             "boundElements": [{"id": "text_tool", "type": "text"}],
-#             "updated": 1,
-#             "link": None,
-#             "locked": False
-#         },
-#         {
-#             "type": "text",
-#             "id": "text_tool",
-#             "x": 580,
-#             "y": 230,
-#             "width": 120,
-#             "height": 20,
-#             "angle": 0,
-#             "strokeColor": "#ffffff",
-#             "backgroundColor": "transparent",
-#             "fillStyle": "solid",
-#             "strokeWidth": 1,
-#             "strokeStyle": "solid",
-#             "roughness": 1,
-#             "opacity": 100,
-#             "text": "Excalidraw Tool",
-#             "fontSize": 16,
-#             "fontFamily": 1,
-#             "textAlign": "center",
-#             "verticalAlign": "middle",
-#             "containerId": "box_tool",
-#             "originalText": "Excalidraw Tool",
-#             "lineHeight": 1.2,
-#             "boundElements": None,
-#             "updated": 1,
-#             "link": None,
-#             "locked": False
-#         },
-#         # Arrow 1: User -> Router
-#         {
-#             "type": "arrow",
-#             "id": "arrow_1",
-#             "x": 245,
-#             "y": 240,
-#             "width": 70,
-#             "height": 0,
-#             "angle": 0,
-#             "strokeColor": "#a4b0be",
-#             "backgroundColor": "transparent",
-#             "fillStyle": "solid",
-#             "strokeWidth": 2,
-#             "strokeStyle": "solid",
-#             "roughness": 1,
-#             "opacity": 100,
-#             "points": [[0, 0], [70, 0]],
-#             "startBinding": {"elementId": "box_user", "focus": 0, "gap": 5},
-#             "endBinding": {"elementId": "box_router", "focus": 0, "gap": 5},
-#             "start": None,
-#             "end": None,
-#             "updated": 1
-#         },
-#         # Arrow 2: Router -> Tool
-#         {
-#             "type": "arrow",
-#             "id": "arrow_2",
-#             "x": 485,
-#             "y": 240,
-#             "width": 70,
-#             "height": 0,
-#             "angle": 0,
-#             "strokeColor": "#a4b0be",
-#             "backgroundColor": "transparent",
-#             "fillStyle": "solid",
-#             "strokeWidth": 2,
-#             "strokeStyle": "solid",
-#             "roughness": 1,
-#             "opacity": 100,
-#             "points": [[0, 0], [70, 0]],
-#             "startBinding": {"elementId": "box_router", "focus": 0, "gap": 5},
-#             "endBinding": {"elementId": "box_tool", "focus": 0, "gap": 5},
-#             "start": None,
-#             "end": None,
-#             "updated": 1
-#         }
-#     ]
-    
-#     return create_excalidraw_drawings.invoke({"diagram_title": system_name, "elements": elements})
-
 # Standard tool module structure
 toolsBasic = [
     create_excalidraw_drawings,
-    # generate_sample_architecture_diagram,
     list_excalidraw_drawings,
     detect_drawing_modifications
 ]
@@ -353,5 +209,6 @@ def ToolsList():
     Returns:
         List: List of tool functions.
     """
+    files = []
     global tools
     return tools

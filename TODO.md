@@ -1,5 +1,6 @@
 # TODO List
 
+- b, bug blackboard ToolMessage    : detect_drawing_modifications -> [ERROR] Drawing file 'Valorant_Agents_Blackboard_excalidraw.excalidraw' not found in ./Langchain/Tools/ToolsBlackboard/Drawings.
 - A, add todo tool
 - A, Hello from PowerShell CLI via WAHA!
 - B, /help is not returning the response but just printing it
