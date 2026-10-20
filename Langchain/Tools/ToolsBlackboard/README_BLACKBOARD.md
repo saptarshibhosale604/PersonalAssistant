@@ -32,7 +32,7 @@ git clone https://github.com/excalidraw/excalidraw.git excalidraw
 
 ### 🚀 How to Install and Run
 
-Open your terminal (PowerShell or Command Prompt) at the root of the project (`E:\WORK\PROJECT\git\PersonalAssistant`), then follow these steps:
+Open your terminal (PowerShell or Command Prompt) at the root of the project (`E:\WORK\PROJECT\git\PersonalAssistant\Langchain\Tools\ToolsBlackboard`), then follow these steps:
 
 #### 1. Navigate to the Excalidraw Directory
 ```powershell

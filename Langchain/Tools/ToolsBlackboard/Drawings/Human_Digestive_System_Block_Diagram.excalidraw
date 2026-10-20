@@ -1,0 +1,175 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "https://excalidraw.com",
+  "elements": [
+    {
+      "strokeWidth": 2,
+      "backgroundColor": "#b2dfdb",
+      "y": 50,
+      "strokeColor": "#00695c",
+      "text": "Mouth / Oral Cavity\\n(Ingestion & Mechanical Digestion)",
+      "id": "rect1",
+      "height": 60,
+      "type": "rectangle",
+      "width": 220,
+      "x": 100
+    },
+    {
+      "height": 60,
+      "strokeColor": "#ef6c00",
+      "backgroundColor": "#ffe0b2",
+      "y": 50,
+      "strokeWidth": 2,
+      "text": "Pharynx & Esophagus\\n(Peristalsis / Transport)",
+      "type": "rectangle",
+      "id": "rect2",
+      "width": 220,
+      "x": 380
+    },
+    {
+      "type": "rectangle",
+      "height": 60,
+      "text": "Stomach\\n(Chemical & Mechanical Digestion)",
+      "strokeColor": "#d84315",
+      "strokeWidth": 2,
+      "x": 660,
+      "id": "rect3",
+      "width": 220,
+      "backgroundColor": "#ffccbc",
+      "y": 50
+    },
+    {
+      "backgroundColor": "#c8e6c9",
+      "width": 240,
+      "x": 650,
+      "id": "rect4",
+      "type": "rectangle",
+      "text": "Small Intestine\\n(Duodenum, Jejunum, Ileum - Absorption)",
+      "y": 180,
+      "strokeColor": "#2e7d32",
+      "height": 60,
+      "strokeWidth": 2
+    },
+    {
+      "text": "Large Intestine / Colon\\n(Water Absorption & Waste Formation)",
+      "type": "rectangle",
+      "id": "rect5",
+      "y": 180,
+      "strokeColor": "#4527a0",
+      "width": 240,
+      "height": 60,
+      "backgroundColor": "#d1c4e9",
+      "strokeWidth": 2,
+      "x": 370
+    },
+    {
+      "height": 60,
+      "type": "rectangle",
+      "text": "Rectum & Anus\\n(Elimination)",
+      "id": "rect6",
+      "backgroundColor": "#f8bbd0",
+      "x": 110,
+      "width": 200,
+      "strokeWidth": 2,
+      "strokeColor": "#c2185b",
+      "y": 180
+    },
+    {
+      "y": 310,
+      "text": "Salivary Glands\\n(Amylase enzyme)",
+      "type": "rectangle",
+      "height": 50,
+      "strokeWidth": 2,
+      "width": 180,
+      "id": "acc1",
+      "x": 120,
+      "strokeColor": "#fbc02d",
+      "backgroundColor": "#fff9c4"
+    },
+    {
+      "id": "acc2",
+      "strokeColor": "#fbc02d",
+      "strokeWidth": 2,
+      "y": 310,
+      "height": 50,
+      "width": 200,
+      "backgroundColor": "#fff9c4",
+      "text": "Liver & Gallbladder\\n(Bile production & storage)",
+      "type": "rectangle",
+      "x": 520
+    },
+    {
+      "backgroundColor": "#fff9c4",
+      "strokeWidth": 2,
+      "height": 50,
+      "strokeColor": "#fbc02d",
+      "y": 310,
+      "text": "Pancreas\\n(Digestive enzymes & insulin)",
+      "id": "acc3",
+      "type": "rectangle",
+      "width": 200,
+      "x": 750
+    },
+    {
+      "startY": 80,
+      "endX": 380,
+      "type": "arrow",
+      "startX": 320,
+      "angle": 0,
+      "endY": 80,
+      "id": "arr1"
+    },
+    {
+      "id": "arr2",
+      "endX": 660,
+      "type": "arrow",
+      "angle": 0,
+      "startY": 80,
+      "endY": 80,
+      "startX": 600
+    },
+    {
+      "endX": 770,
+      "startX": 770,
+      "startY": 110,
+      "id": "arr3",
+      "type": "arrow",
+      "endY": 180,
+      "angle": 0
+    },
+    {
+      "endY": 210,
+      "type": "arrow",
+      "angle": 0,
+      "startX": 650,
+      "id": "arr4",
+      "startY": 210,
+      "endX": 610
+    },
+    {
+      "endX": 370,
+      "type": "arrow",
+      "id": "arr5",
+      "angle": 0,
+      "startY": 210,
+      "endY": 210,
+      "startX": 370
+    },
+    {
+      "endY": 210,
+      "startX": 370,
+      "id": "arr6",
+      "startY": 210,
+      "endX": 310,
+      "angle": 0,
+      "type": "arrow"
+    }
+  ],
+  "appState": {
+    "viewBackgroundColor": "#121212",
+    "gridSize": 20,
+    "theme": "dark"
+  },
+  "files": {}
+}

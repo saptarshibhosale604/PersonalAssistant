@@ -3,6 +3,14 @@
 - A, add todo tool
 - A, Hello from PowerShell CLI via WAHA!
 - B, /help is not returning the response but just printing it
+- C, bug, session_0297_2026-10-20_21-17-01.log the tockens are automatically droping
+
+
+
+
+
+
+
 - a, bug, understand the current project and summarise it in summary.md
     is not working with globalGemini02 try with 01, its just not giving any output
     might be token variable DEFAULT-MAX-TOKEN
