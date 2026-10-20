@@ -1,5 +1,4 @@
 from flask import Flask, render_template, request, jsonify
-import json
 import time
 import os
 from dotenv import load_dotenv
@@ -13,58 +12,6 @@ from Log.turn_logger import begin_turn, end_turn, set_agent_output, get_current_
 
 
 app = Flask(__name__)
-
-# Import Whiteboard routes
-# import UI.WebApp.whiteboard_routes as wb_routes
-# app.register_blueprint(wb_routes.app if hasattr(wb_routes, 'app') else None) # we can also import directly or add routes
-
-# Alternatively include whiteboard routes directly
-with app.app_context():
-    @app.route('/whiteboard')
-    def whiteboard_view():
-        return render_template('whiteboard.html')
-
-    @app.route('/api/canvas/state', methods=['GET', 'POST'])
-    def api_canvas_state():
-        state_file = "./Langchain/Tools/whiteboard_state.json"
-        if request.method == 'POST':
-            data = request.json or {}
-            os.makedirs(os.path.dirname(state_file), exist_ok=True)
-            with open(state_file, 'w', encoding='utf-8') as f:
-                json.dump(data, f, indent=2)
-            return jsonify({"status": "success"})
-        else:
-            if os.path.exists(state_file):
-                try:
-                    with open(state_file, 'r', encoding='utf-8') as f:
-                        return jsonify(json.load(f))
-                except Exception:
-                    pass
-            return jsonify({"elements": [], "appState": {}})
-
-    @app.route('/api/canvas/agent', methods=['POST'])
-    def api_canvas_agent():
-        req = request.json or {}
-        user_message = req.get("message", "")
-        if not user_message:
-            return jsonify({"response": "No message provided", "elements": []})
-        
-        global threadId, modeLLM, modeContext
-        try:
-            full_response = ""
-            for chunk in Agent.StreamingResponse(user_message, threadId, modeLLM, modeContext):
-                full_response += chunk
-            
-            state_file = "./Langchain/Tools/whiteboard_state.json"
-            elements = []
-            if os.path.exists(state_file):
-                with open(state_file, 'r', encoding='utf-8') as f:
-                    board_data = json.load(f)
-                    elements = board_data.get("elements", [])
-                    
-            return jsonify({"response": full_response, "elements": elements})
-        except Exception as e:
-            return jsonify({"response": f"Error executing agent: {str(e)}", "elements": []})
 
 debug01 = True
 
@@ -86,9 +33,14 @@ listSleepCalls = ["sleep now", "go to sleep", "we are done", "got it"]
 
 def UpdateModeLLM(inputData):
 	global modeLLM
-	modeLLM = inputData
-	Agent.UpdateAgent(inputData)
-	print(f"Updated modeLLM to: {modeLLM}")
+	if(inputData == "global"):
+		modeLLM = "global"
+	elif(inputData == "local"):
+		modeLLM = "local"
+	else:
+		print("Error: Invalid inputData:", inputData)
+	
+	# print(f"modeLLM: {modeLLM}")
 
 
 roleDefining = f"""For the 'User Input' given below
@@ -224,12 +176,12 @@ def BasicCmds(userInput):
 		return True
 
 	# checking for mode LLM
-	elif (userInput.lower().startswith("mode llm")):
-		parts = userInput.split()
-		if len(parts) >= 3:
-			modeLLM = parts[2]
-			Agent.UpdateAgent(modeLLM)
-			return True
+	elif (userInput.lower() == "mode llm local"):
+		modeLLM = "local"
+		return True
+
+	elif (userInput.lower() == "mode llm global"):
+		modeLLM = "global"
 		return True
 	
 	else:
@@ -292,7 +244,7 @@ def get_user_input_extra():
 	print(f"user_message: {user_message}")
 	if(user_message == "y" or user_message == "n"):
 		UpdateManInTheLoopResponse(user_message)
-	elif user_message.startswith("global") or user_message.startswith("local"):	
+	elif(user_message == "global" or user_message == "local"):	
 		UpdateModeLLM(user_message)
 	# time.sleep(3)
 	return "None"

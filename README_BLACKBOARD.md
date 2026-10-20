@@ -1,46 +1,74 @@
-# Excalidraw Whiteboard Integration & Setup Guide
+# README_BLACKBOARD.md
 
-This project integrates **Excalidraw** as a local submodule/sub-repository inside the `./excalidraw` directory, providing interactive whiteboard and canvas state capabilities directly within the Personal Assistant web application (`UI/WebApp/app.py`) and LangChain tools (`toolsExcalidraw`).
+## 🖍️ Excalidraw Setup & Run Guide (`./excalidraw`)
 
----
-
-## 📂 Project Structure & Components
-
-1. **`./excalidraw/`**: Separate Git repository containing the full Excalidraw React application source code.
-2. **`UI/WebApp/app.py`**: Flask web server configured with routes:
-   - `/whiteboard`: Renders the whiteboard interface (`whiteboard.html`).
-   - `/api/canvas/state`: GET/POST endpoints to persist and sync canvas state (`./Langchain/Tools/whiteboard_state.json`).
-3. **`Langchain/Tools/toolsExcalidraw`**: LangChain tool module registered in `toolsManager.py` to allow AI agents to interact with whiteboard elements and state.
-4. **`.gitignore`**: Configured to ignore the local `./excalidraw/` build artifacts, node modules, and state files.
+This repository includes **Excalidraw** as a separate git repository located in the `./excalidraw` directory. Excalidraw is an open-source virtual collaborative whiteboard web application built as a React monorepo.
 
 ---
 
-## ⚙️ How to Setup & Run
+### 📂 Project Structure & Architecture
 
-### 1. Install Excalidraw Dependencies
-Navigate into the `./excalidraw` directory and install the required npm packages:
+Excalidraw is structured as a **Yarn workspace monorepo**:
+- **`excalidraw/packages/excalidraw/`**: The core React drawing library (published to npm as `@excalidraw/excalidraw`).
+- **`excalidraw/excalidraw-app/`**: The full-featured web application (`excalidraw.com` interface).
+- **`excalidraw/packages/`**: Core packages (`@excalidraw/common`, `@excalidraw/element`, `@excalidraw/math`, `@excalidraw/utils`, etc.).
+- **`excalidraw/examples/`**: Integration examples (Next.js, browser script embeds).
+
+---
+
+### ⚙️ Prerequisites & Cloning
+
+Before running Excalidraw in this project, ensure you have the following installed on your Windows machine:
+- **Node.js** (v18.0.0 or higher recommended, e.g., v22.x)
+- **Yarn** package manager (`yarn`)
+- **Git**
+
+If `./excalidraw` is not already present in your project workspace as a separate repository, clone it into the root directory:
+```powershell
+git clone https://github.com/excalidraw/excalidraw.git excalidraw
+```
+
+---
+
+### 🚀 How to Install and Run
+
+Open your terminal (PowerShell or Command Prompt) at the root of the project (`E:\WORK\PROJECT\git\PersonalAssistant`), then follow these steps:
+
+#### 1. Navigate to the Excalidraw Directory
 ```powershell
 cd excalidraw
-npm install
-# or yarn install
 ```
 
-### 2. Run Excalidraw Development Server
-Excalidraw runs locally as a React Vite/Webpack app (typically on port `3000` or `5173`):
+#### 2. Install Dependencies
+Install all workspace dependencies using Yarn:
 ```powershell
-npm run start
-# or yarn start
+yarn install
 ```
 
-### 3. Run the Personal Assistant Web Application
-In a separate PowerShell terminal, start the main Flask web application:
+#### 3. Start the Development Server
+Run the local development server for the Excalidraw web application:
 ```powershell
-python UI/WebApp/app.py
+yarn start
 ```
-* Access the whiteboard view at: `http://localhost:5000/whiteboard` (or the configured Flask port).
+*(Alternatively, you can run `yarn --cwd excalidraw-app start` from the repository root).*
+
+#### 4. Access the Whiteboard
+Once the development server boots up (typically via Vite on port `3000` or `5173`), open your browser and navigate to:
+👉 `http://localhost:3000` (or check your terminal output for the exact local URL).
 
 ---
 
-## 🛠️ API & Tool Integration
-- **State persistence**: Canvas JSON elements are stored locally at `./Langchain/Tools/whiteboard_state.json`.
-- **AI Agent Tool**: The `toolsExcalidraw` tool enables agents to read, write, and update whiteboard elements programmatically during assistant turns.
+### 🧪 Additional Commands
+
+- **Type Checking:**
+  ```powershell
+  yarn test:typecheck
+  ```
+- **Run Tests:**
+  ```powershell
+  yarn test
+  ```
+- **Build for Production:**
+  ```powershell
+  yarn build
+  ```
