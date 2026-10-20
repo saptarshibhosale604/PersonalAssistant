@@ -29,6 +29,7 @@ TOOLS_MODULES = {
     "toolsCodingAgent": "Langchain.Tools.toolsCodingAgent",
     "toolsWebSearch": "Langchain.Tools.toolsWebSearch",
     "toolsProjectContextManager": "Langchain.Tools.toolsProjectContextManager",
+    "toolsExcalidraw": "Langchain.Tools.toolsExcalidraw",
 
     # Domain: PC control
     "toolsWindowsOS": "Langchain.Tools.toolsWindowsOS",
@@ -58,7 +59,8 @@ DEFAULT_CONFIG = {
     "toolsProjectContextManager": True,
     "toolsWindowsOS": True,
     "toolsJobSwitchAssist": True,
-    "toolsExcel": True
+    "toolsExcel": True,
+    "toolsExcalidraw": True
 }
 
 # Global state for tools configuration
