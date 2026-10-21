@@ -69,6 +69,27 @@ Start the Python bridge server (`waha_bridge.py`), which listens on port `5002` 
 python -m UI.WhatsApp.waha_bridge
 ```
 
+## ⚙️ WhatsApp-to-CLI Communication Control (`waha_bridge.py`)
+
+The bridge includes a safety mechanism allowing specified WhatsApp contacts to communicate directly with `cli.py` (`UI.cli.ProcessCLIInput`), with all other incoming numbers ignored.
+
+### 🎛️ How to Toggle ON or OFF
+You can control this feature using the environment variable `ENABLE_WHATSAPP_TO_CLI`:
+
+- **Turn ON (Enable WhatsApp-to-CLI)**:
+  Set `ENABLE_WHATSAPP_TO_CLI=True` in your environment or `.env` file.
+- **Turn OFF (Disable / Default)**:
+  Set `ENABLE_WHATSAPP_TO_CLI=False` (or omit it, as the default value is `False`).
+
+### 👥 Managing Allowed Contacts
+Allowed contacts and their corresponding LIDs are defined in `UI/WhatsApp/waha_bridge.py`:
+```python
+WHATSAPP_CLI_ALLOWED_CONTACTS = {
+    "919922113131",
+    "131967181967606",  # WAHA LID format
+}
+```
+
 ---
 
 ## 📂 Architecture & Components

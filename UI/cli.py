@@ -41,6 +41,7 @@ LIST_SLEEP_CALLS = ["sleep now", "go to sleep", "we are done", "got it"]
 
 THREAD_ID = 0          # Memory Id for the agent graph
 USER_INPUT_COUNT = 0   # Tracks number of loops through Main()
+is_terminal_active = False # Tracks whether interactive terminal command mode is active
 
 MODE_CONFIG_FILE_PATH = "./UI/modesConfig.json"
 MODE_CONFIG_SANDBOX_FILE_PATH = "./UI/modesConfigSandbox.json"
@@ -288,6 +289,8 @@ def BasicCmdsSlash(userInput: str) -> bool:
         print("  /resume <log file name>  : Rehydrates conversation history and context memory from a previous session log.")
         print("  /skill                   : Scans and displays available procedural skill routines stored in the './Skill' directory.")
         print("  /<skillName> <userInput> : Executes a specific pre-defined skill prompt combined with your optional input.")
+        print("  /terminal start          : Enters interactive terminal command mode.")
+        print("  /terminal stop           : Exits interactive terminal command mode.")
         print("  /reset                   : Deletes and re-initializes the active mode configuration file.")
         print("  /exit                    : Safely shuts down the Personal Assistant CLI application and flushes logs.")
         print()
@@ -300,9 +303,33 @@ def BasicCmdsSlash(userInput: str) -> bool:
     # Update mode values
     # --------------------------------------------------
 
-    elif command in ("/input", "/llm", "/stream", "/os"):
+    if command in ("/input", "/llm", "/stream", "/os"):
         UpdateModeValue(f"mode-{command[1:]}", value)
         return True
+
+    # --------------------------------------------------
+    # Terminal Mode Command
+    # --------------------------------------------------
+
+    elif command == "/terminal":
+        global is_terminal_active
+        if value == "start":
+            is_terminal_active = True
+            FormatMessageTypes("SystemMessage")
+            print("Terminal mode started.")
+            print("All subsequent inputs will be executed directly as system shell commands.")
+            print("Type '/terminal stop' to exit terminal mode.")
+            print()
+            return True
+        elif value == "stop":
+            is_terminal_active = False
+            FormatMessageTypes("SystemMessage")
+            print("Terminal mode stopped. Returning to standard assistant mode.")
+            print()
+            return True
+        else:
+            print("Usage: /terminal start  OR  /terminal stop")
+            return True
 
     # --------------------------------------------------
     # Show current modes
@@ -714,7 +741,40 @@ def Input() -> str:
 def Processing(userInput: str) -> Any:
     """Route user input through basic commands or the LLM framework."""
     # PrintFunctionNames("cli Processing...")
-    global THREAD_ID
+    global THREAD_ID, is_terminal_active
+
+    userInput_str = userInput.strip() if userInput else ""
+
+    # If terminal mode is active, handle stop command or execute shell commands directly
+    if is_terminal_active:
+        parts = userInput_str.split()
+        if parts and parts[0].lower() == "/terminal" and len(parts) > 1 and parts[1].lower() == "stop":
+            is_terminal_active = False
+            FormatMessageTypes("SystemMessage")
+            print("Terminal mode stopped. Returning to standard assistant mode.")
+            print()
+            return "Terminal mode stopped."
+
+        import subprocess
+        try:
+            print(f"[Terminal Executing] {userInput_str}")
+            result = subprocess.run(
+                userInput_str,
+                shell=True,
+                capture_output=True,
+                text=True,
+                timeout=60
+            )
+            output = result.stdout
+            if result.stderr:
+                output += "\n[stderr]:\n" + result.stderr
+            
+            print(output)
+            return output
+        except Exception as e:
+            err_msg = f"Terminal execution error: {e}"
+            print(err_msg)
+            return err_msg
 
     if BasicCmdsMode(userInput):
         return None

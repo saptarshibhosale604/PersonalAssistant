@@ -2,6 +2,7 @@
 
 - A, bug, phone number PII add from env
 - b, bug blackboard ToolMessage    : detect_drawing_modifications -> [ERROR] Drawing file 'Valorant_Agents_Blackboard_excalidraw.excalidraw' not found in ./Langchain/Tools/ToolsBlackboard/Drawings.
+- B, Set of WhatsApp contacts allowed to communicate with cli.py (includes 919922113131 as requested). (Respective commits: 54d9f98, 3b5b33e)
 - A, add todo tool
 - A, Hello from PowerShell CLI via WAHA!
 - B, /help is not returning the response but just printing it
