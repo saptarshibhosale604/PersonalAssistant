@@ -40,6 +40,16 @@ WHATSAPP_THREAD_ID = 9999
 # We can allow specific numbers, or set ALLOWED_SENDER = "" to allow all senders.
 ALLOWED_SENDER = os.getenv("WAHA_ALLOWED_SENDER", "")
 
+# WhatsApp to CLI communication settings
+# Toggle variable allowing specific set of WhatsApp contacts to communicate to cli.py (Default: False)
+ENABLE_WHATSAPP_TO_CLI = os.getenv("ENABLE_WHATSAPP_TO_CLI", "True").lower() in ("true", "1", "yes")
+
+# Set of WhatsApp contacts allowed to communicate with cli.py (includes 919922113131 as requested)
+WHATSAPP_CLI_ALLOWED_CONTACTS = {
+    "919922113131",
+    "131967181967606",  # LID corresponding to 919922113131 in WAHA test payload
+}
+
 # Recently seen message IDs (dedupe when WAHA delivers both "message" and "message.any")
 SEEN_MESSAGE_IDS = deque(maxlen=200)
 # Recently sent bot replies; our own replies come back as fromMe events and must be skipped
@@ -100,14 +110,22 @@ def webhook():
             SEEN_MESSAGE_IDS.append(message_id)
 
         # Incoming messages from 3rd parties: Do not reply, only log if needed.
+        # However, if WhatsApp-to-CLI communication is enabled and the sender is in our allowed list, permit it even if from_me is False.
+        sender_raw = sender.split("@")[0] if "@" in sender else sender
+        is_allowed_cli_contact = any(contact in sender or contact in sender_raw for contact in WHATSAPP_CLI_ALLOWED_CONTACTS)
+
         if not from_me:
-            logger.info(f"[WhatsApp External Incoming] From 3rd party {sender}: {body} (Ignored)")
-            return jsonify({"status": "ignored", "reason": "external 3rd party message"}), 200
+            if ENABLE_WHATSAPP_TO_CLI and is_allowed_cli_contact:
+                logger.info(f"[WhatsApp CLI Allowed External] Permitting incoming message from allowed contact {sender}: {body}")
+                # We want to process this message and reply to the sender chat (`sender`)
+                chat_id = sender
+            else:
+                logger.info(f"[WhatsApp External Incoming] From 3rd party {sender}: {body} (Ignored)")
+                return jsonify({"status": "ignored", "reason": "external 3rd party message"}), 200
+        else:
+            # Own messages: reply into the chat they were sent to.
+            chat_id = recipient
 
-        # Own messages: reply into the chat they were sent to.
-        chat_id = recipient
-
-        if from_me:
             # Only "Message yourself" chat drives the bot; ignore what you type to other people
             me = data.get("me") or {}
             my_ids = {me.get("id"), me.get("lid")} - {None}
@@ -134,6 +152,12 @@ def webhook():
             if ALLOWED_SENDER and ALLOWED_SENDER not in sender and ALLOWED_SENDER not in sender_raw:
                 print(f"[WhatsApp Ignored] Message from {sender} (not allowed sender {ALLOWED_SENDER})")
                 return jsonify({"status": "ignored", "reason": "unauthorized sender"}), 200
+
+            # Check if WhatsApp-to-CLI communication is enabled and if the contact is in the allowed set
+            is_allowed_cli_contact = any(contact in sender or contact in sender_raw for contact in WHATSAPP_CLI_ALLOWED_CONTACTS)
+            if not ENABLE_WHATSAPP_TO_CLI or not is_allowed_cli_contact:
+                print(f"[WhatsApp Ignored] CLI communication disabled or sender {sender} not in allowed CLI contacts list.")
+                return jsonify({"status": "ignored", "reason": "whatsapp-to-cli disabled or unauthorized contact"}), 200
 
             # Invoke the CLI pipeline instead of calling Agent.Main directly
             logger.info(f"[WhatsApp CLI Routing] Processing message via UI.cli: {body}")

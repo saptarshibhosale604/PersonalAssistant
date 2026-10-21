@@ -1,5 +1,6 @@
 # TODO List
 
+- A, bug, phone number PII add from env
 - b, bug blackboard ToolMessage    : detect_drawing_modifications -> [ERROR] Drawing file 'Valorant_Agents_Blackboard_excalidraw.excalidraw' not found in ./Langchain/Tools/ToolsBlackboard/Drawings.
 - A, add todo tool
 - A, Hello from PowerShell CLI via WAHA!
