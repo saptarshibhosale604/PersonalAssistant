@@ -70,7 +70,7 @@ DEBUG_LLM_PAYLOAD = False  # print the full first LLM request (system/history/to
 SHOW_LLM_PAYLOAD_BANNER = False  # Set to False to hide the LLM PAYLOAD banner and contents
 
 JARVIS_SYSTEM_PROMPT = (
-    "You are an assistance like a JARVIS from Iron Man. "
+    "You are a personal assistant. Be informative but also be funny. "
     "Your name is RPI. Your master name is SSB"
 )
 BUDDY_SYSTEM_PROMPT = (
@@ -178,17 +178,20 @@ class LlmPayloadDebugHandler(BaseCallbackHandler):
 
 @PrintFunctionName
 def BuildAgent():
-    """Create a new LangChain agent from the current global LLM/tools + HITL middleware."""
-    # print("Agent BuildAgent new instance")
-    # print(f"Agent BuildAgent llm: {LLM}")
-
+    """Create a new LangChain agent from the current global LLM/tools + HITL middleware + System Prompt."""
     middleware = [
         HumanInTheLoopMiddleware(
             interrupt_on=TOOL_INTERRUPT_POLICY,
             description_prefix="Tool execution pending approval",
         )
     ]
-    return create_agent(model=LLM, tools=TOOLS, middleware=middleware, checkpointer=CHECKPOINTER)
+    return create_agent(
+        model=LLM,
+        tools=TOOLS,
+        system_prompt=JARVIS_SYSTEM_PROMPT,
+        middleware=middleware,
+        checkpointer=CHECKPOINTER
+    )
 
 
 # Shared across agent rebuilds so thread memory survives LLM mode changes
