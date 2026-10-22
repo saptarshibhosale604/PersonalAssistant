@@ -616,6 +616,9 @@ def StreamAndAccumulate(messages: list, configMemory: dict) -> str:
     print()
     FormatMessageTypes("")
     print()
+    from Log.turn_logger import set_agent_output
+    if response:
+        set_agent_output(response)
     # logger.info(f"[AgentOutput] {response}")
     return response
 
@@ -652,6 +655,9 @@ def StreamAndAccumulateResume(messages: list, configMemory: dict, decisions) -> 
     print()
     FormatMessageTypes("")
     print()
+    from Log.turn_logger import set_agent_output
+    if response:
+        set_agent_output(response)
     # logger.info(f"[AgentOutput] {response}")
     return response
 
@@ -690,6 +696,9 @@ def StreamResumeAndAccumulate(decisions: list, configMemory: dict) -> str:
     print()
     FormatMessageTypes("")
     print()
+    from Log.turn_logger import set_agent_output
+    if response:
+        set_agent_output(response)
     # logger.info(f"[AgentOutput] {response}")
     return response
 

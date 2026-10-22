@@ -138,7 +138,8 @@ def format_turn(record: TurnRecord) -> str:
         lines.append("ToolMessage    : none")
     
     lines.append(sub_separator)
-    lines.append(f"AgentOutput    : {record.agent_output}")
+    agent_out = record.agent_output if record.agent_output else "(No output or command handled)"
+    lines.append(f"AgentOutput    : {agent_out}")
     lines.append(sub_separator)
     
     # Token metrics
