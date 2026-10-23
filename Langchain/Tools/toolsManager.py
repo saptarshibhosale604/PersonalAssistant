@@ -42,6 +42,7 @@ TOOLS_MODULES = {
     "toolsProjectBuilder": "Langchain.Tools.ToolsProjectBuilder.toolsProjectBuilder",
     "toolsTravelAssist": "Langchain.Tools.toolsTravelAssist",
     "toolsExcel": "Langchain.Tools.toolsExcel",
+    "toolsReminder": "Langchain.Tools.ToolReminder.toolsReminder",
 
     # Domain: Testing
     # "toolsGeneral": "Langchain.Tools.toolsGeneral",
@@ -60,7 +61,8 @@ DEFAULT_CONFIG = {
     "toolsWindowsOS": True,
     "toolsJobSwitchAssist": True,
     "toolsExcel": True,
-    "toolsBlackboard": True
+    "toolsBlackboard": True,
+    "toolsReminder": True
 }
 
 # Global state for tools configuration

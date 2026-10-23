@@ -1,0 +1,17 @@
+# RPI Reminder Service Systemd Unit File
+# Copy this file to /etc/systemd/system/rpi-reminder.service
+
+[Unit]
+Description=RPI Personal Assistant Reminder Dispatcher Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/ProjectRpi
+ExecStart=/usr/bin/python3 /root/ProjectRpi/Script/reminderDispatcher.py --loop
+Restart=always
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target
