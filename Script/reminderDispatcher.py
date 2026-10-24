@@ -69,11 +69,19 @@ def send_whatsapp_notification(task: str, chat_id: str) -> bool:
     print(f"\n[RPI REMINDER ALERT FOR SSB] ⏰ -> {task}\n")
     
     url = f"{WAHA_API_URL.rstrip('/')}/api/sendText"
-    target_chat = chat_id if chat_id and chat_id != "default" else "919922113131@c.us"
+    
+    # Target General SSB's phone number 917058033447@c.us if chat_id is default or empty
+    if not chat_id or chat_id == "default":
+        target_chat = "917058033447@c.us"
+    elif "@" not in chat_id:
+        target_chat = f"{chat_id}@c.us"
+    else:
+        target_chat = chat_id
+
     payload = {
         "session": WAHA_SESSION,
         "chatId": target_chat,
-        "text": f"⏰ *RPI Reminder Alert for SSB!*\n\n{task}"
+        "text": f"⏰ *RPI Reminder Alert for General SSB!*\n\n{task}"
     }
     headers = {
         "x-api-key": WAHA_API_KEY,

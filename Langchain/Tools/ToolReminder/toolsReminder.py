@@ -74,12 +74,20 @@ def schedule_reminder(
             return f"[ERROR] Could not parse reminder time '{remind_time}'. Please provide time in format YYYY-MM-DD HH:MM:SS or clear natural time like '3:00 PM today'."
 
         reminder_id = f"rem_{int(now.timestamp())}"
+        
+        # Default to General SSB's phone number 917058033447 if not specified
+        target_chat_id = chat_id
+        if not target_chat_id or target_chat_id == "default":
+            target_chat_id = "917058033447@c.us"
+        elif "@" not in target_chat_id:
+            target_chat_id = f"{target_chat_id}@c.us"
+
         new_reminder = {
             "id": reminder_id,
             "task": task,
             "remind_at": target_dt.strftime("%Y-%m-%d %H:%M:%S"),
             "status": "pending",
-            "chat_id": chat_id or os.getenv("WAHA_CHAT_ID", "default")
+            "chat_id": target_chat_id
         }
 
         data = _load_reminders()

@@ -21,7 +21,8 @@ from Script.reminderDispatcher import dispatch_reminders
 CHECK_INTERVAL_SECONDS = 60
 
 # Configuration: Set to True to send to WhatsApp, False to print reminder sent and actual reminder name locally without sending actual reminder.
-SEND_TO_WHATSAPP = False
+# SEND_TO_WHATSAPP = False
+SEND_TO_WHATSAPP = True
 
 def main():
     print("=" * 60)
