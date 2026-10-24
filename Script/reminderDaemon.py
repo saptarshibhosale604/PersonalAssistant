@@ -20,12 +20,16 @@ from Script.reminderDispatcher import dispatch_reminders
 
 CHECK_INTERVAL_SECONDS = 60
 
+# Configuration: Set to True to send to WhatsApp, False to print reminder sent and actual reminder name locally without sending actual reminder.
+SEND_TO_WHATSAPP = False
+
 def main():
     print("=" * 60)
     print(f"  RPI Universal In-Process Reminder Daemon Started")
     print(f"  Platform: {sys.platform}")
     print(f"  Interval: {CHECK_INTERVAL_SECONDS} seconds")
     print(f"  Mode: In-Process Execution (Zero Subprocess Overhead)")
+    print(f"  WhatsApp Dispatch Enabled: {SEND_TO_WHATSAPP}")
     print(f"  Press Ctrl+C to stop.")
     print("=" * 60)
 
@@ -34,7 +38,7 @@ def main():
             current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             print(f"[{current_time}] Checking reminders...")
             try:
-                dispatch_reminders()
+                dispatch_reminders(send_to_whatsapp=SEND_TO_WHATSAPP)
             except Exception as e:
                 print(f"[ERROR] Dispatcher execution error: {e}", file=sys.stderr)
             

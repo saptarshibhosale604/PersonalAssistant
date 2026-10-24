@@ -222,8 +222,9 @@ def BasicCmdsSkill(userInput: str) -> bool:
         print("-" * 40)
 
         # Pass combined input to Processing (which invokes Agent)
-        Processing(combined_input)
-        return True
+        # Processing(combined_input)
+        # return True
+        return combined_input
     except Exception as e:
         print(f"Error reading skill file '{matched_file}': {e}")
         return False
@@ -778,12 +779,14 @@ def Processing(userInput: str) -> Any:
 
     if BasicCmdsMode(userInput):
         return None
-    if BasicCmdsSkill(userInput):
-        return None
     if BasicCmdsSlash(userInput):
         return None
+    combined_input = BasicCmdsSkill(userInput)
+    if combined_input:
+        userInput = combined_input
+        # return None combined_input
 
-    PromptInjection(userInput)
+    # PromptInjection(userInput)
     if GetModeValue("mode-conversation") == "wakeUp":
         modeFramework = GetModeValue("mode-framework")
 
