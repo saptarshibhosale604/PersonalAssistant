@@ -32,9 +32,9 @@ def main():
     load_dotenv(dotenv_path=env_path)
     
     api_key = os.getenv("WAHA_API_KEY")
-    base_url = os.getenv("WAHA_API_URL", "http://localhost:3000")
-    session_name = os.getenv("WAHA_SESSION", "default")
-    bridge_port = os.getenv("WAHA_BRIDGE_PORT", "5002")
+    base_url = os.getenv("WAHA_API_URL")
+    session_name = os.getenv("WAHA_SESSION")
+    bridge_port = os.getenv("WAHA_BRIDGE_PORT")
     webhook_url = f"http://host.docker.internal:{bridge_port}/webhook"
 
     # ==========================================
