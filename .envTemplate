@@ -23,4 +23,5 @@ WAHA_API_URL=http://localhost:3000
 WAHA_API_KEY=your_waha_api_key_here
 WAHA_SESSION=your_waha_session_id_here
 WAHA_BRIDGE_PORT=5002
-
+WHATSAPP_PHONE_NUMBER=your_whatsapp_phone_number_here
+WAHA_ALLOWED_SENDER=

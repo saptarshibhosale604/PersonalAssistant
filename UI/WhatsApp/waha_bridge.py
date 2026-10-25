@@ -121,6 +121,11 @@ def webhook():
         if not body:
             return jsonify({"status": "ignored", "reason": "empty message body"}), 200
 
+        # Ignore RPI system alerts to prevent feedback loops / echo processing by LLM
+        if "[RPI_SYS_ALERT]" in body or "RPI Reminder Alert for General SSB" in body:
+            print(f"[WhatsApp Ignored] Dropped system reminder alert echo: {body[:60]}...")
+            return jsonify({"status": "ignored", "reason": "system reminder alert echo"}), 200
+
         logger.info(f"[WhatsApp Incoming/Self] From Me: {from_me} | From {sender} | ChatID: {chat_id} | Body: {body}")
 
         # Default model / settings (e.g. gemini-3.6-flash)
@@ -134,6 +139,22 @@ def webhook():
             if ALLOWED_SENDER and ALLOWED_SENDER not in sender and ALLOWED_SENDER not in sender_raw:
                 print(f"[WhatsApp Ignored] Message from {sender} (not allowed sender {ALLOWED_SENDER})")
                 return jsonify({"status": "ignored", "reason": "unauthorized sender"}), 200
+
+            # SECURITY CHECK: Verify that the message is from General SSB (master's WhatsApp phone number)
+            WHATSAPP_PHONE_NUMBER = os.getenv("WHATSAPP_PHONE_NUMBER", "917058033447")
+            if WHATSAPP_PHONE_NUMBER:
+                is_from_master = (
+                    WHATSAPP_PHONE_NUMBER in sender or 
+                    WHATSAPP_PHONE_NUMBER in sender_raw or 
+                    WHATSAPP_PHONE_NUMBER in chat_id or
+                    (from_me and "192229901648068" in sender) # Allow self-messages / linked device syncs if needed, or enforce exact ID
+                )
+                # If it's a message from someone else (not master and not self), drop it with a security warning!
+                if not is_from_master and not from_me:
+                    logger.warning(f"[WhatsApp Security] Blocked incoming input from unauthorized contact: {sender} (Body: {body[:30]})")
+                    print(f"[WhatsApp SECURITY ALERT] Blocked unauthorised transmission from non-master sender: {sender}")
+                    # Optionally notify master or ignore completely
+                    return jsonify({"status": "ignored", "reason": "unauthorized sender - restricted to Commander SSB only"}), 200
 
             # Invoke the CLI pipeline instead of calling Agent.Main directly
             logger.info(f"[WhatsApp CLI Routing] Processing message via UI.cli: {body}")
