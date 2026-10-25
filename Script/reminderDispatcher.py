@@ -18,6 +18,7 @@ REMINDER_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "remind
 WAHA_API_URL = os.getenv("WAHA_API_URL", "http://localhost:3000")
 WAHA_API_KEY = os.getenv("WAHA_API_KEY", "")
 WAHA_SESSION = os.getenv("WAHA_SESSION", "default")
+WHATSAPP_PHONE_NUMBER = os.getenv("WHATSAPP_PHONE_NUMBER")
 
 def dispatch_reminders(send_to_whatsapp: bool = True) -> None:
     if not os.path.exists(REMINDER_FILE):
@@ -70,9 +71,12 @@ def send_whatsapp_notification(task: str, chat_id: str) -> bool:
     
     url = f"{WAHA_API_URL.rstrip('/')}/api/sendText"
     
-    # Target General SSB's phone number 917058033447@c.us if chat_id is default or empty
+    # Target phone number from env if chat_id is default or empty
     if not chat_id or chat_id == "default":
-        target_chat = "917058033447@c.us"
+        if not WHATSAPP_PHONE_NUMBER:
+            print("[ERROR] WHATSAPP_PHONE_NUMBER is not set in .env. Cannot dispatch WhatsApp notification.")
+            return False
+        target_chat = f"{WHATSAPP_PHONE_NUMBER}@c.us"
     elif "@" not in chat_id:
         target_chat = f"{chat_id}@c.us"
     else:
@@ -81,7 +85,7 @@ def send_whatsapp_notification(task: str, chat_id: str) -> bool:
     payload = {
         "session": WAHA_SESSION,
         "chatId": target_chat,
-        "text": f"⏰ *RPI Reminder Alert for General SSB!*\n\n{task}"
+        "text": f"[RPI_SYS_ALERT] ⏰ *RPI Reminder Alert for General SSB!*\n\n{task}"
     }
     headers = {
         "x-api-key": WAHA_API_KEY,

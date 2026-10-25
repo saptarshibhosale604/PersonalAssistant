@@ -151,7 +151,8 @@ def AskHumanInput(prompt_message: str) -> str:
 
 
 # Category-based tool collections matching otherTools.py format
-toolsAdvance = [ExecuteBash, AskHumanInput]  # Tools requiring human confirmation/sensitive operations / interactive prompt
+# toolsAdvance = [ExecuteBash, AskHumanInput]  # Tools requiring human confirmation/sensitive operations / interactive prompt
+toolsAdvance = [ExecuteBash]  # Tools requiring human confirmation/sensitive operations / interactive prompt
 toolsIntermediate = [ReadFile, WriteFile, EditFile]
 toolsBasic = []
 

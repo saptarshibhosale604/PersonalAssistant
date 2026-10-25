@@ -15,6 +15,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 REMINDER_FILE = "./reminder.json"
+WHATSAPP_PHONE_NUMBER = os.getenv("WHATSAPP_PHONE_NUMBER")
 
 def _load_reminders() -> Dict[str, List[Dict[str, Any]]]:
     if not os.path.exists(REMINDER_FILE):
@@ -75,10 +76,12 @@ def schedule_reminder(
 
         reminder_id = f"rem_{int(now.timestamp())}"
         
-        # Default to General SSB's phone number 917058033447 if not specified
+        # Default to phone number from env if not specified
         target_chat_id = chat_id
         if not target_chat_id or target_chat_id == "default":
-            target_chat_id = "917058033447@c.us"
+            if not WHATSAPP_PHONE_NUMBER:
+                return "[ERROR] WHATSAPP_PHONE_NUMBER is not set in .env. Please provide a chat_id or configure WHATSAPP_PHONE_NUMBER in .env."
+            target_chat_id = f"{WHATSAPP_PHONE_NUMBER}@c.us"
         elif "@" not in target_chat_id:
             target_chat_id = f"{target_chat_id}@c.us"
 
