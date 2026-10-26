@@ -33,7 +33,7 @@ TOOLS_MODULES = {
 
     # Domain: PC control
     "toolsWindowsOS": "Langchain.Tools.toolsWindowsOS",
-    "toolsGoogleForms": "Langchain.Tools.ToolsBrowserAutomation",
+    "toolsGoogleForms": "Langchain.Tools.ToolsBrowserAutomation.toolsGoogleForms",
 
     # Domain: Personal control
     "toolsJobSwitchAssist": "Langchain.Tools.ToolsJobSwitchAssist.toolsJobSwitchAssist",

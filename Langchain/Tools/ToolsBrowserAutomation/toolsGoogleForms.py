@@ -1,8 +1,10 @@
+# toolsGoogleForms.py
+# Google Form Automation Tools for PersonalAssistant
+
 import os
 import json
 from typing import Annotated, Dict, Any, List
 from langchain.tools import tool
-from Log.log_utils import PrintFunctionName
 
 try:
     from playwright.sync_api import sync_playwright
@@ -11,12 +13,79 @@ except ImportError:
     PLAYWRIGHT_AVAILABLE = False
 
 
+def _get_pii_file_path() -> str:
+    """Returns the path to userPiiData.json, checking root and tools directory."""
+    paths = [
+        "userPiiData.json",
+        os.path.join(os.path.dirname(__file__), "userPiiData.json"),
+        os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "userPiiData.json")
+    ]
+    for p in paths:
+        if os.path.exists(p):
+            return p
+    return "userPiiData.json"
+
+
+@tool("get_user_pii_data", description="Reads and returns the contents of userPiiData.json containing user PII information for form filling.")
+def GetUserPiiData() -> str:
+    """Reads userPiiData.json and returns its JSON string content."""
+    try:
+        path = _get_pii_file_path()
+        if not os.path.exists(path):
+            # Create default if missing
+            default_data = {
+                "name": "General SSB",
+                "age": 30,
+                "ssn": "000-00-0000",
+                "dob": "1994-01-01",
+                "phone": "555-0199"
+            }
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(default_data, f, indent=2)
+        
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return json.dumps(data, indent=2)
+    except Exception as e:
+        return f"[ERROR] Failed to read user PII data: {str(e)}"
+
+
+@tool("update_user_pii_data", description="Updates existing fields or adds new fields to userPiiData.json using a JSON string or dictionary of updates.")
+def UpdateUserPiiData(
+    updates_json: Annotated[str, "JSON string containing key-value pairs to update or add in userPiiData.json"]
+) -> str:
+    """Updates or adds fields in userPiiData.json."""
+    try:
+        updates = json.loads(updates_json)
+    except json.JSONDecodeError as e:
+        return f"[ERROR] Invalid JSON provided for updates: {str(e)}"
+        
+    try:
+        path = _get_pii_file_path()
+        data = {}
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8") as f:
+                try:
+                    data = json.load(f)
+                except Exception:
+                    data = {}
+                    
+        for k, v in updates.items():
+            data[k] = v
+            
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+            
+        return f"[SUCCESS] Updated userPiiData.json with keys: {list(updates.keys())}. Current state:\n" + json.dumps(data, indent=2)
+    except Exception as e:
+        return f"[ERROR] Failed to update user PII data: {str(e)}"
+
+
 def _get_or_launch_browser(p):
     """Attempts to connect to Chrome over CDP on port 9222. If not running, launches Chrome automatically."""
     try:
         return p.chromium.connect_over_cdp("http://127.0.0.1:9222")
     except Exception:
-        # Fallback: Automatically launch Chrome in debug mode if not already running
         chrome_paths = [
             r"C:\Program Files\Google\Chrome\Application\chrome.exe",
             r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
@@ -35,11 +104,9 @@ def _get_or_launch_browser(p):
         debug_dir = os.path.expandvars(r"%LOCALAPPDATA%\TempChromeDebug")
         os.makedirs(debug_dir, exist_ok=True)
         
-        # Launch Chrome with debugging port
         import subprocess
         subprocess.Popen([launch_path, "--remote-debugging-port=9222", f"--user-data-dir={debug_dir}"])
         
-        # Wait for port to become active
         import time
         for _ in range(10):
             try:
@@ -71,14 +138,12 @@ def InspectActiveGoogleForm() -> str:
                     break
             
             if not target_page:
-                # If no form open, open a default placeholder or let user know
                 if browser.contexts and browser.contexts[0].pages:
                     target_page = browser.contexts[0].pages[0]
                 else:
                     target_page = browser.new_context().new_page()
                 return "[INFO] Connected to Chrome, but no active Google Form tab was found. Please navigate to your Google Form in Chrome."
             
-            # Extract form questions and fields using JS evaluation
             form_data = target_page.evaluate("""() => {
                 const title = document.querySelector('div.F9hGLd') ? document.querySelector('div.F9hGLd').innerText : document.title;
                 const questions = [];
@@ -207,3 +272,15 @@ def FillGoogleForm(
             
     except Exception as e:
         return f"[ERROR] Failed during form filling: {str(e)}"
+
+
+# Export tools list for toolsManager
+def ToolsList():
+    return [
+        InspectActiveGoogleForm,
+        FillGoogleForm,
+        GetUserPiiData,
+        UpdateUserPiiData
+    ]
+
+GOOGLE_FORM_TOOLS = ToolsList()
