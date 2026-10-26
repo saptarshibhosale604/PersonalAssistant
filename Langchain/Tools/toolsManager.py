@@ -43,6 +43,7 @@ TOOLS_MODULES = {
     "toolsTravelAssist": "Langchain.Tools.toolsTravelAssist",
     "toolsExcel": "Langchain.Tools.toolsExcel",
     "toolsReminder": "Langchain.Tools.ToolReminder.toolsReminder",
+    "toolsGoogleWorkspace": "Langchain.Tools.ToolsGoogleWorkspace.toolsGoogleWorkspace",
 
     # Domain: Testing
     # "toolsGeneral": "Langchain.Tools.toolsGeneral",
@@ -62,7 +63,8 @@ DEFAULT_CONFIG = {
     "toolsJobSwitchAssist": True,
     "toolsExcel": True,
     "toolsBlackboard": True,
-    "toolsReminder": True
+    "toolsReminder": True,
+    "toolsGoogleWorkspace": True
 }
 
 # Global state for tools configuration

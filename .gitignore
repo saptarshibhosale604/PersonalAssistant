@@ -76,3 +76,9 @@ sessions/
 excalidraw
 Langchain/Tools/ToolsBlackboard/Drawings/
 reminder.json
+
+# Google Workspace OAuth Credentials & Tokens
+credentials.json
+token.json
+**/credentials.json
+**/token.json

@@ -43,7 +43,7 @@ def schedule_reminder(
     
     Args:
         task: Description of the task or homework to remind SSB about (e.g. "do homework").
-        remind_time: The time to remind, in ISO format (YYYY-MM-DD HH:MM:SS) or natural descriptive time (e.g. "3:00 PM today", "15:00").
+        remind_time: The time to remind, in ISO format (YYYY-MM-DD HH:MM:SS).
         chat_id: Optional WhatsApp chat ID or phone number. If omitted, uses default active session chat/number.
     """
     try:
