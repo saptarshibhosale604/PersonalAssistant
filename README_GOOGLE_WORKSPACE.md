@@ -5,8 +5,9 @@ This document provides complete instructions on how to set up, configure, and op
 ---
 
 ## 📂 Architecture & Location
-- **Toolkit Module:** `Langchain/Tools/ToolsGoogleWorkspace/toolsGoogleWorkspace.py`
-- **Tool Manager Registration:** `Langchain/Tools/toolsManager.py` (`toolsGoogleWorkspace`)
+- **Gmail Module:** `Langchain/Tools/ToolsGoogleWorkspace/toolsGmail.py`
+- **Calendar Module:** `Langchain/Tools/ToolsGoogleWorkspace/toolsCalendar.py`
+- **Tool Manager Registration:** `Langchain/Tools/toolsManager.py` (`toolsGmail`, `toolsCalendar`)
 - **Dependencies Config:** `Langchain/Tools/ToolsGoogleWorkspace/requirements.txt`
 
 ---
@@ -57,7 +58,7 @@ To allow the assistant to interact with your Gmail and Google Calendar securely 
    - The application will look for `credentials.json`.
    - It will initiate an OAuth local server flow (or open your default web browser).
 2. Log in with your authorized Google account, review the permissions, and click **Allow**.
-3. A **`token.json`** file will automatically be generated and stored in your project root directory to cache your session securely for future use.
+3. Each service caches its own token in the project root: **`token_gmail.json`** (Gmail scope) and **`token_calendar.json`** (Calendar scope). They are kept separate because a token is only valid for the scopes it was granted with; sharing one file caused Calendar calls to fail with `403 insufficient authentication scopes`. Expect one consent prompt per service on first run. To re-authenticate a service, delete its token file.
 
 ---
 
