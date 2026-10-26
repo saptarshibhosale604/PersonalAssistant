@@ -1,3 +1,7 @@
+# PII Data and Credentials
+userPiiData.json
+**/userPiiData.json
+
 TextToSpeech/Data/*
 
 GitSSHAuthentication
