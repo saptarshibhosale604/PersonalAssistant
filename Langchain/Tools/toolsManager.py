@@ -34,6 +34,7 @@ TOOLS_MODULES = {
     # Domain: PC control
     "toolsWindowsOS": "Langchain.Tools.toolsWindowsOS",
     "toolsGoogleForms": "Langchain.Tools.ToolsBrowserAutomation.toolsGoogleForms",
+    "toolsBrowserAutomation": "Langchain.Tools.ToolsBrowserAutomation.toolsBrowserAutomation",
 
     # Domain: Personal control
     "toolsJobSwitchAssist": "Langchain.Tools.ToolsJobSwitchAssist.toolsJobSwitchAssist",
@@ -63,6 +64,7 @@ DEFAULT_CONFIG = {
     "toolsProjectContextManager": True,
     "toolsWindowsOS": True,
     "toolsGoogleForms": True,
+    "toolsBrowserAutomation": True,
     "toolsJobSwitchAssist": True,
     "toolsExcel": True,
     "toolsBlackboard": True,
