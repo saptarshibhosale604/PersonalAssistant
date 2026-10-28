@@ -1,26 +1,27 @@
 """
-Turn Logger Module
+Turn Logger Module (JSON Format)
 
 Provides structured per-turn logging with token statistics, tool calls,
-and agent output. Produces a human-readable text block and optional JSON sidecar.
+and agent output. Serializes the entire session into a clean JSON structure
+at ./Log/SessionLog/session_[ID]_[TIMESTAMP].json
 """
 
 import time
 import json
 import logging
+import os
 import threading
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
 
-from Log.custom_logger import logger
+from Log.custom_logger import logger, log_path
 
-# Module-level state for the current turn (single-threaded CLI)
+# Module-level state for the current turn and session turns list
 _current_turn: Optional['TurnRecord'] = None
+_session_turns: List[Dict[str, Any]] = []
 _turn_lock = threading.Lock()
 
-# Configuration
-ENABLE_JSON_SIDECAR = False  # Can be toggled via config later
 MAX_TOOL_RESULT_LENGTH = 2000  # Truncate long tool results in log
 
 
@@ -47,7 +48,6 @@ class TurnRecord:
     def add_tool_message(self, name: str, result: Any) -> None:
         """Add a tool message/result to the record."""
         result_str = str(result)
-        # Store full result, truncation happens at format time
         self.tool_messages.append({"name": name, "result": result_str})
 
     def add_usage(self, input_tokens: Optional[int], output_tokens: Optional[int],
@@ -86,116 +86,38 @@ def _truncate(text: str, max_len: int = MAX_TOOL_RESULT_LENGTH) -> str:
     return text[:max_len] + f"\n[truncated {truncated} chars]"
 
 
-def _format_token_value(value: Optional[int]) -> str:
-    """Format token value, showing 'n/a' for missing data."""
-    return str(value) if value is not None else "n/a"
-
-
-def _format_duration(value: Optional[float]) -> str:
-    """Format duration in seconds with 2 decimal places."""
-    if value is None or value <= 0:
-        return "0.00s"
-    return f"{value:.2f}s"
-
-
-def _format_tokens_per_second(output_tokens: Optional[int], duration_s: Optional[float]) -> str:
-    """Calculate and format tokens per second."""
+def _format_tokens_per_second(output_tokens: Optional[int], duration_s: Optional[float]) -> float:
+    """Calculate tokens per second."""
     if output_tokens is None or duration_s is None or duration_s <= 0:
-        return "0.00"
-    return f"{output_tokens / duration_s:.2f}"
+        return 0.0
+    return round(output_tokens / duration_s, 2)
 
 
-def format_turn(record: TurnRecord) -> str:
-    """
-    Format a TurnRecord into the human-readable text block.
-    
-    This is a pure function for easy unit testing.
-    """
-    lines = []
-    separator = "=" * 60
-    sub_separator = "-" * 60
-    
-    lines.append(f"\n")
-    lines.append(separator)
-    lines.append(f"UserInputCount : {record.count}")
-    lines.append(f"UserInput      : {record.user_input}")
-    lines.append(sub_separator)
-    
-    # Tool Calls
-    if record.tool_calls:
-        for tc in record.tool_calls:
-            args_str = json.dumps(tc['args'], ensure_ascii=False)
-            lines.append(f"Tool Calls     : {tc['name']}({args_str})")
-    else:
-        lines.append("Tool Calls     : none")
-    
-    # Tool Messages
-    if record.tool_messages:
-        for tm in record.tool_messages:
-            result = _truncate(tm['result'])
-            lines.append(f"ToolMessage    : {tm['name']} -> {result}")
-    else:
-        lines.append("ToolMessage    : none")
-    
-    lines.append(sub_separator)
-    agent_out = record.agent_output if record.agent_output else "(No output or command handled)"
-    lines.append(f"AgentOutput    : {agent_out}")
-    lines.append(sub_separator)
-    
-    # Token metrics
-    lines.append(f"Model Name         : {record.model_name or 'n/a'}")
-    lines.append(f"Input Tokens       : {_format_token_value(record.input_tokens)}")
-    lines.append(f"Output Tokens      : {_format_token_value(record.output_tokens)}")
-    lines.append(f"Total Tokens       : {_format_token_value(record.total_tokens)}")
-    lines.append(f"Tokens / Second    : {_format_tokens_per_second(record.output_tokens, record.duration_s)}")
-    lines.append(f"Total Duration     : {_format_duration(record.duration_s)}")
-    
-    if record.error:
-        lines.append(sub_separator)
-        lines.append(f"Error            : {record.error}")
-    
-    lines.append(separator)
-    
-    return "\n".join(lines)
-
-
-def _get_json_logger() -> logging.Logger:
-    """Get or create a separate logger for JSON sidecar output."""
-    json_logger = logging.getLogger('turn_logger_json')
-    json_logger.setLevel(logging.INFO)
-    json_logger.propagate = False  # Don't propagate to root logger
-    
-    if not json_logger.handlers:
-        from Log.custom_logger import log_dir
-        parent_dir = os.path.dirname(log_dir)
-        json_path = os.path.join(parent_dir, "structured_latest.log")
-        handler = logging.FileHandler(json_path, encoding='utf-8')
-        handler.setFormatter(logging.Formatter('%(message)s'))  # Raw JSON lines
-        json_logger.addHandler(handler)
-    
-    return json_logger
+def _flush_session_to_disk() -> None:
+    """Write the complete session object to the JSON log file."""
+    try:
+        session_data = {
+            "session_meta": {
+                "log_file": os.path.basename(log_path),
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            },
+            "turns": _session_turns
+        }
+        with open(log_path, "w", encoding="utf-8") as f:
+            json.dump(session_data, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        print(f"[TurnLogger] Failed to write session JSON log: {e}")
 
 
 def begin_turn(count: int, user_input: str) -> TurnRecord:
-    """
-    Start a new turn record.
-    
-    Args:
-        count: The user input count (1-based)
-        user_input: The raw user input text
-        
-    Returns:
-        The created TurnRecord
-    """
+    """Start a new turn record."""
     global _current_turn
-    
     with _turn_lock:
         _current_turn = TurnRecord(
             count=count,
             user_input=user_input,
             started_at=time.perf_counter()
         )
-    
     return _current_turn
 
 
@@ -234,12 +156,9 @@ def set_agent_output(text: str) -> None:
         turn.set_agent_output(text)
 
 
-def end_turn() -> Optional[str]:
+def end_turn() -> Optional[Dict[str, Any]]:
     """
-    Finalize the current turn, write the log block, and clear the record.
-    
-    Returns:
-        The formatted text block that was logged, or None if no active turn.
+    Finalize the current turn, append to session turns, flush JSON to disk, and clear.
     """
     global _current_turn
     
@@ -248,62 +167,40 @@ def end_turn() -> Optional[str]:
         if not turn:
             return None
         
-        # Calculate duration from timer if not set by usage
         if turn.duration_s is None:
             turn.duration_s = time.perf_counter() - turn.started_at
         
-        # Format the turn
-        formatted = format_turn(turn)
+        # Prepare truncated tool messages for JSON storage
+        processed_tool_messages = [
+            {"name": tm["name"], "result": _truncate(tm["result"])}
+            for tm in turn.tool_messages
+        ]
         
-        # Write to main logger as a single multi-line message
-        try:
-            logger.info(formatted)
-        except Exception as e:
-            # Logging errors must never break the agent
-            print(f"[TurnLogger] Failed to write log: {e}")
+        turn_dict = {
+            "turn_id": turn.count,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "user_input": turn.user_input,
+            "tool_calls": turn.tool_calls,
+            "tool_messages": processed_tool_messages,
+            "agent_output": turn.agent_output if turn.agent_output else "(No output or command handled)",
+            "metrics": {
+                "model_name": turn.model_name or "n/a",
+                "input_tokens": turn.input_tokens,
+                "output_tokens": turn.output_tokens,
+                "total_tokens": turn.total_tokens,
+                "tokens_per_second": _format_tokens_per_second(turn.output_tokens, turn.duration_s),
+                "duration_seconds": round(turn.duration_s, 2) if turn.duration_s else 0.0,
+            },
+            "error": turn.error
+        }
         
-        # Write JSON sidecar if enabled
-        if ENABLE_JSON_SIDECAR:
-            try:
-                _write_json_sidecar(turn)
-            except Exception as e:
-                print(f"[TurnLogger] Failed to write JSON sidecar: {e}")
+        _session_turns.append(turn_dict)
+        _flush_session_to_disk()
         
-        # Clear the current turn
         _current_turn = None
-        
-        return formatted
-
-
-def _write_json_sidecar(record: TurnRecord) -> None:
-    """Write the turn record as a JSON line to the sidecar file."""
-    json_logger = _get_json_logger()
-    
-    # Build JSON-serializable dict
-    data = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "user_input_count": record.count,
-        "user_input": record.user_input,
-        "tool_calls": record.tool_calls,
-        "tool_messages": record.tool_messages,
-        "agent_output": record.agent_output,
-        "input_tokens": record.input_tokens,
-        "output_tokens": record.output_tokens,
-        "total_tokens": record.total_tokens,
-        "tokens_per_second": _format_tokens_per_second(record.output_tokens, record.duration_s),
-        "duration_seconds": record.duration_s,
-        "model_name": record.model_name,
-        "error": record.error,
-    }
-    
-    json_logger.info(json.dumps(data, ensure_ascii=False))
+        return turn_dict
 
 
 def set_json_sidecar_enabled(enabled: bool) -> None:
-    """Enable or disable JSON sidecar output."""
-    global ENABLE_JSON_SIDECAR
-    ENABLE_JSON_SIDECAR = enabled
-
-
-# Import os for _get_json_logger
-import os
+    """Legacy helper for backward compatibility."""
+    pass

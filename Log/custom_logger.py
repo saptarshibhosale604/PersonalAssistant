@@ -27,7 +27,7 @@ session_id_str = f"{next_id:04d}"
 
 # Generate session timestamp
 session_timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-session_filename = f"session_{session_id_str}_{session_timestamp}.log"
+session_filename = f"session_{session_id_str}_{session_timestamp}.json"
 log_path = os.path.join(log_dir, session_filename)
 
 # Create a custom logger
@@ -50,17 +50,16 @@ if not logger.handlers:
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
 
-# Optional: maintain a 'latest.log' symlink or copy in Log/ (parent of log_dir) for easy tailing
+# Optional: maintain a 'latest.json' symlink or copy in Log/ (parent of log_dir) for easy tailing
 try:
     parent_dir = os.path.dirname(log_dir)
-    latest_path = os.path.join(parent_dir, "latest.log")
+    latest_path = os.path.join(parent_dir, "latest.json")
     if os.path.islink(latest_path):
         os.unlink(latest_path)
     elif os.path.exists(latest_path):
         os.remove(latest_path)
     # On Windows or systems where symlink might fail without admin rights, fallback or try symlink
     if os.name == 'nt':
-        # On Windows, copy or write a pointer, or create symlink if permitted
         try:
             os.symlink(os.path.join("SessionLog", session_filename), latest_path)
         except OSError:
