@@ -208,27 +208,43 @@ def main():
         raise Exception("WAHA session did not reach 'WORKING' status.")
 
     # ==========================================
-    # STEP 5: Summarize & Launch Bridge
+    # STEP 5: Summarize & Launch Bridge + Anti-Sleep Keep-Alive
     # ==========================================
     print("\n----------------------------------------")
-    print("STEP 05: Summary & Bridge Launch")
+    print("STEP 05: Summary, Anti-Sleep Jiggler & Bridge Launch")
     print("----------------------------------------")
     print("SUMMARY OF ACTIONS:")
     print("1. Docker Desktop: Running & Verified")
     print("2. WAHA Container ('waha'): Active & Listening")
     print("3. WAHA Session Status: WORKING")
     print(f"4. Webhook Configured: {webhook_url}")
+    print("5. Anti-Sleep PowerShell Keep-Alive: Initializing...")
     print("----------------------------------------")
     
+    # Launch PowerShell Keep-Alive / F15 Key Jiggler in background (prevents Windows sleep)
+    jiggler_cmd = "powershell -Command \"while ($true) { $wscript = New-Object -ComObject Wscript.Shell; $wscript.SendKeys('{F15}'); Start-Sleep -Seconds 240 }\""
+    jiggler_process = subprocess.Popen(jiggler_cmd, shell=True)
+    print("[SUCCESS] Anti-Sleep Keep-Alive Jiggler active in background (Sends {F15} every 4 minutes).")
+
     print("Pausing for 3 seconds for you to digest this information...")
     time.sleep(3)
     
     print("\nLaunching Python WAHA Bridge (`waha_bridge.py`)...")
     root_dir = Path(r"E:\WORK\PROJECT\git\PersonalAssistant")
     os.chdir(root_dir)
-    cmd = "python -m UI.WhatsApp.waha_bridge"
-    print(f"Running command: {cmd}")
-    subprocess.run(cmd, shell=True, check=True)
+    
+    try:
+        cmd = "python -m UI.WhatsApp.waha_bridge"
+        print(f"Running command: {cmd}")
+        subprocess.run(cmd, shell=True, check=True)
+    finally:
+        # Ensure jiggler process is terminated when bridge exits
+        if jiggler_process:
+            print("\n[INFO] Terminating Anti-Sleep Keep-Alive Jiggler...")
+            try:
+                subprocess.run(f"taskkill /f /pid {jiggler_process.pid} /t", capture_output=True)
+            except Exception:
+                jiggler_process.terminate()
 
 if __name__ == "__main__":
     main()
