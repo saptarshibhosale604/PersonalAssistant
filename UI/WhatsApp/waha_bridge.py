@@ -4,6 +4,11 @@ WAHA (WhatsApp HTTP API) Bridge for Personal Assistant.
 Runs a local Flask webhook listener on port 5002 to receive incoming WhatsApp messages from WAHA,
 passes them through the Personal Assistant's core LangChain Agent (`Agent.Main`),
 and sends the AI response back to the WhatsApp user via WAHA's outbound REST API.
+
+SECURITY / MESSAGE FILTERING POLICY:
+- ALLOWED: Messages sent by you TO you (Self-chat / "Message Yourself" mode).
+- DENIED:  Messages sent by you TO others (Outbound messages to other users/groups).
+- DENIED:  Messages sent by others TO you (Incoming messages from external contacts).
 """
 
 import os
@@ -72,6 +77,34 @@ def send_whatsapp_message(chat_id: str, text: str):
         logger.exception(f"[WhatsApp] Exception while sending message to {chat_id}: {e}")
         return False
 
+def classify_message_case(payload, me_info):
+    """
+    Classify the message into the 3 specific cases:
+    - Type 01: From me to me
+    - Type 02: From me to other
+    - Type 03: From other to me
+    Works robustly even when body is absent/not considered.
+    """
+    from_me = payload.get("fromMe", False)
+    info = payload.get("_data", {}).get("Info", {})
+    recipient_alt = info.get("RecipientAlt", "")
+    my_jids = [me_info.get("id"), me_info.get("jid"), me_info.get("lid")]
+    
+    if from_me:
+        # Check if recipient is self (me to me vs me to other)
+        is_self = (
+            recipient_alt in my_jids or 
+            info.get("Chat") == info.get("Sender") or
+            payload.get("to") in my_jids
+        )
+        if is_self:
+            return "TYPE_01"
+        else:
+            return "TYPE_02"
+    else:
+        return "TYPE_03"
+
+
 @app.route("/webhook", methods=["POST"])
 def webhook():
     """Receive incoming webhook events from WAHA."""
@@ -96,7 +129,10 @@ def webhook():
         body = payload.get("body", "") or payload.get("text", "")
         message_id = payload.get("id") or data.get("id")
 
-        print(f"[WhatsApp Event] event: {event} | from_me: {from_me} | from: {sender} | to: {recipient} | body: {body[:50]}")
+        me = data.get("me") or {}
+        detected_case = classify_message_case(payload, me)
+        
+        print(f"[WhatsApp Event] event: {event} | Case: {detected_case} | from_me: {from_me} | from: {sender} | to: {recipient} | body: {body[:50]}")
 
         if message_id:
             if message_id in SEEN_MESSAGE_IDS:
@@ -108,14 +144,25 @@ def webhook():
             BOT_SENT_TEXTS.remove(body)
             return jsonify({"status": "ignored", "reason": "bot's own echo message"}), 200
 
-        # Determine chat_id for replying in "Message yourself" mode
-        me = data.get("me") or {}
+        # Determine chat_id and account identifiers
         my_id = me.get("id", "")
         my_lid = me.get("lid", "")
-        
+        WHATSAPP_PHONE_NUMBER = os.getenv("WHATSAPP_PHONE_NUMBER", "917058033447")
+
+        # Handle filtering based on detected cases
+        if detected_case == "TYPE_01":
+            logger.info(f"[WhatsApp Self-Chat] Processing TYPE 01 (From me to me) | Body: {body}")
+        elif detected_case == "TYPE_02":
+            logger.debug(f"[WhatsApp Ignored] TYPE 02 (From me to other) blocked | Recipient: {recipient}")
+            return jsonify({"status": "ignored", "reason": "outgoing message to another user blocked"}), 200
+        else:
+            logger.debug(f"[WhatsApp Ignored] TYPE 03 (From other to me) blocked | Sender: {sender}")
+            # logger.warning(f"[WhatsApp Security] TYPE 03 (From other to me) blocked | Sender: {sender}")
+            # print(f"[WhatsApp SECURITY ALERT] Blocked incoming message from external sender: {sender}")
+            return jsonify({"status": "ignored", "reason": "messages from other senders blocked"}), 200
+
         chat_id = recipient
         if not chat_id or chat_id == my_id or chat_id == my_lid or "@s.whatsapp.net" in sender or "@c.us" in sender:
-            # If messaging yourself, chat_id should be your own JID/phone (sender or recipient)
             chat_id = sender or recipient
 
         if not body:
@@ -126,38 +173,13 @@ def webhook():
             print(f"[WhatsApp Ignored] Dropped system reminder alert echo: {body[:60]}...")
             return jsonify({"status": "ignored", "reason": "system reminder alert echo"}), 200
 
-        logger.info(f"[WhatsApp Incoming/Self] From Me: {from_me} | From {sender} | ChatID: {chat_id} | Body: {body}")
-
-        # Default model / settings (e.g. gemini-3.6-flash)
+        # Default model / settings
         model_name = "gemini-3.6-flash"
         
         try:
-            # Extract clean phone number/sender ID from WAHA 'from' or 'participant' or contact info
-            sender_raw = sender.split("@")[0] if "@" in sender else sender
-            
-            # Optional: filter for ALLOWED_SENDER if configured
-            if ALLOWED_SENDER and ALLOWED_SENDER not in sender and ALLOWED_SENDER not in sender_raw:
-                print(f"[WhatsApp Ignored] Message from {sender} (not allowed sender {ALLOWED_SENDER})")
-                return jsonify({"status": "ignored", "reason": "unauthorized sender"}), 200
-
-            # SECURITY CHECK: Verify that the message is from General SSB (master's WhatsApp phone number)
-            WHATSAPP_PHONE_NUMBER = os.getenv("WHATSAPP_PHONE_NUMBER", "917058033447")
-            if WHATSAPP_PHONE_NUMBER:
-                is_from_master = (
-                    WHATSAPP_PHONE_NUMBER in sender or 
-                    WHATSAPP_PHONE_NUMBER in sender_raw or 
-                    WHATSAPP_PHONE_NUMBER in chat_id or
-                    (from_me and "192229901648068" in sender) # Allow self-messages / linked device syncs if needed, or enforce exact ID
-                )
-                # If it's a message from someone else (not master and not self), drop it with a security warning!
-                if not is_from_master and not from_me:
-                    logger.warning(f"[WhatsApp Security] Blocked incoming input from unauthorized contact: {sender} (Body: {body[:30]})")
-                    print(f"[WhatsApp SECURITY ALERT] Blocked unauthorised transmission from non-master sender: {sender}")
-                    # Optionally notify master or ignore completely
-                    return jsonify({"status": "ignored", "reason": "unauthorized sender - restricted to Commander SSB only"}), 200
-
-            # Invoke the CLI pipeline instead of calling Agent.Main directly
+            # Invoke the CLI pipeline (`UI.cli`) as requested by General SSB
             logger.info(f"[WhatsApp CLI Routing] Processing message via UI.cli: {body}")
+            print(f"[CLI-INTEGRATION] Dispatching message to cli.py | Case: {detected_case} | Body: {body}")
             ai_response = CLI.ProcessCLIInput(userInput=body)
             
             if not ai_response:
