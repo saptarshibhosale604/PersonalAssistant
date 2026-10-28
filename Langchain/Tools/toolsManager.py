@@ -28,7 +28,7 @@ TOOLS_MODULES = {
     # Domain: Must ON tools
     "toolsCodingAgent": "Langchain.Tools.toolsCodingAgent",
     "toolsWebSearch": "Langchain.Tools.toolsWebSearch",
-    "toolsProjectContextManager": "Langchain.Tools.toolsProjectContextManager",
+    "toolsContextManagerReadOnly": "Langchain.Tools.toolsContextManagerReadOnly",
     "toolsBlackboard": "Langchain.Tools.ToolsBlackboard.toolsBlackboard",
 
     # Domain: PC control
@@ -61,7 +61,7 @@ DEFAULT_CONFIG = {
     "toolsPii": True,
     "toolsDataAnalysis": False,  # Commented out by default
     "toolsFinanceAssist": True,
-    "toolsProjectContextManager": True,
+    "toolsContextManagerReadOnly": True,
     "toolsWindowsOS": True,
     "toolsGoogleForms": True,
     "toolsBrowserAutomation": True,
