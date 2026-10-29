@@ -1,0 +1,22 @@
+# SKILL REFERENCE: Reminder Profile Mapping & Tactical Deployment
+
+## Objective
+This skill guides the AI assistant in mapping user requests to specific reminder profile codenames (Alpha, Bravo, Charlie, Delta) based on the operational objective/use case, and passing the corresponding payload into `create_calendar_event`.
+
+---
+
+## Profile Mapping Matrix
+
+| Profile Codename | Tactical Objective / Use Case | `reminders` Payload Structure |
+| :--- | :--- | :--- |
+| **Profile Alpha** | Routine meetings & internal syncs | `[{"method": "popup", "minutes": 10}]` |
+| **Profile Bravo** | High-Priority Strategic Summit / Critical operations | `[{"method": "email", "minutes": 1440}, {"method": "popup", "minutes": 15}]` |
+| **Profile Charlie** | Long-Range Executive Briefing / Major audits & prep | `[{"method": "email", "minutes": 10080}, {"method": "email", "minutes": 2880}, {"method": "popup", "minutes": 60}, {"method": "popup", "minutes": 5}]` |
+| **Profile Delta** | Rapid Deployment / Zero-Lag Huddle / Emergency syncs | `[{"method": "popup", "minutes": 2}, {"method": "popup", "minutes": 0}]` |
+
+---
+
+## Execution Protocol
+1. **Intent Analysis:** Analyze user request for urgency, importance, and preparation requirements.
+2. **Profile Selection:** Select matching profile (Alpha, Bravo, Charlie, or Delta). Default to **Alpha** if unspecified.
+3. **Tool Invocation:** Call `create_calendar_event` with `reminders` set to the selected profile's payload array.

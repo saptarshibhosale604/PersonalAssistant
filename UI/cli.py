@@ -446,10 +446,34 @@ def BasicCmdsSlash(userInput: str) -> bool:
             print(f"New Thread ID: {THREAD_ID} ({new_thread_id_str})")
             print(f"Log path: {os.path.abspath(log_file_path)}")
             
-            # Display last 1000 characters or preview of log content
-            preview = log_content[-1000:] if len(log_content) > 1000 else log_content
+            # Display formatted session preview / tail
             print("\n--- Session Preview / Tail ---")
-            print(preview)
+            try:
+                session_data = json.loads(log_content)
+                turns_data = session_data.get("turns", [])
+                if turns_data:
+                    first_turn = turns_data[0]
+                    f_in = first_turn.get("user_input", "")[:100]
+                    f_out = first_turn.get("agent_output", "")[:100]
+                    print(f"user_input: {f_in}")
+                    print(f"agent_output: {f_out}")
+                    
+                    if len(turns_data) > 2:
+                        middle_count = len(turns_data) - 2
+                        print(f"\n. . .\n[{middle_count} turns in between]\n. . .\n")
+                    elif len(turns_data) == 2:
+                        print("\n. . .\n")
+
+                    if len(turns_data) > 1:
+                        last_turn = turns_data[-1]
+                        l_in = last_turn.get("user_input", "")[:100]
+                        l_out = last_turn.get("agent_output", "")[:100]
+                        print(f"user_input: {l_in}")
+                        print(f"agent_output: {l_out}")
+                else:
+                    print(log_content[-1000:])
+            except Exception:
+                print(log_content[-1000:])
             print("------------------------------\n")
             
         except Exception as e:
