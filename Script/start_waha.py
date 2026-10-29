@@ -221,10 +221,10 @@ def main():
     print("5. Anti-Sleep PowerShell Keep-Alive: Initializing...")
     print("----------------------------------------")
     
-    # Launch PowerShell Keep-Alive / F15 Key Jiggler in background (prevents Windows sleep)
-    jiggler_cmd = "powershell -Command \"while ($true) { $wscript = New-Object -ComObject Wscript.Shell; $wscript.SendKeys('{F15}'); Start-Sleep -Seconds 240 }\""
+    # Launch PowerShell Keep-Alive / F11 Key Jiggler in background (prevents Windows sleep)
+    jiggler_cmd = "powershell -Command \"while ($true) { $wscript = New-Object -ComObject Wscript.Shell; $wscript.SendKeys('{F11}'); Start-Sleep -Seconds 240 }\""
     jiggler_process = subprocess.Popen(jiggler_cmd, shell=True)
-    print("[SUCCESS] Anti-Sleep Keep-Alive Jiggler active in background (Sends {F15} every 4 minutes).")
+    print("[SUCCESS] Anti-Sleep Keep-Alive Jiggler active in background (Sends {F11} every 4 minutes).")
 
     print("Pausing for 3 seconds for you to digest this information...")
     time.sleep(3)

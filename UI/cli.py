@@ -396,7 +396,7 @@ def BasicCmdsSlash(userInput: str) -> bool:
 
         # Get all log files sorted by modification time (newest first)
         log_files = sorted(
-            [f for f in os.listdir(session_log_dir) if f.endswith(".log")],
+            [f for f in os.listdir(session_log_dir) if f.endswith((".log", ".json"))],
             key=lambda x: os.path.getmtime(os.path.join(session_log_dir, x)),
             reverse=True
         )

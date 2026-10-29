@@ -285,7 +285,8 @@ def UpdateAgent(modeLLM: str) -> None:
     elif modeLLM == "globalGemini02":
         LLM = ChatGoogleGenerativeAI(
             model="gemini-3.5-flash-lite", max_tokens=DEFAULT_MAX_TOKENS,  # 2nd best: fast, quick Q&A + simple tools
-            temperature=DEFAULT_TEMPERATURE, max_retries=DEFAULT_MAX_RETRIES,
+            max_retries=DEFAULT_MAX_RETRIES,
+            # temperature=DEFAULT_TEMPERATURE, max_retries=DEFAULT_MAX_RETRIES,
         )
         TOOLS = toolsManager.Main("get")  # "get": fetch tools list
 
@@ -790,8 +791,8 @@ def Main(userInput: str, threadId, modeLLM: str, modeStream: str) -> str:
 
     # print(f"agent.py Main : userInput {userInput}, threadId: {threadId}, "
     #       f"modeLLM: {modeLLM}, modeStream: {modeStream}")
-    print(f"[Info] agent.py Main : userInput, threadId: {threadId}, "
-          f"modeLLM: {modeLLM}, modeStream: {modeStream}")
+    # print(f"[Info] agent.py Main : userInput, threadId: {threadId}, "
+    #       f"modeLLM: {modeLLM}, modeStream: {modeStream}")
 
     threadIdStr = "thread-" + str(threadId)
     configMemory = {"configurable": {"thread_id": threadIdStr}}
