@@ -11,6 +11,9 @@ import re
 import json
 from datetime import datetime
 
+# Configurable Token Threshold per Batch
+TOKEN_THRESHOLD = 40000
+
 def load_json_tolerant(filepath):
     """Loads JSON data from file, handling appended log text after the valid JSON object."""
     with open(filepath, "r", encoding="utf-8") as f:
@@ -69,7 +72,7 @@ def extract_and_chunk_sessions():
     
     batch_start_sess = None
 
-    print(f"[TACTICAL] Processing {len(matched_files)} session files with 4K token threshold per file batch...")
+    print(f"[TACTICAL] Processing {len(matched_files)} session files with {TOKEN_THRESHOLD} token threshold per file batch...")
 
     for sess_num, filename in matched_files:
         filepath = os.path.join(source_dir, filename)
@@ -104,8 +107,8 @@ def extract_and_chunk_sessions():
             if batch_start_sess is None:
                 batch_start_sess = f"{sess_num:04d}"
 
-            # Check if adding this session file's tokens exceeds 4k
-            if current_batch_tokens + session_tokens > 4000 and current_batch_sessions:
+            # Check if adding this session file's tokens exceeds threshold
+            if current_batch_tokens + session_tokens > TOKEN_THRESHOLD and current_batch_sessions:
                 # Dump current batch
                 batch_end_sess = f"{matched_files[[m[0] for m in matched_files].index(sess_num) - 1][0]:04d}"
                 dump_batch(output_dir, batch_counter, batch_start_sess, batch_end_sess, current_batch_sessions, current_batch_tokens, timestamp_str)

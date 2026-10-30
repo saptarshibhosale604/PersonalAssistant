@@ -1,0 +1,39 @@
+# SKILL REFERENCE: User Context Ingestion & Secure Profile Sync
+
+## Objective
+This skill instructs the agent on the strict operational sequence for ingesting raw user session context files, extracting structured user attributes, validating them with General SSB, archiving the session payload, and persistently updating the secure user context repository (`CloudPII/UserContext/userContext.md`).
+
+---
+
+## Operational Pipeline
+
+### Phase 1: Intake & Staging
+1. **Locate Target:** List the contents of `Log/UserContextRawInput/` and identify the **first available file** (ignoring subdirectories like `Processing` or `Done`).
+2. **Move to Processing:** Safely move (or rename) the identified raw file from `Log/UserContextRawInput/<filename>` to `Log/UserContextRawInput/Processing/<filename>`.
+
+### Phase 2: Extraction & Analysis
+1. **Read Payload:** Read the contents of `Log/UserContextRawInput/Processing/<filename>`.
+2. **Extract Attributes:** Parse the file structure (JSON or text) to extract key user information categorized under the Master Intelligence Matrix:
+   - **Command & Core Identification:** Name, rank/title, call signs, communication style preferences.
+   - **PII & Digital Footprint:** Contact vectors (emails, phone), government identifiers, credentials, cloud accounts, device inventory.
+   - **Finance & Economic Assets:** Annual income, bank/account types, investment portfolios, major financial goals (e.g., house loans, budgets).
+   - **Medical & Biometric Telemetry:** Vitals, emergency medical data, fitness activity, home gym equipment, medication/dietary parameters.
+   - **Active Projects & Operational Deployments:** Software repositories, active codebases, project roadmaps (e.g., PersonalAssistant, CloudPII, Custom Keyboard).
+   - **Routines, Schedules & Logistics:** Temporal patterns, travel logistics, display/audio preferences.
+   - **Other:** Hobbies, book reading, sports history (football, chess, table tennis, badminton), and miscellaneous personal interests.
+3. **Draft Summary:** Format the extracted information into a clean, structured tactical briefing report.
+
+### Phase 3: Presentation & Commander Review
+1. **Output to User:** Present the extracted user information summary clearly to General SSB.
+2. **Hold for Confirmation:** Halt automated write operations and prompt the Commander for explicit confirmation: *"Awaiting Commander authorization to commit user context to secure records."*
+
+### Phase 4: Archival & Persistent Commit
+1. **Archive Source File:** Upon receiving confirmation from General SSB, move the session file from `Log/UserContextRawInput/Processing/<filename>` to `Log/UserContextRawInput/Done/<filename>`.
+2. **Persistent Append:** Append the verified user data into `CloudPII/UserContext/userContext.md` following standard markdown profile formatting.
+
+---
+
+## Edge Cases & Exception Handling
+- **Missing Raw File:** If `Log/UserContextRawInput/` contains no files, log a warning stating no intake files are available and abort the operation.
+- **Malformed Data:** If parsing fails during extraction, move the corrupted file to `Log/UserContextRawInput/Processing/failed/` and alert General SSB immediately.
+- **Unconfirmed Data:** Under no circumstances shall data be appended to `CloudPII/UserContext/userContext.md` without explicit positive confirmation from General SSB.

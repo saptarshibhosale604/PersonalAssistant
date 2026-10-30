@@ -38,6 +38,26 @@ def main():
     webhook_url = f"http://host.docker.internal:{bridge_port}/webhook"
 
     # ==========================================
+    # PROMPT: Background PowerShell F11 Jiggler
+    # ==========================================
+    print("\n----------------------------------------")
+    prompt_input = input("[TACTICAL PROMPT] Would you like to start the background PowerShell keep-alive script (presses F11 every 4 mins)? [Y/n]: ").strip().lower()
+    
+    start_jiggler = True
+    if prompt_input in ["n", "no"]:
+        start_jiggler = False
+        print("[INFO] Background PowerShell keep-alive script disabled by user.")
+    else:
+        print("[INFO] Background PowerShell keep-alive script enabled (Default: Y).")
+
+    jiggler_process = None
+    if start_jiggler:
+        print("Initializing Anti-Sleep Keep-Alive Jiggler in background...")
+        jiggler_cmd = "powershell -Command \"while ($true) { $wscript = New-Object -ComObject Wscript.Shell; $wscript.SendKeys('{F11}'); Start-Sleep -Seconds 240 }\""
+        jiggler_process = subprocess.Popen(jiggler_cmd, shell=True)
+        print("[SUCCESS] Anti-Sleep Keep-Alive Jiggler active in background.")
+
+    # ==========================================
     # STEP 1: Check & Launch Docker
     # ==========================================
     print("\n----------------------------------------")
@@ -208,23 +228,21 @@ def main():
         raise Exception("WAHA session did not reach 'WORKING' status.")
 
     # ==========================================
-    # STEP 5: Summarize & Launch Bridge + Anti-Sleep Keep-Alive
+    # STEP 5: Summarize & Launch Bridge + Anti-Sleep Keep-Alive Status
     # ==========================================
     print("\n----------------------------------------")
-    print("STEP 05: Summary, Anti-Sleep Jiggler & Bridge Launch")
+    print("STEP 05: Summary & Bridge Launch")
     print("----------------------------------------")
     print("SUMMARY OF ACTIONS:")
     print("1. Docker Desktop: Running & Verified")
     print("2. WAHA Container ('waha'): Active & Listening")
     print("3. WAHA Session Status: WORKING")
     print(f"4. Webhook Configured: {webhook_url}")
-    print("5. Anti-Sleep PowerShell Keep-Alive: Initializing...")
+    if jiggler_process:
+        print("5. Anti-Sleep PowerShell Keep-Alive: Active (Sending {F11} every 4 minutes)")
+    else:
+        print("5. Anti-Sleep PowerShell Keep-Alive: Disabled by user")
     print("----------------------------------------")
-    
-    # Launch PowerShell Keep-Alive / F11 Key Jiggler in background (prevents Windows sleep)
-    jiggler_cmd = "powershell -Command \"while ($true) { $wscript = New-Object -ComObject Wscript.Shell; $wscript.SendKeys('{F11}'); Start-Sleep -Seconds 240 }\""
-    jiggler_process = subprocess.Popen(jiggler_cmd, shell=True)
-    print("[SUCCESS] Anti-Sleep Keep-Alive Jiggler active in background (Sends {F11} every 4 minutes).")
 
     print("Pausing for 3 seconds for you to digest this information...")
     time.sleep(3)
