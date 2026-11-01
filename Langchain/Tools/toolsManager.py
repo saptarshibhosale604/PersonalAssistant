@@ -47,6 +47,7 @@ TOOLS_MODULES = {
     "toolsReminder": "Langchain.Tools.ToolReminder.toolsReminder",
     "toolsGmail": "Langchain.Tools.ToolsGoogleWorkspace.toolsGmail",
     "toolsCalendar": "Langchain.Tools.ToolsGoogleWorkspace.toolsCalendar",
+    "toolsMaps": "Langchain.Tools.ToolsGoogleWorkspace.toolsMaps",
 
     # Domain: Testing
     # "toolsGeneral": "Langchain.Tools.toolsGeneral",
@@ -70,7 +71,8 @@ DEFAULT_CONFIG = {
     "toolsBlackboard": True,
     "toolsReminder": True,
     "toolsGmail": True,
-    "toolsCalendar": True
+    "toolsCalendar": True,
+    "toolsMaps": True
 }
 
 # Global state for tools configuration

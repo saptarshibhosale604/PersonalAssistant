@@ -2,3 +2,4 @@ langchain-google-community[gmail,calendar]
 google-auth-oauthlib
 google-auth-httplib2
 google-api-python-client
+googlemaps>=4.10.0

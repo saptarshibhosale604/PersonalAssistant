@@ -25,7 +25,10 @@ This skill instructs the agent on the strict operational sequence for ingesting 
 
 ### Phase 3: Presentation & Commander Review
 1. **Output to User:** Present the extracted user information summary clearly to General SSB.
-2. **Hold for Confirmation:** Halt automated write operations and prompt the Commander for explicit confirmation: *"Awaiting Commander authorization to commit user context to secure records."*
+2. **Hold for Confirmation (CRITICAL SAFEGUARD):** 
+   - Halt all automated write operations immediately. Under NO circumstances shall any tool (`toolWriteFile`) be invoked or file modified at this stage.
+   - Prompt the Commander for explicit confirmation: *"Awaiting Commander authorization to commit user context to secure records."*
+   - Stop generation entirely and wait for explicit positive confirmation (e.g., "yes", "approved", "proceed") from General SSB before proceeding to Phase 4.
 
 ### Phase 4: Archival & Persistent Commit
 1. **Archive Source File:** Upon receiving confirmation from General SSB, move the session file from `Log/UserContextRawInput/Processing/<filename>` to `Log/UserContextRawInput/Done/<filename>`.
