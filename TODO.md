@@ -1,5 +1,6 @@
 # TODO List
 
+- B, reacher season 4 incident
 - b, tool battery percentage
 - B, PII, Gmail in tool calendar
 - A, bug, phone number PII add from env
