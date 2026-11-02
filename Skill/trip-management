@@ -1,0 +1,51 @@
+# SKILL: Trip Management & Itinerary Synchronization Protocol
+
+## Objective
+Guide the LLM agent in managing, diffing, backing up, and updating user travel itineraries under `CloudPII/Trips/<subfolder>/itinerary.md` with mandatory user approval gates and strict execution sequencing.
+
+---
+
+## Operational Workflow
+
+### Step 1: Ingest User Request
+- Analyze the user prompt for travel modifications, additions, cancellations, or updates.
+
+### Step 2: Scan Trip Subfolders
+- Check available subfolders under `CloudPII/Trips/` using file listing tools.
+- Identify existing trip names (e.g., `Gokarna`, `Thailand`).
+
+### Step 3: Map Intent & Subfolder
+- Match the user's request against the available subfolders.
+- **Ambiguity Rule:** If the target trip is unclear or ambiguous (confidence < 80%), **stop and ask General SSB** for clarification:
+  > *"General SSB, multiple trip destinations detected. Please specify which trip folder this request relates to, Sir!"*
+
+### Step 4: Read Existing Itinerary
+- Once the subfolder is confirmed, read the contents of `CloudPII/Trips/<subfolder>/itinerary.md`. If the file does not exist, initialize a clean template.
+
+### Step 5: Generate, Present Diff Plan & Enforce Confirmation Gate
+- Formulate the proposed updates and present a clear **Diff Plan** to General SSB:
+  ```markdown
+  ### 📊 Proposed Itinerary Diff Plan: <Subfolder>
+  **Target File:** `CloudPII/Trips/<subfolder>/itinerary.md`
+
+  **[REMOVED / OLD]:**
+  - [Old line or section]
+
+  **[ADDED / NEW]:**
+  - [New line or section]
+  ```
+- **CRITICAL APPROVAL GATE:** Explicitly ask: *"Do you approve this itinerary modification, General?"*
+  - **MANDATORY STOP:** The LLM agent **MUST STOP EXECUTION ENTIRELY** at this prompt. 
+  - **ZERO-TOLERANCE RULE:** Under no circumstances shall `toolWriteFile`, `toolEditFile`, or any file mutation tool be invoked before the user explicitly replies with confirmation.
+  - **IF USER CONFIRMS (Yes / Approved / Proceed):** Proceed strictly to **Step 6**.
+  - **IF USER REJECTS / CANCELS / HESITATES / ASKS A FOLLOW-UP QUESTION (No / Abort / Wait / Clarification):** **SKIP Step 6 ENTIRELY** and proceed directly to **Step 7** (or respond to the query/adjust proposal without writing files) with a status of *"Mission Awaiting Commander Confirmation"*. No files or backups shall be modified.
+
+### Step 6: Pre-Update Backup & Conditional Execution (Strict Sequence)
+*(Execute ONLY after receiving explicit confirmation from Step 5)*
+1. **Pre-Update Backup:** Before writing any updates, immediately copy `CloudPII/Trips/<subfolder>/itinerary.md` to `CloudPII/Trips/<subfolder>/itinerary_<timestamp>.md` (format: `YYYYMMDD_HHMMSS`) to preserve the untouched original state.
+2. **Apply Update:** Write the updated itinerary content to `CloudPII/Trips/<subfolder>/itinerary.md`.
+
+### Step 7: Mission Summary Presentation
+- Present a crisp combat-ready summary to General SSB:
+  - If executed: Confirm pre-update backup creation (with timestamp) and successful itinerary sync.
+  - If aborted/paused: Confirm that no changes were made and original itinerary remains untouched.
