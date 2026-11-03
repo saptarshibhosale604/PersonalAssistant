@@ -35,7 +35,8 @@ TOOLS_MODULES = {
     "toolsWindowsOS": "Langchain.Tools.toolsWindowsOS",
     "toolsGoogleForms": "Langchain.Tools.ToolsBrowserAutomation.toolsGoogleForms",
     "toolsBrowserAutomation": "Langchain.Tools.ToolsBrowserAutomation.toolsBrowserAutomation",
-
+    "toolsPlaywrightToolkit": "Langchain.Tools.ToolsBrowserAutomation.toolsPlaywrightToolkit",
+    
     # Domain: Personal control
     "toolsJobSwitchAssist": "Langchain.Tools.ToolsJobSwitchAssist.toolsJobSwitchAssist",
     "toolsDataAnalysis": "Langchain.Tools.toolsDataAnalysis",
@@ -66,6 +67,7 @@ DEFAULT_CONFIG = {
     "toolsWindowsOS": True,
     "toolsGoogleForms": True,
     "toolsBrowserAutomation": True,
+    "toolsPlaywrightToolkit": True,
     "toolsJobSwitchAssist": True,
     "toolsExcel": True,
     "toolsBlackboard": True,

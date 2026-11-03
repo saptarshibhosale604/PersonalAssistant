@@ -73,6 +73,7 @@ python Testing/testGemini.py
 ## ⚠️ Active Status & TODOs (Summary)
 - **Active Model Defaults:** `gemini-3.6-flash` (Cloud, primary agent) and `gemini-3.5-flash-lite` (Fast fallback).
 - **Known Issues / Items in Progress:**
+  - [C] [feature] Implement Over-The-Air (OTA) update system with backup, git sync, and container restart (Ref: `Plan/ota_update_plan.md`).
   - Multi-line user input mode refinement.
   - Local LLM tool calling improvements and prompt engineering (JARVIS persona).
   - Shell tool multiple command handling.
