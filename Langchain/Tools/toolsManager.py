@@ -49,6 +49,9 @@ TOOLS_MODULES = {
     "toolsGmail": "Langchain.Tools.ToolsGoogleWorkspace.toolsGmail",
     "toolsCalendar": "Langchain.Tools.ToolsGoogleWorkspace.toolsCalendar",
     "toolsMaps": "Langchain.Tools.ToolsGoogleWorkspace.toolsMaps",
+    "toolsDocumentConverterPython": "Langchain.Tools.ToolsDocumentConverter.toolsDocumentConverterPythonBased",
+    "toolsDocumentConverterLLM": "Langchain.Tools.ToolsDocumentConverter.toolsDocumentConverterLLMBased",
+    "toolsSqlDatabase": "Langchain.Tools.ToolsSqlDatabase.toolsSqlDatabase",
 
     # Domain: Testing
     # "toolsGeneral": "Langchain.Tools.toolsGeneral",
@@ -74,7 +77,10 @@ DEFAULT_CONFIG = {
     "toolsReminder": True,
     "toolsGmail": True,
     "toolsCalendar": True,
-    "toolsMaps": True
+    "toolsMaps": True,
+    "toolsDocumentConverterPython": True,
+    "toolsDocumentConverterLLM": True,
+    "toolsSqlDatabase": True
 }
 
 # Global state for tools configuration

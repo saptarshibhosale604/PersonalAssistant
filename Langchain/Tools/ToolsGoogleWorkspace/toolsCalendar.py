@@ -131,11 +131,11 @@ def ToolsList() -> List[Any]:
                     tool = PatchedGetCurrentDatetime(api_resource=api_resource)
 
                 filtered_tools.append(tool)
-                print(f"  [SELECTED & CONFIGURED] {tool_name}")
-            else:
-                print(f"  [EXCLUDED] {tool_name}")
+                # print(f"  [SELECTED & CONFIGURED] {tool_name}")
+            # else:
+            #     print(f"  [EXCLUDED] {tool_name}")
 
-        print(f"[OK] Successfully loaded {len(filtered_tools)} selected Calendar tools.")
+        # print(f"[OK] Successfully loaded {len(filtered_tools)} selected Calendar tools.")
 
     except Exception as error:
         print(f"[ERROR] Failed to initialize Calendar toolkit: {str(error)}")

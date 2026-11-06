@@ -55,11 +55,11 @@ def ToolsList() -> List[Any]:
             tool_name = getattr(tool, "name", "")
             if tool_name in selected_tool_names:
                 filtered_tools.append(tool)
-                print(f"  [SELECTED] {tool_name}")
-            else:
-                print(f"  [EXCLUDED] {tool_name}")
+            #     print(f"  [SELECTED] {tool_name}")
+            # else:
+            #     print(f"  [EXCLUDED] {tool_name}")
 
-        print(f"[OK] Successfully loaded {len(filtered_tools)} selected Gmail tools.")
+        # print(f"[OK] Successfully loaded {len(filtered_tools)} selected Gmail tools.")
 
     except Exception as error:
         print(f"[ERROR] Failed to initialize Gmail toolkit: {str(error)}")

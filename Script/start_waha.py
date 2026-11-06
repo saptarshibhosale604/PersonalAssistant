@@ -24,7 +24,7 @@ from dotenv import load_dotenv
 
 def main():
     # Load environment variables
-    env_path = Path(r"E:\WORK\PROJECT\git\PersonalAssistant\.env")
+    env_path = Path(r"E:\WORK\PROJECT\git\PersonalAssistant\CloudPII\EnvVars\.env")
     if not env_path.exists():
         raise FileNotFoundError(f"Configuration file not found at {env_path}")
         

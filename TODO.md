@@ -1,5 +1,6 @@
 # TODO List
 
+- A, Implement skill to inspect, auto-fill, and submit Google Forms using active browser DOM and user context PII (See Plan/google_form_autofill_plan.md)
 - B, reacher season 4 incident
 - b, tool battery percentage
 - B, PII, Gmail in tool calendar

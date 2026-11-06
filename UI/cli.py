@@ -377,11 +377,20 @@ def BasicCmdsSlash(userInput: str) -> bool:
 
     elif command == "/new":
         # tools = toolsManager.Main(value)
-        print("toolsManager: New session")
+        print("toolsManager: New session initializing...")
         global THREAD_ID, _os_prefix_added
         THREAD_ID += 1
         _os_prefix_added = False  # Reset OS prefix flag for new session
-        # FormatToolsPrinting(tools)
+        
+        # Create a brand new session JSON file on disk and reset turn memory
+        from Log import custom_logger
+        new_log_path = custom_logger.start_new_session()
+        
+        FormatMessageTypes("SystemMessage")
+        print(f"New session initialized successfully!")
+        print(f"New Thread ID: {THREAD_ID} (thread-{THREAD_ID})")
+        print(f"New Session Log File: {os.path.abspath(new_log_path)}")
+        print()
         return True
 
     # --------------------------------------------------
@@ -446,35 +455,25 @@ def BasicCmdsSlash(userInput: str) -> bool:
             print(f"New Thread ID: {THREAD_ID} ({new_thread_id_str})")
             print(f"Log path: {os.path.abspath(log_file_path)}")
             
-            # Display formatted session preview / tail
-            print("\n--- Session Preview / Tail ---")
+            # Display formatted session preview / tail - showing all turns
+            print("\n--- Session Preview (All Turns) ---")
             try:
                 session_data = json.loads(log_content)
                 turns_data = session_data.get("turns", [])
                 if turns_data:
-                    first_turn = turns_data[0]
-                    f_in = first_turn.get("user_input", "")[:100]
-                    f_out = first_turn.get("agent_output", "")[:100]
-                    print(f"user_input: {f_in}")
-                    print(f"agent_output: {f_out}")
-                    
-                    if len(turns_data) > 2:
-                        middle_count = len(turns_data) - 2
-                        print(f"\n. . .\n[{middle_count} turns in between]\n. . .\n")
-                    elif len(turns_data) == 2:
-                        print("\n. . .\n")
-
-                    if len(turns_data) > 1:
-                        last_turn = turns_data[-1]
-                        l_in = last_turn.get("user_input", "")[:100]
-                        l_out = last_turn.get("agent_output", "")[:100]
-                        print(f"user_input: {l_in}")
-                        print(f"agent_output: {l_out}")
+                    for idx, t in enumerate(turns_data, start=1):
+                        t_in = t.get("user_input", "")
+                        t_out = t.get("agent_output", "")
+                        print(f"Turn {idx}:")
+                        print(f"  user_input: {t_in}")
+                        print(f"  agent_output: {t_out}")
+                        if idx < len(turns_data):
+                            print()
                 else:
                     print(log_content[-1000:])
             except Exception:
                 print(log_content[-1000:])
-            print("------------------------------\n")
+            print("------------------------------------\n")
             
         except Exception as e:
             print(f"Error reading log file {matched_log}: {e}")

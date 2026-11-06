@@ -160,24 +160,65 @@ def _Run(fn: Callable[[], str]) -> str:
 _SNAPSHOT_JS = r"""
 (args) => {
   const { max, wholePage } = args;
-  const sel = 'a[href], button, input:not([type=hidden]), textarea, select, [role=button], [role=link], [role=tab], [role=menuitem]';
+  const sel = 'input:not([type=hidden]), textarea, select, [role="textbox"], [role="radio"], [role="checkbox"], [role="listbox"], a[href], button, [role=button], [role=link], [role=tab], [role=menuitem]';
   const out = [], seen = new Set();
-  for (const el of document.querySelectorAll(sel)) {
+
+  // Recursively query elements including inside Shadow DOMs
+  function queryDeep(root, selector) {
+    let results = Array.from(root.querySelectorAll(selector));
+    for (const el of root.querySelectorAll('*')) {
+      if (el.shadowRoot) {
+        results = results.concat(queryDeep(el.shadowRoot, selector));
+      }
+    }
+    return results;
+  }
+
+  const elements = queryDeep(document, sel);
+
+  for (const el of elements) {
     if (out.length >= max) break;
-    const r = el.getBoundingClientRect(), s = getComputedStyle(el);
-    if (!r.width || !r.height || s.visibility === 'hidden' || s.display === 'none') continue;
-    if (!wholePage && (r.bottom < 0 || r.top > innerHeight)) continue;
-    const tag = el.tagName.toLowerCase();
-    const text = (el.innerText || el.value || el.placeholder || el.getAttribute('aria-label') || el.title || el.alt || '')
+    
+    try {
+      const r = el.getBoundingClientRect();
+      const s = getComputedStyle(el);
+      if (!r.width || !r.height || s.visibility === 'hidden' || s.display === 'none') continue;
+      if (!wholePage && (r.bottom < -1 || r.top > innerHeight)) continue;
+    } catch (e) {}
+
+    const tag = el.tagName ? el.tagName.toLowerCase() : 'element';
+    
+    // Resolve aria-labelledby to get the actual Google Forms question text
+    let labelText = '';
+    const ariaLabelledBy = el.getAttribute('aria-labelledby');
+    if (ariaLabelledBy) {
+      // aria-labelledby can contain multiple space-separated IDs
+      const ids = ariaLabelledBy.split(/\s+/);
+      for (const idStr of ids) {
+        const labelEl = document.getElementById(idStr);
+        if (labelEl && labelEl.innerText) {
+          labelText += (labelText ? ' ' : '') + labelEl.innerText;
+        }
+      }
+    }
+
+    const text = (labelText || el.innerText || el.value || el.placeholder || el.getAttribute('aria-label') || el.getAttribute('data-initial-value') || el.title || el.alt || '')
       .trim().replace(/\s+/g, ' ').slice(0, 80);
+
     let href = null;
     if (el.href) { try { const u = new URL(el.href); href = (u.origin + u.pathname).slice(0, 100); } catch (e) {} }
-    if (!text && !href && !['input', 'textarea', 'select'].includes(tag)) continue;
+
+    if (!text && !href && !['input', 'textarea', 'select'].includes(tag) && !el.getAttribute('role')) continue;
+
     const key = tag + '|' + text + '|' + (href || '');
     if (seen.has(key)) continue;
     seen.add(key);
+
     const id = out.length + 1;
-    el.setAttribute('data-agent-id', String(id));
+    try {
+      el.setAttribute('data-agent-id', String(id));
+    } catch (e) {}
+    
     out.push({ id, tag, type: el.type || null, text, href });
   }
   return out;

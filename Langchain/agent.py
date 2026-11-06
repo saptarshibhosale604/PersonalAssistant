@@ -14,6 +14,17 @@ load_dotenv()
 from Log.log_utils import PrintFunctionName
 from Log.turn_logger import add_tool_call, add_tool_message, add_usage
 
+from pathlib import Path
+from dotenv import load_dotenv
+# env_path = Path(r"E:\WORK\PROJECT\git\PersonalAssistant\.env")
+env_path = Path(r"E:\WORK\PROJECT\git\PersonalAssistant\CloudPII\EnvVars\.env")
+if not env_path.exists():
+    raise FileNotFoundError(f"Configuration file not found at {env_path}")
+    
+print(f"Loading environment variables from {env_path}...")
+load_dotenv(dotenv_path=env_path)
+
+
 @PrintFunctionName
 def RemoveSpaces(inputString: str) -> str:
     """Remove all whitespace characters from a string.
@@ -34,10 +45,10 @@ def RemoveSpaces(inputString: str) -> str:
 #     "sk-proj-zP6XLa1m5gtlBcXJCaHZGmAvXEvUrP 5ATJSPBfLRdEuF-vSroLAG4V0zBdpwPz9PTXe9rM0-CgT3BlbkFJ83"
 #     " AZyS7Zds5OT4G7S7MJslTok1O8P7ftX6Zz_IvdtMsy_CnjJeBoOv-o-G5t13-1Yw20ei_BwA"
 # )  # myTestKey08, saptarshibhosale604@gmail.com
-TAVILY_KEY = "tvly-kX76LCz C36oih0u9COcf6oa 53A47MX0g"
+# TAVILY_KEY = "tvly-kX76LCz C36oih0u9COcf6oa 53A47MX0g"
 
 # os.environ["OPENAI_API_KEY"] = RemoveSpaces(OPENAI_KEY)
-os.environ["TAVILY_API_KEY"] = RemoveSpaces(TAVILY_KEY)
+# os.environ["TAVILY_API_KEY"] = RemoveSpaces(TAVILY_KEY)
 
 # Imported after the API-key env vars are set above, since some provider
 # SDKs read credentials from the environment at import time.
@@ -290,11 +301,21 @@ def UpdateAgent(modeLLM: str) -> None:
         )
         TOOLS = toolsManager.Main("get")  # "get": fetch tools list
 
+
+    elif modeLLM == "globalGemini03":
+        LLM = ChatGoogleGenerativeAI(
+            model="gemini-3.5-flash", max_tokens=DEFAULT_MAX_TOKENS,  # 2nd best: fast, quick Q&A + simple tools
+            max_retries=DEFAULT_MAX_RETRIES,
+            # temperature=DEFAULT_TEMPERATURE, max_retries=DEFAULT_MAX_RETRIES,
+        )
+        TOOLS = toolsManager.Main("get")  # "get": fetch tools list
+
     elif modeLLM == "globalMistral01":
         LLM = ChatMistralAI(
             # model="mistral-small-latest", api_key=os.environ.get("MISTRAL_API_KEY"),
             # model="ministral-14b-2512", api_key=os.environ.get("MISTRAL_API_KEY"),
-            model="labs-leanstral-2603", api_key=os.environ.get("MISTRAL_API_KEY"),
+            # model="labs-leanstral-2603", api_key=os.environ.get("MISTRAL_API_KEY"),
+            model="labs-leanstral-2603",
             max_tokens=DEFAULT_MAX_TOKENS,
             temperature=DEFAULT_TEMPERATURE, max_retries=DEFAULT_MAX_RETRIES,
         )
@@ -302,7 +323,8 @@ def UpdateAgent(modeLLM: str) -> None:
 
     elif modeLLM == "globalMistral02":
         LLM = ChatMistralAI(
-            model="ministral-8b-latest", api_key=os.environ.get("MISTRAL_API_KEY"),
+            # model="ministral-8b-latest", api_key=os.environ.get("MISTRAL_API_KEY"),
+            model="ministral-8b-latest",
             max_tokens=DEFAULT_MAX_TOKENS,
             temperature=DEFAULT_TEMPERATURE, max_retries=DEFAULT_MAX_RETRIES,
         )
@@ -311,7 +333,8 @@ def UpdateAgent(modeLLM: str) -> None:
     elif modeLLM == "globalGroq01":
         LLM = ChatOpenAI(
             model="openai/gpt-oss-120b", base_url="https://api.groq.com/openai/v1",
-            api_key=os.environ.get("GROQ_API_KEY"), streaming=True,
+            # api_key=os.environ.get("GROQ_API_KEY"), streaming=True,
+            streaming=True,
             max_tokens=DEFAULT_MAX_TOKENS, temperature=DEFAULT_TEMPERATURE,
             max_retries=DEFAULT_MAX_RETRIES,
         )
@@ -320,7 +343,8 @@ def UpdateAgent(modeLLM: str) -> None:
     elif modeLLM == "globalGroq02":
         LLM = ChatOpenAI(
             model="qwen/qwen3.8-27b", base_url="https://api.groq.com/openai/v1",
-            api_key=os.environ.get("GROQ_API_KEY"), streaming=True,
+            # api_key=os.environ.get("GROQ_API_KEY"), streaming=True,
+            streaming=True,
             max_tokens=DEFAULT_MAX_TOKENS, temperature=DEFAULT_TEMPERATURE,
             max_retries=DEFAULT_MAX_RETRIES,
         )
@@ -329,7 +353,8 @@ def UpdateAgent(modeLLM: str) -> None:
     elif modeLLM == "globalOpenRouter01":
         LLM = ChatOpenAI(
             model="nvidia/nemotron-3-ultra-550b-a55b:free", base_url="https://openrouter.ai/api/v1",
-            api_key=os.environ.get("OPENROUTER_API_KEY"), streaming=True,
+            streaming=True,
+            # api_key=os.environ.get("OPENROUTER_API_KEY"), streaming=True,
             max_tokens=DEFAULT_MAX_TOKENS, temperature=DEFAULT_TEMPERATURE,
             max_retries=DEFAULT_MAX_RETRIES,
         )
@@ -338,7 +363,8 @@ def UpdateAgent(modeLLM: str) -> None:
     elif modeLLM == "globalOpenRouter02":
         LLM = ChatOpenAI(
             model="nvidia/nemotron-3.5-lightning:free", base_url="https://openrouter.ai/api/v1",
-            api_key=os.environ.get("OPENROUTER_API_KEY"), streaming=True,
+            # api_key=os.environ.get("OPENROUTER_API_KEY"), streaming=True,
+            streaming=True,
             max_tokens=DEFAULT_MAX_TOKENS, temperature=DEFAULT_TEMPERATURE,
             max_retries=DEFAULT_MAX_RETRIES,
         )
@@ -348,6 +374,7 @@ def UpdateAgent(modeLLM: str) -> None:
         LLM = ChatOpenAI(
             model="nvidia/nemotron-3-ultra-550b-a55b", base_url="https://integrate.api.nvidia.com/v1",
             api_key=os.environ.get("NVIDIA_API_KEY"), streaming=True,
+            # streaming=True,
             max_tokens=DEFAULT_MAX_TOKENS, temperature=DEFAULT_TEMPERATURE,
             max_retries=DEFAULT_MAX_RETRIES,
         )
@@ -356,7 +383,8 @@ def UpdateAgent(modeLLM: str) -> None:
     elif modeLLM == "globalNvidia02":
         LLM = ChatOpenAI(
             model="mistralai/mistral-large-2-instruct", base_url="https://integrate.api.nvidia.com/v1",
-            api_key=os.environ.get("NVIDIA_API_KEY"), streaming=True,
+            # api_key=os.environ.get("NVIDIA_API_KEY"), streaming=True,
+            streaming=True,
             max_tokens=DEFAULT_MAX_TOKENS, temperature=DEFAULT_TEMPERATURE,
             max_retries=DEFAULT_MAX_RETRIES,
         )
@@ -777,6 +805,67 @@ def StreamingResponse(userInput: str, threadId, modeLLM: str, modeContext: str) 
 
 
 @PrintFunctionName
+def PrintThreadInfo(configMemory: dict) -> None:
+    """Print all human and AI message info stored in the thread checkpointer memory."""
+    try:
+        state = AGENT.get_state(configMemory)
+        if not state or not state.values or "messages" not in state.values:
+            print(f"\n{'-' * BANNER_WIDTH}")
+            print("THREAD INFO: No thread history recorded.")
+            print(f"{'-' * BANNER_WIDTH}\n")
+            return
+
+        messages = state.values.get("messages", [])
+        FormatMessageTypes("THREAD INFO")
+        print(f"Thread ID: {configMemory.get('configurable', {}).get('thread_id')}")
+        print(f"Total Messages: {len(messages)}")
+        print("-" * BANNER_WIDTH)
+
+        for idx, msg in enumerate(messages, start=1):
+            msgType = getattr(msg, "type", msg.__class__.__name__)
+            content = getattr(msg, "content", str(msg))
+
+            if msgType == "human":
+                roleLabel = "[HUMAN MESSAGE]"
+            elif msgType == "ai":
+                roleLabel = "[AI MESSAGE]"
+            elif msgType == "tool":
+                toolName = getattr(msg, "name", "unknown_tool")
+                roleLabel = f"[TOOL MESSAGE: {toolName}]"
+            else:
+                roleLabel = f"[{msgType.upper()} MESSAGE]"
+
+            print(f"{idx}. {roleLabel}")
+            print(f"{content}")
+            if getattr(msg, "tool_calls", None):
+                print(f"Tool Calls: {msg.tool_calls}")
+            print("-" * BANNER_WIDTH)
+
+        FormatMessageTypes("")
+        print()
+
+    except Exception as error:
+        logger.error(f"PrintThreadInfo Error: {error}")
+
+
+@PrintFunctionName
+def PromptAndShowThreadInfo(configMemory: dict) -> None:
+    """Prompt user if they want to see all thread info (human/AI messages). Default is Yes."""
+    try:
+        # choice = 'n'
+        choice = input("Do you want to see all thread info (human message, ai message)? [y/N]: ").strip().lower()
+        if choice in ("y", "yes"):
+            PrintThreadInfo(configMemory)
+        elif choice in ("n", "no"):
+            print("Thread info display skipped.")
+        else:
+            print("Thread info display skipped.")
+        #     PrintThreadInfo(configMemory)
+    except (EOFError, KeyboardInterrupt):
+        PrintThreadInfo(configMemory)
+
+
+@PrintFunctionName
 def Main(userInput: str, threadId, modeLLM: str, modeStream: str) -> str:
     """Route a user input to the appropriate LLM/agent execution strategy.
 
@@ -798,8 +887,10 @@ def Main(userInput: str, threadId, modeLLM: str, modeStream: str) -> str:
     configMemory = {"configurable": {"thread_id": threadIdStr}}
     # print(f"thread_id: {threadIdStr}")
 
+    agentResponse = ""
+
     if modeLLM == "local":
-        return StreamAndAccumulate(
+        agentResponse = StreamAndAccumulate(
             [
                 {"role": "system", "content": JARVIS_SYSTEM_PROMPT},
                 {"role": "user", "content": userInput},
@@ -808,7 +899,7 @@ def Main(userInput: str, threadId, modeLLM: str, modeStream: str) -> str:
         )
 
     elif modeLLM == "local-buddy":
-        return StreamAndAccumulate(
+        agentResponse = StreamAndAccumulate(
             [
                 {"role": "system", "content": BUDDY_SYSTEM_PROMPT},
                 {"role": "user", "content": userInput},
@@ -833,7 +924,9 @@ def Main(userInput: str, threadId, modeLLM: str, modeStream: str) -> str:
             print(f"02 state:{state}")
 
             if not state.interrupts:
-                return result["messages"][-1].text
+                last_msg = result["messages"][-1]
+                agentResponse = getattr(last_msg, "text", getattr(last_msg, "content", ""))
+                break
 
             interrupt = state.interrupts[0]
             actions = interrupt.value["action_requests"]
@@ -848,14 +941,12 @@ def Main(userInput: str, threadId, modeLLM: str, modeStream: str) -> str:
             result = AGENT.invoke(Command(resume={"decisions": decisions}), config=configMemory)
             print(f"03 result:{result}")
 
-
     elif modeLLM == "local-4b" and modeStream == "true":
         # NOTE: leftover debug pause from the original implementation; blocks
         # execution waiting for Enter. Preserved to keep behavior identical.
         # input("HumanInterrupt01")
 
         agentCallingCount = 0
-        agentResponse = ""
 
         while True:
             agentCallingCount += 1
@@ -882,7 +973,7 @@ def Main(userInput: str, threadId, modeLLM: str, modeStream: str) -> str:
                 print()
 
             else:
-                return agentResponse
+                break
 
             # logger.debug(f"[Info] agentCallingCountPerUserInput: {agentCallingCount}")
 
@@ -892,7 +983,6 @@ def Main(userInput: str, threadId, modeLLM: str, modeStream: str) -> str:
         # input("HumanInterrupt01")
 
         agentCallingCount = 0
-        agentResponse = ""
 
         while True:
             agentCallingCount += 1
@@ -906,12 +996,12 @@ def Main(userInput: str, threadId, modeLLM: str, modeStream: str) -> str:
                 print()
 
             else:
-                return agentResponse
+                break
 
             # logger.debug(f"agentCallingCountPerUserInput: {agentCallingCount}")
+
     elif "global" in modeLLM:
         agentCallingCount = 0
-        agentResponse = ""
 
         while True:
             agentCallingCount += 1
@@ -926,6 +1016,9 @@ def Main(userInput: str, threadId, modeLLM: str, modeStream: str) -> str:
                 agentResponse = StreamResumeAndAccumulate(decisions, configMemory)
 
             else:
-                return agentResponse
+                break
 
             # logger.debug(f"agentCallingCountPerUserInput: {agentCallingCount}")
+
+    # PromptAndShowThreadInfo(configMemory)
+    return agentResponse

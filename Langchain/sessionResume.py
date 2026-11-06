@@ -29,8 +29,8 @@ def ParseSessionLog(logFilePath: str, maxTurns: int = MAX_RESUME_TURNS) -> list:
             userInput = t.get("user_input", "")
             agentOutput = t.get("agent_output", "")
             
-            if not userInput or not agentOutput or agentOutput == NO_OUTPUT_TEXT:
-                continue
+            # if not userInput or not agentOutput or agentOutput == NO_OUTPUT_TEXT:
+            #     continue
 
             tool_calls = t.get("tool_calls", [])
             if tool_calls:

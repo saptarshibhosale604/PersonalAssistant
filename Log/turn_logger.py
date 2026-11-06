@@ -149,6 +149,14 @@ def add_usage(input_tokens: Optional[int], output_tokens: Optional[int],
         turn.add_usage(input_tokens, output_tokens, total_tokens, duration_s, model_name)
 
 
+def reset_session_turns() -> None:
+    """Clear all session turns in memory when starting a new session."""
+    global _session_turns, _current_turn
+    with _turn_lock:
+        _session_turns = []
+        _current_turn = None
+
+
 def set_agent_output(text: str) -> None:
     """Set the agent output for the current turn."""
     turn = get_current_turn()
