@@ -11,6 +11,8 @@
 - A, Hello from PowerShell CLI via WAHA!
 - B, /help is not returning the response but just printing it
 - C, bug, session_0297_2026-10-20_21-17-01.log the tockens are automatically droping
+- B, mega server in start waha script
+- B, to do handler skill
 
 
 
