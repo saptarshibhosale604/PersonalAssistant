@@ -1,657 +1,79 @@
-## README ##
-# # # # # # # # # # # # # # # # # # # # # # # # 
-#    ____  _____    _    ____  __  __ _____    #
-#   |  _ \| ____|  / \  |  _ \|  \/  | ____|   #
-#   | |_) |  _|   / _ \ | | | | |\/| |  _|     #
-#   |  _ <| |___ / ___ \| |_| | |  | | |___    #
-#   |_| \_\_____/_/   \_\____/|_|  |_|_____|   #
-#                                              #
-#                                              #
-# # # # # # # # # # # # # # # # # # # # # # # # 
-
-
 """
-LangChain Tools for Personal Finance Tracking
-Handles reading and writing finance data from/to CSV file
+LangChain Tools for Personal Finance Tracking - CDC Framework
+Provides append-only ledger tools for all finance tables in finance.db
 """
 
-## IMPORT ##
-# # # # # # # # # # # # # # # # # # # # # 
-#    ___ __  __ ____   ___  ____ ___:_    #
-#   |_ _|  \/  |  _ \ / _ \|  _ \_   _|   #
-#    | || |\/| | |_) | | | | |_) || |     #
-#    | || |  | |  __/| |_| |  _ < | |     #
-#   |___|_|  |_|_|    \___/|_| \_\|_|     #
-#                                         #
-#                                         #
-# # # # # # # # # # # # # # # # # # # # # 
-
-
-import csv
 import os
-import time
-from typing import Dict, List, Any
-from pathlib import Path
-from pydantic import BaseModel, Field
+import sys
 
-from langchain.tools import tool
+# Add project root to path
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+sys.path.insert(0, PROJECT_ROOT)
 
-from queue import Queue
-import threading
-# import pandas as pd
-from datetime import datetime
-import atexit
-
-
-## VARIABLES ##
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-#   __     ___    ____  ___    _    ____  _     _____ ____     #
-#   \ \   / / \  |  _ \|_ _|  / \  | __ )| |   | ____/ ___|    #
-#    \ \ / / _ \ | |_) || |  / _ \ |  _ \| |   |  _| \___ \    #
-#     \ V / ___ \|  _ < | | / ___ \| |_) | |___| |___ ___) |   #
-#      \_/_/   \_\_| \_\___/_/   \_\____/|_____|_____|____/    #
-#                                                              #
-#                                                              #
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-
-
-FINANCE_CSV_PATH = "/root/ProjectRpi/Rpi/PersonalAssistant/Langchain/Tools/ToolsFinanceAssist/Data/finance.csv"
-CSV_COLUMNS = ["SrNo", "Name", "InvestedAmount", "CurrentAmount", "Profit"]
-
-
-
-## FUNCTIONS ##
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-#    _____ _   _ _   _  ____ _____ ___ ___  _   _ ____     #
-#   |  ___| | | | \ | |/ ___|_   _|_ _/ _ \| \ | / ___|    #
-#   | |_  | | | |  \| | |     | |  | | | | |  \| \___ \    #
-#   |  _| | |_| | |\  | |___  | |  | | |_| | |\  |___) |   #
-#   |_|    \___/|_| \_|\____| |_| |___\___/|_| \_|____/    #
-#                                                          #
-#                                                          #
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+from Langchain.Tools.ToolsFinanceAssist.tools.cdc_tools import ALL_CDC_TOOLS
 
 
 # ============================================================================
-# PYDANTIC SCHEMAS FOR TOOL INPUTS
+# EXPORT ALL CDC TOOLS
 # ============================================================================
 
-class ReadFinanceInput(BaseModel):
-    """Schema for reading finance data"""
-    filterBy: str = Field(
-        default="all",
-        description="Filter by: 'all', 'investment_name', or specific row number"
-    )
-    filterValue: str = Field(
-        default="",
-        description="Value to filter by (e.g., 'Stocks' or '2')"
-    )
+# All 35 tools (7 per table × 5 tables)
+tools = ALL_CDC_TOOLS
 
+# Also provide categorized access
+def get_tools_by_table(table_name: str):
+    """Get the 7 tools for a specific table"""
+    from Langchain.Tools.ToolsFinanceAssist.tools.cdc_tools import get_tools_for_table
+    return get_tools_for_table(table_name)
 
-class WriteFinanceInput(BaseModel):
-    """Schema for writing finance data"""
-    operation: str = Field(
-        description="Operation type: 'add', 'update', or 'delete'"
-    )
-    rowNumber: int = Field(
-        default=None,
-        description="Row number (SrNo) for update/delete operations"
-    )
-    investmentName: str = Field(
-        default="",
-        description="Name of the investment (required for 'add' operation)"
-    )
-    investedAmount: float = Field(
-        default=0.0,
-        description="Amount invested (required for 'add' operation)"
-    )
-    currentAmount: float = Field(
-        default=0.0,
-        description="Current amount (required for 'add' operation)"
-    )
 
+def get_all_tools():
+    """Get all 35 CDC tools"""
+    return ALL_CDC_TOOLS
 
-# ============================================================================
-# HELPER FUNCTIONS
-# ============================================================================
-
-def InitializeFinanceCSV() -> None:
-    """Initialize finance.csv with headers if it doesn't exist"""
-    if not os.path.exists(FINANCE_CSV_PATH):
-        print(f"The finance file do not exist:: FINANCE_CSV_PATH: {FINANCE_CSV_PATH}")
-        # with open(FINANCE_CSV_PATH, 'w', newline='', encoding='utf-8') as csvFile:
-        #     writer = csv.DictWriter(csvFile, fieldnames=CSV_COLUMNS)
-        #     writer.writeheader()
-
-
-def CalculateProfit(investedAmount: float, currentAmount: float) -> float:
-    """Calculate profit from invested and current amounts"""
-    return round(currentAmount - investedAmount, 2)
-
-
-def FormatCurrency(amount: float) -> str:
-    """Format amount as currency (Rs)"""
-    return f"{amount:,.2f} Rs"
-
-
-def ReadAllFinanceData() -> list[dict]:
-    """Read all data from finance.csv"""
-    InitializeFinanceCSV()
-    
-    financeData = []
-    try:
-        with open(FINANCE_CSV_PATH, 'r', encoding='utf-8') as csvFile:
-            reader = csv.DictReader(csvFile)
-            for row in reader:
-                if row and any(row.values()):  # Skip empty rows
-                    financeData.append(row)
-    except Exception as e:
-        raise Exception(f"Error reading CSV: {str(e)}")
-    
-    return financeData
-
-
-import uuid
-
-def GenerateUUID():
-    """
-    Generates a random UUID.
-    
-    Returns:
-        str: A random UUID.
-    """
-
-    # Generate a random UUID using the uuid4 function from the uuid module
-    random_uuid = uuid.uuid4()
-    # input(f"random_uuid: {random_uuid}")
-
-    # Convert the UUID to a string in the format 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx xxxx'
-    # id_str = f"{random_uuid.x} {random_uuid.y} {random_uuid.z} {random_uuid.w} {random_uuid.e} {random_uuid.d}"
-
-    return random_uuid
-
-# GenerateUUID()
-
-def WriteFinanceData(financeData: list[dict], writeMode) -> None:
-    """Write data to finance.csv"""
-    global financeQueue
-    try:
-        # backup the current finance.csv file as <timestamp>_finance.csv.bak
-        # TODO
-        input("TODO B backup the current finance.csv file as <timestamp>_finance.csv.bak")
-        input(f"writeMode: {writeMode}")
-        if writeMode == "append":
-
-            nextRowNumber = GetNextRowNumber()
-            # input(f"WriteFinanceData() nextRowNumber: {nextRowNumber}\n")
-            #
-            print(f"financeData before: {financeData}")
-            for i, data in enumerate(financeData):
-                data['SrNo'] = nextRowNumber  # Replace with your desired SrNo value
-            # newRow["SrNo"] = nextRowNumber
-            # financeData["SrNo"] = nextRowNumber
-            print(f"financeData after: {financeData}")
-
-            # input(f"WriteFinanceData() nextRowNumber: {nextRowNumber}\n")
-
-
-            #
-            with open(FINANCE_CSV_PATH, 'a', newline='', encoding='utf-8') as csvFile:
-                writer = csv.DictWriter(csvFile, fieldnames=CSV_COLUMNS)
-                # input(f"writer: {writer}")
-                # writer.writeheader()
-                # input(f"writer: {writer}")
-                writer.writerows(financeData)
-                # input(f"writer: {writer}")
-
-            input(f"Data has been written")
-
-        elif writeMode == "write":
-
-            nextRowNumber = GetNextRowNumber()
-            input(f"WriteFinanceData() nextRowNumber: {nextRowNumber}\n")
-
-            # Generate tentative ID (will be reconciled later)
-            # nextId = GetTentativeId()
-            # nextId = GetTentativeId()
-            # queueEntry = {'operation': operation, 'data': {...}, 'timestamp': datetime.now()}
-            # financeQueue.put(queueEntry)
-            # return f"Queued row {nextId}: {investmentName}"
-
-            #
-            # print(f"financeData before: {financeData}")
-            # for i, data in enumerate(financeData):
-            #     data['SrNo'] = nextRowNumber  # Replace with your desired SrNo value
-            # # newRow["SrNo"] = nextRowNumber
-            # # financeData["SrNo"] = nextRowNumber
-            # print(f"financeData after: {financeData}")
-            #
-            # input(f"WriteFinanceData() nextRowNumber: {nextRowNumber}\n")
-            #
-            # with open(FINANCE_CSV_PATH, 'w', newline='', encoding='utf-8') as csvFile:
-            #     writer = csv.DictWriter(csvFile, fieldnames=CSV_COLUMNS)
-            #     # input(f"writer: {writer}")
-            #     writer.writeheader()
-            #     # input(f"writer: {writer}")
-            #     writer.writerows(financeData)
-            #     # input(f"writer: {writer}")
-    except Exception as e:
-        raise Exception(f"Error writing to CSV: {str(e)}")
-
-
-def GetNextRowNumber() -> int:
-    """Get the next available row number (SrNo)"""
-    financeData = ReadAllFinanceData()
-    if not financeData:
-        return 1
-    
-    maxRowNumber = max(int(row.get("SrNo", 0)) for row in financeData)
-    print(f"GetNextRowNumber() maxRowNumber: {maxRowNumber}")
-    return maxRowNumber + 1
-
-
-# ============================================================================
-# Queue
-# ============================================================================
-
-# Global shared queue (thread-safe)
-# financeQueue = Queue()
-# csvWriterThread = None
-# Global singleton (thread-safe)
-financeQueue = Queue()
-writerThread = None
-writerStarted = False
-
-# def StartCsvWriter():
-#     global csvWriterThread
-#     print(f"StartCsvWriter started ")
-#     csvWriterThread = threading.Thread(target=ProcessQueue, daemon=True)
-#     csvWriterThread.start()
-#
-# def ToolWriteFinanceData(operation, investmentName, ...):
-#     # Generate tentative ID (will be reconciled later)
-#     nextId = GetTentativeId()
-#     queueEntry = {'operation': operation, 'data': {...}, 'timestamp': datetime.now()}
-#     financeQueue.put(queueEntry)
-#     return f"Queued row {nextId}: {investmentName}"
-
-# def ProcessQueue():
-#     batch = []
-#     # batch = None
-#     print("ProcessQueue starts")
-#     while True:
-#         print("ProcessQueue while loop")
-#         if not financeQueue.empty():
-#             batch.append(financeQueue.get())
-#             # Process batch every 5 seconds or 10 items
-#             input(f"batch: {batch}")
-#             if len(batch) >= 10 or ...:
-#                 # finance_data = batch['data']
-#                 finance_data = batch[0]['data']
-#                 print(f"In ProcessQueue: finance_data: {finance_data}")
-#                 WriteFinanceData(finance_data, "append")
-#                 batch = []
-#         time.sleep(3)
-#
-
-def InitializeQueueWriter(filename='finance.csv'):
-    global writerThread, writerStarted
-
-    print(f"InitializeQueueWriter writerStarted: {writerStarted}")
-
-    if not writerStarted:
-        writerThread = threading.Thread(target=ProcessQueue, args=(filename,), daemon=True)
-        writerThread.start()
-        writerStarted = True
-        atexit.register(FlushQueueOnExit)
-
-        
-def ProcessQueue(filename):
-    batch = []
-    while True:
-        print(f"ProcessQueue len(batch): {len(batch)}")
-        try:
-            batch.append(financeQueue.get(timeout=1))
-            input(f"ProcessQueue: batch: {batch}::")
-            # if len(batch) >= 5:
-            if len(batch) <= 9:
-                # ApplyBatch(batch, filename)
-                finance_data = batch[0]['data']
-                print(f"In ProcessQueue: finance_data: {finance_data}")
-                WriteFinanceData(finance_data, "append")
-                batch = []
-        except:
-            if batch:
-                ApplyBatch(batch, filename)
-                batch = []
-
-        time.sleep(2)
-
-def FlushQueueOnExit():
-    print(f"FlushQueueOnExit")
-
-# ============================================================================
-# LANGCHAIN TOOLS
-# ============================================================================
-
-@tool(args_schema=ReadFinanceInput)
-def ToolReadFinanceData(
-    filterBy: str = "all",
-    filterValue: str = ""
-) -> str:
-    """
-    Read personal finance data from CSV file.
-    
-    Args:
-        filterBy: Filter type ('all', 'investment_name', 'row_number')
-        filterValue: Value to filter by
-    
-    Returns:
-        Formatted finance data as string
-    """
-    try:
-        allFinanceData = ReadAllFinanceData()
-        print(f"allFinanceData: {allFinanceData}")
-        input("Human01")
-        
-        if not allFinanceData:
-            return "No finance data found. CSV is empty."
-        
-        # Filter data based on user request
-        filteredData = allFinanceData
-        # print(f"filteredData: {filteredData}")
-        # input("Human02")
-        
-        if filterBy == "investment_name" and filterValue:
-            filteredData = [
-                row for row in allFinanceData 
-                if filterValue.lower() in row.get("Name", "").lower()
-            ]
-        elif filterBy == "row_number" and filterValue:
-            filteredData = [
-                row for row in allFinanceData 
-                if row.get("SrNo") == filterValue
-            ]
-        
-        if not filteredData:
-            return f"No data found for filter: {filterBy}={filterValue}"
-        
-        print(f"filteredData: {filteredData}")
-        input("Human03")
-
-        # Format output
-        output = "📊 Personal Finance Data:\n"
-        output += "=" * 80 + "\n"
-        
-        totalInvested = 0.0
-        totalCurrent = 0.0
-        totalProfit = 0.0
-        
-        for row in filteredData:
-            srNo = row.get("SrNo", "N/A")
-            name = row.get("Name", "N/A")
-            investedStr = row.get("InvestedAmount", "0")
-            currentStr = row.get("CurrentAmount", "0")
-            profitStr = row.get("Profit", "0")
-            
-            # Convert to float for calculations
-            invested = float(investedStr.replace(",", "").replace(" Rs", ""))
-            current = float(currentStr.replace(",", "").replace(" Rs", ""))
-            profit = float(profitStr.replace(",", "").replace(" Rs", ""))
-            
-            totalInvested += invested
-            totalCurrent += current
-            totalProfit += profit
-            
-            output += f"\n📌 Sr No: {srNo}\n"
-            output += f"   Name: {name}\n"
-            output += f"   Invested: {FormatCurrency(invested)}\n"
-            output += f"   Current: {FormatCurrency(current)}\n"
-            output += f"   Profit: {FormatCurrency(profit)}\n"
-        
-        output += "\n" + "=" * 80 + "\n"
-        output += "📈 Summary:\n"
-        output += f"   Total Invested: {FormatCurrency(totalInvested)}\n"
-        output += f"   Total Current: {FormatCurrency(totalCurrent)}\n"
-        output += f"   Total Profit: {FormatCurrency(totalProfit)}\n"
-        
-        if totalInvested > 0:
-            profitPercentage = (totalProfit / totalInvested) * 100
-            output += f"   ROI: {profitPercentage:.2f}%\n"
-        
-        print(f"output: {output}")
-        input("Human04")
-        return output
-        
-    except Exception as e:
-        return f"Error reading finance data: {str(e)}"
-
-
-@tool(args_schema=WriteFinanceInput)
-def ToolWriteFinanceData(
-    operation: str,
-    rowNumber: int = None,
-    investmentName: str = "",
-    investedAmount: float = 0.0,
-    currentAmount: float = 0.0
-) -> str:
-    """
-    Write/update personal finance data to CSV file.
-    
-    Args:
-        operation: 'add', 'update', or 'delete'
-        rowNumber: Row number (SrNo) for update/delete
-        investmentName: Name of investment
-        investedAmount: Amount invested
-        currentAmount: Current amount
-    
-    Returns:
-        Success/error message
-    """
-    try:
-        financeData = ReadAllFinanceData()
-        print(f"financeData: {financeData}")
-        InitializeQueueWriter()  # Safe idempotent start
-
-        input(f"operation: {operation}")
-
-        if operation.lower() == "add":
-            if not investmentName:
-                return "Error: investmentName is required for 'add' operation"
-            
-            nextRowNumber = GetNextRowNumber()
-            profitValue = CalculateProfit(investedAmount, currentAmount)
-            
-            input(f"ToolWriteFinanceData() nextRowNumber: {nextRowNumber}\n")
-            newRow = {
-                "SrNo": str(nextRowNumber),
-                "Name": investmentName,
-                "InvestedAmount": investedAmount,
-                "CurrentAmount": currentAmount,
-                "Profit": profitValue
-            }
-            financeData = [] # wipe the financeData
-            financeData.append(newRow)
-            # WriteFinanceData(financeData, "append")
-            nextId = GenerateUUID()
-            input(f"nextId: {nextId}")
-
-            print(f"financeData: {financeData}")
-            queueEntry = {'operation': 'append', 'data': financeData, 'timestamp': datetime.now()}
-            finance_data02 = queueEntry.get('data')
-            print(f"finance_data02: {finance_data02}")
-            # input(f"queueEntry: {queueEntry}")
-
-            input(f"Queued: queueEntry: {queueEntry}::investmentName: {investmentName} (processed in background):::")
-            financeQueue.put(queueEntry)
-            # input(f"financeQueue: {financeQueue}")
-
-            # return f"Queued row {nextId}: {queueEntry}"
-            print(f"Queued row {nextId}: {queueEntry}")
-
-            # WriteFinanceData(newRow, "append")
-            
-            return (
-                f"✅ Successfully added new investment:\n"
-                f"   Sr No: {nextRowNumber}\n"
-                f"   Name: {investmentName}\n"
-                f"   Invested: {FormatCurrency(investedAmount)}\n"
-                f"   Current: {FormatCurrency(currentAmount)}\n"
-                f"   Profit: {FormatCurrency(profitValue)}"
-            )
-        
-        elif operation.lower() == "update":
-            if not rowNumber:
-                return "Error: rowNumber is required for 'update' operation"
-            
-            foundIndex = None
-            for idx, row in enumerate(financeData):
-                if row.get("SrNo") == str(rowNumber):
-                    foundIndex = idx
-                    break
-            
-            if foundIndex is None:
-                return f"Error: No investment found with Sr No {rowNumber}"
-            
-            oldRow = financeData[foundIndex]
-            profitValue = CalculateProfit(investedAmount, currentAmount)
-            
-            financeData[foundIndex] = {
-                "SrNo": str(rowNumber),
-                "Name": investmentName or oldRow.get("Name"),
-                "InvestedAmount": investedAmount if investedAmount > 0 else oldRow.get("InvestedAmount"),
-                "CurrentAmount": currentAmount if currentAmount > 0 else oldRow.get("CurrentAmount"),
-                "Profit": profitValue
-                # "InvestedAmount": FormatCurrency(investedAmount) if investedAmount > 0 else oldRow.get("InvestedAmount"),
-                # "CurrentAmount": FormatCurrency(currentAmount) if currentAmount > 0 else oldRow.get("CurrentAmount"),
-                # "Profit": FormatCurrency(profitValue)
-            }
-            
-            WriteFinanceData(financeData)
-            
-            return (
-                f"✅ Successfully updated investment Sr No {rowNumber}:\n"
-                f"   Name: {financeData[foundIndex].get('Name')}\n"
-                f"   Invested: {financeData[foundIndex].get('InvestedAmount')}\n"
-                f"   Current: {financeData[foundIndex].get('CurrentAmount')}\n"
-                f"   Profit: {financeData[foundIndex].get('Profit')}"
-            )
-        
-        elif operation.lower() == "delete":
-            input("delete")
-
-            if not rowNumber:
-                return "Error: rowNumber is required for 'delete' operation"
-            
-            input(f"rowNumber: {rowNumber}")
-
-            foundIndex = None
-            
-            for idx, row in enumerate(financeData):
-                if row.get("SrNo") == str(rowNumber):
-                    foundIndex = idx
-                    break
-            
-            if foundIndex is None:
-                return f"Error: No investment found with Sr No {rowNumber}"
-            
-            input(f"foundIndex: {foundIndex}")
-
-            deletedRow = financeData.pop(foundIndex)
-            WriteFinanceData(financeData)
-            
-
-            return (
-                f"✅ Successfully deleted investment:\n"
-                f"   Sr No: {rowNumber}\n"
-                f"   Name: {deletedRow.get('Name')}"
-            )
-        
-        else:
-            return f"Error: Unknown operation '{operation}'. Use 'add', 'update', or 'delete'"
-    
-    except Exception as e:
-        return f"Error writing finance data: {str(e)}"
-
-# StartCsvWriter()
-
-
-# ============================================================================
-# SQL TOOLS
-# ============================================================================
-import os
-from langchain_community.utilities import SQLDatabase
-from langchain_community.agent_toolkits import SQLDatabaseToolkit
-from langchain_openai import ChatOpenAI
-
-def RemoveSpaces(input_string):
-    # Remove spaces from the input string
-    return input_string.replace(" ", "")
-
-openai_key = "sk-proj-zP6XLa1m5gtlBcXJCaHZGmAvXEvUrP 5ATJSPBfLRdEuF-vSroLAG4V0zBdpwPz9PTXe9rM0-CgT3BlbkFJ83 AZyS7Zds5OT4G7S7MJslTok1O8P7ftX6Zz_IvdtMsy_CnjJeBoOv-o-G5t13-1Yw20ei_BwA" # myTestKey08, saptarshibhosale604@gmail.com
-tavily_key = "tvly-kX76LCz C36oih0u9COcf6oa 53A47MX0g"
-
-os.environ["OPENAI_API_KEY"] = RemoveSpaces(openai_key)
-os.environ["TAVILY_API_KEY"] = RemoveSpaces(tavily_key)
-
-
-# db = SQLDatabase.from_uri("sqlite:///Data/Chinook.db")
-db = SQLDatabase.from_uri("sqlite:///Langchain/Tools/ToolsFinanceAssist/Data/Assets.db")
-
-model = ChatOpenAI(model="gpt-3.5-turbo", streaming=True, max_tokens=500, temperature=0, max_retries=1)
-
-toolkit = SQLDatabaseToolkit(db=db, llm=model)
-
-ToolSQL = toolkit.get_tools()
-
-
-# tools = toolkit.get_tools()
-#
-# for tool in tools:
-#     print(f"{tool.name}: {tool.description}\n")
-
-
-# ============================================================================
-# RETURN
-# ============================================================================
-
-toolsAdvance =  []             	# Need for human in loop
-# toolsIntermediate = [ToolSQL]
-toolsIntermediate = ToolSQL
-toolsBasic = []                  # No need for human in loop
-
-tools = toolsAdvance + toolsIntermediate + toolsBasic
 
 def ToolsList():
-    global tools
+    """Return all tools for agent registration"""
     return tools
 
-## TEMP ##
-# # # # # # # # # # # # # # # # # 
-#    _____ _____ __  __ ____     #
-#   |_   _| ____|  \/  |  _ \    #
-#     | | |  _| | |\/| | |_) |   #
-#     | | | |___| |  | |  __/    #
-#     |_| |_____|_|  |_|_|       #
-#                                #
-#                                #
-# # # # # # # # # # # # # # # # # 
 
-# print(f"Dialect: {db.dialect}")
-# print(f"Available tables: {db.get_usable_table_names()}")
-# print(f'Sample output: {db.run("SELECT * FROM Artist LIMIT 5;")}')
+# ============================================================================
+# TABLE MAPPING
+# ============================================================================
 
-# from langchain_openai import ChatOpenAI
-#
-# model = ChatOpenAI(model="gpt-3.5-turbo", streaming=True, max_tokens=500, temperature=0, max_retries=1)
+TABLES = [
+    "mutual_fund",
+    "fixed_deposit", 
+    "physical",
+    "saving",
+    "stock"
+]
+
+TOOLS_PER_TABLE = 7
+TOTAL_TOOLS = len(TABLES) * TOOLS_PER_TABLE  # 35
 
 
-# toolkit = SQLDatabaseToolkit(db=db, llm=model)
-#
-# tools = toolkit.get_tools()
-#
-# for tool in tools:
-#     print(f"{tool.name}: {tool.description}\n")
+# ============================================================================
+# DEMO / VERIFICATION
+# ============================================================================
 
-
-# get add the FD rows, create a single FD row with all the investment and current value combined, drop the old FD rows
+if __name__ == "__main__":
+    print("=" * 60)
+    print("TOOLS FINANCE ASSIST - CDC FRAMEWORK")
+    print("=" * 60)
+    print(f"Tables: {TABLES}")
+    print(f"Tools per table: {TOOLS_PER_TABLE}")
+    print(f"Total tools: {TOTAL_TOOLS}")
+    print()
+    
+    print("All tools:")
+    for i, tool in enumerate(tools, 1):
+        print(f"  {i:2d}. {tool.name}")
+    
+    print()
+    print("Tools by table:")
+    for table in TABLES:
+        table_tools = get_tools_by_table(table)
+        print(f"  {table}: {len(table_tools)} tools")
+        for t in table_tools:
+            print(f"    - {t.name}")
