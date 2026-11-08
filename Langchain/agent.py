@@ -8,11 +8,28 @@ human-in-the-loop (HITL) approval middleware.
 
 import os
 import time
+import json
 from dotenv import load_dotenv
 load_dotenv()
 
 from Log.log_utils import PrintFunctionName
 from Log.turn_logger import add_tool_call, add_tool_message, add_usage
+
+# Provider-agnostic token counting fallback
+try:
+    import tiktoken
+    TIKTOKEN_AVAILABLE = True
+except ImportError:
+    TIKTOKEN_AVAILABLE = False
+
+# Create a proxy-free HTTP client for cloud APIs that may have proxy issues
+def _get_proxy_free_client():
+    """Create an httpx client that ignores environment proxy settings."""
+    try:
+        import httpx
+        return httpx.Client(timeout=60, trust_env=False, proxy=None)
+    except Exception:
+        return None
 
 from pathlib import Path
 from dotenv import load_dotenv
@@ -272,15 +289,17 @@ def UpdateAgent(modeLLM: str) -> None:
 
     elif modeLLM == "globalChatgpt01":
         LLM = ChatOpenAI(
-            model="gpt-5.5", streaming=True, max_tokens=DEFAULT_MAX_TOKENS,  # plan generation
+            model="gpt-5.5", streaming=False, max_tokens=DEFAULT_MAX_TOKENS,  # plan generation
             temperature=DEFAULT_TEMPERATURE, max_retries=DEFAULT_MAX_RETRIES,
+            http_client=_get_proxy_free_client(),
         )
         TOOLS = toolsManager.Main("get")  # "get": fetch tools list
 
     elif modeLLM == "globalChatgpt02":
         LLM = ChatOpenAI(
-            model="gpt-5.4", streaming=True, max_tokens=DEFAULT_MAX_TOKENS,  # plan execution
+            model="gpt-5.4", streaming=False, max_tokens=DEFAULT_MAX_TOKENS,  # plan execution
             temperature=DEFAULT_TEMPERATURE, max_retries=DEFAULT_MAX_RETRIES,
+            http_client=_get_proxy_free_client(),
         )
         TOOLS = toolsManager.Main("get")  # "get": fetch tools list
 
@@ -334,9 +353,10 @@ def UpdateAgent(modeLLM: str) -> None:
         LLM = ChatOpenAI(
             model="openai/gpt-oss-120b", base_url="https://api.groq.com/openai/v1",
             # api_key=os.environ.get("GROQ_API_KEY"), streaming=True,
-            streaming=True,
+            streaming=False,
             max_tokens=DEFAULT_MAX_TOKENS, temperature=DEFAULT_TEMPERATURE,
             max_retries=DEFAULT_MAX_RETRIES,
+            http_client=_get_proxy_free_client(),
         )
         TOOLS = toolsManager.Main("get")  # "get": fetch tools list
 
@@ -344,19 +364,21 @@ def UpdateAgent(modeLLM: str) -> None:
         LLM = ChatOpenAI(
             model="qwen/qwen3.8-27b", base_url="https://api.groq.com/openai/v1",
             # api_key=os.environ.get("GROQ_API_KEY"), streaming=True,
-            streaming=True,
+            streaming=False,
             max_tokens=DEFAULT_MAX_TOKENS, temperature=DEFAULT_TEMPERATURE,
             max_retries=DEFAULT_MAX_RETRIES,
+            http_client=_get_proxy_free_client(),
         )
         TOOLS = toolsManager.Main("get")  # "get": fetch tools list
 
     elif modeLLM == "globalOpenRouter01":
         LLM = ChatOpenAI(
             model="nvidia/nemotron-3-ultra-550b-a55b:free", base_url="https://openrouter.ai/api/v1",
-            streaming=True,
+            streaming=False,
             # api_key=os.environ.get("OPENROUTER_API_KEY"), streaming=True,
             max_tokens=DEFAULT_MAX_TOKENS, temperature=DEFAULT_TEMPERATURE,
             max_retries=DEFAULT_MAX_RETRIES,
+            http_client=_get_proxy_free_client(),
         )
         TOOLS = toolsManager.Main("get")  # "get": fetch tools list
 
@@ -364,19 +386,21 @@ def UpdateAgent(modeLLM: str) -> None:
         LLM = ChatOpenAI(
             model="nvidia/nemotron-3.5-lightning:free", base_url="https://openrouter.ai/api/v1",
             # api_key=os.environ.get("OPENROUTER_API_KEY"), streaming=True,
-            streaming=True,
+            streaming=False,
             max_tokens=DEFAULT_MAX_TOKENS, temperature=DEFAULT_TEMPERATURE,
             max_retries=DEFAULT_MAX_RETRIES,
+            http_client=_get_proxy_free_client(),
         )
         TOOLS = toolsManager.Main("get")  # "get": fetch tools list
 
     elif modeLLM == "globalNvidia01":
         LLM = ChatOpenAI(
             model="nvidia/nemotron-3-ultra-550b-a55b", base_url="https://integrate.api.nvidia.com/v1",
-            api_key=os.environ.get("NVIDIA_API_KEY"), streaming=True,
+            api_key=os.environ.get("NVIDIA_API_KEY"), streaming=False,
             # streaming=True,
             max_tokens=DEFAULT_MAX_TOKENS, temperature=DEFAULT_TEMPERATURE,
             max_retries=DEFAULT_MAX_RETRIES,
+            http_client=_get_proxy_free_client(),
         )
         TOOLS = toolsManager.Main("get")  # "get": fetch tools list
 
@@ -384,9 +408,10 @@ def UpdateAgent(modeLLM: str) -> None:
         LLM = ChatOpenAI(
             model="mistralai/mistral-large-2-instruct", base_url="https://integrate.api.nvidia.com/v1",
             # api_key=os.environ.get("NVIDIA_API_KEY"), streaming=True,
-            streaming=True,
+            streaming=False,
             max_tokens=DEFAULT_MAX_TOKENS, temperature=DEFAULT_TEMPERATURE,
             max_retries=DEFAULT_MAX_RETRIES,
+            http_client=_get_proxy_free_client(),
         )
         TOOLS = toolsManager.Main("get")  # "get": fetch tools list
 
@@ -446,10 +471,9 @@ def SeedThreadHistory(threadId, modeLLM: str, turns: list) -> int:
 def PrintPostProcessingLLMVariables(content) -> None:
     """
     Print final AIMessage metadata in a human-readable format.
-    Intended for use with stream_mode='updates'.
+    Supports: Google Gemini, OpenAI-compatible (NVIDIA, Groq, OpenRouter), Ollama.
     Also records token usage to the turn logger.
     """
-
     try:
         if not isinstance(content, dict):
             return
@@ -464,89 +488,133 @@ def PrintPostProcessingLLMVariables(content) -> None:
 
         message = messages[-1]
 
-        responseMetadata = getattr(message, "response_metadata", {})
-        usageMetadata = getattr(message, "usage_metadata", {})
-        # print(f"responseMetadata: {responseMetadata}")
-        # print(f"usageMetadata: {usageMetadata}")
-
-        # print("\n" + "=" * 80)
-        # print("FINAL LLM RESPONSE")
-        # print("-" * BANNER_WIDTH)
-        print("\nLLM Metrics Extraction:")
-        # print("=" * 80)
-
-        # print(f"Model              : {responseMetadata.get('model_name', 'Unknown')}")
-        # print(f"Provider           : {responseMetadata.get('model_provider', 'Unknown')}")
-        # print(f"Done               : {responseMetadata.get('done', 'Unknown')}")
-        # print(f"Done Reason        : {responseMetadata.get('done_reason', 'Unknown')}")
-
-        print()
-
-        input_tokens = usageMetadata.get('input_tokens')
-        output_tokens = usageMetadata.get('output_tokens')
-        total_tokens = usageMetadata.get('total_tokens')
+        # --- PROVIDER-AGNOSTIC METADATA EXTRACTION ---
+        response_metadata = getattr(message, "response_metadata", {}) or {}
+        usage_metadata = getattr(message, "usage_metadata", {}) or {}
+        usage = getattr(message, "usage", {}) or {}  # OpenAI-compatible
         
+        # Detect provider from response_metadata keys
+        model_provider = response_metadata.get('model_provider', '')
+        is_gemini = model_provider == 'google_genai' or 'eval_duration' in response_metadata or 'prompt_eval_duration' in response_metadata
+        is_openai_compatible = 'token_usage' in response_metadata or 'completion_tokens' in (usage or {}) or model_provider == 'openai'
+        is_ollama = 'eval_duration' in response_metadata and 'prompt_eval_count' in response_metadata
+
+        # --- EXTRACT TOKEN COUNTS ---
+        input_tokens = None
+        output_tokens = None
+        total_tokens = None
+        model_name = response_metadata.get('model_name', '') or response_metadata.get('model', '')
+
+        if is_gemini:
+            # Gemini format
+            input_tokens = usage_metadata.get('input_tokens')
+            output_tokens = usage_metadata.get('output_tokens')
+            total_tokens = usage_metadata.get('total_tokens')
+            
+        elif is_openai_compatible:
+            # OpenAI-compatible format (NVIDIA, Groq, OpenRouter, OpenAI)
+            # Try usage attribute first
+            if usage:
+                input_tokens = usage.get('prompt_tokens')
+                output_tokens = usage.get('completion_tokens')
+                total_tokens = usage.get('total_tokens')
+            # Fallback to response_metadata.token_usage
+            elif 'token_usage' in response_metadata:
+                tu = response_metadata['token_usage']
+                input_tokens = tu.get('prompt_tokens')
+                output_tokens = tu.get('completion_tokens')
+                total_tokens = tu.get('total_tokens')
+                
+        elif is_ollama:
+            # Ollama format
+            input_tokens = response_metadata.get('prompt_eval_count')
+            output_tokens = response_metadata.get('eval_count')
+            total_tokens = (input_tokens or 0) + (output_tokens or 0) if input_tokens and output_tokens else None
+
+        # Fallback: estimate from text if tiktoken available
+        if (input_tokens is None or output_tokens is None) and TIKTOKEN_AVAILABLE and model_name:
+            try:
+                encoding = tiktoken.encoding_for_model(model_name) if 'gpt' in model_name.lower() else tiktoken.get_encoding("cl100k_base")
+                content_text = getattr(message, "content", "") or ""
+                if isinstance(content_text, list):
+                    content_text = "".join([c.get("text", "") if isinstance(c, dict) else str(c) for c in content_text])
+                estimated = len(encoding.encode(content_text))
+                if output_tokens is None:
+                    output_tokens = estimated
+                if total_tokens is None and input_tokens is not None:
+                    total_tokens = input_tokens + estimated
+            except Exception:
+                pass
+
+        # --- EXTRACT TIMING ---
+        eval_duration_ns = 0
+        if is_gemini:
+            eval_duration_ns = response_metadata.get("eval_duration", 0)
+        elif is_openai_compatible:
+            # OpenAI-compatible may not provide ns-precision timing
+            # Try various fields
+            eval_duration_ns = response_metadata.get("completion_time", 0) * 1_000_000_000  # convert seconds to ns
+            if eval_duration_ns == 0:
+                eval_duration_ns = response_metadata.get("total_duration", 0)
+        elif is_ollama:
+            eval_duration_ns = response_metadata.get("eval_duration", 0)
+
+        tokens_per_second = 0.0
+        if eval_duration_ns > 0 and output_tokens:
+            tokens_per_second = output_tokens / (eval_duration_ns / 1_000_000_000)
+
+        total_duration_ns = response_metadata.get('total_duration', 0)
+        if total_duration_ns == 0 and eval_duration_ns > 0:
+            total_duration_ns = eval_duration_ns
+
+        # --- PRINT METRICS ---
+        print("\nLLM Metrics Extraction:")
         print(f"Input Tokens       : {input_tokens if input_tokens is not None else 'n/a'}")
         print(f"Output Tokens      : {output_tokens if output_tokens is not None else 'n/a'}")
         print(f"Total Tokens       : {total_tokens if total_tokens is not None else 'n/a'}")
-                
-        evalDurationNs = responseMetadata.get("eval_duration", 0)
-        outputTokens = usageMetadata.get("output_tokens", 0)
+        print(f"Tokens / Second    : {tokens_per_second:.2f}")
+        print(f"Model              : {model_name if model_name else 'Unknown'}")
+        print(f"Created At         : {response_metadata.get('created_at', 'Unknown')}")
+        
+        if total_duration_ns > 0:
+            print(f"Total Duration     : {total_duration_ns / 1_000_000_000:.2f}s")
+        if eval_duration_ns > 0 and is_gemini:
+            print(f"Generation Time    : {eval_duration_ns / 1_000_000_000:.2f}s")
+            print(f"Prompt Eval Time   : {response_metadata.get('prompt_eval_duration', 0) / 1_000_000_000:.2f}s")
+            print(f"Load Duration      : {response_metadata.get('load_duration', 0) / 1_000_000_000:.2f}s")
 
-        tokensPerSecond = (
-            outputTokens / (evalDurationNs / 1_000_000_000)
-            if evalDurationNs > 0
-            else 0.0
-        )
-
-        print(f"Tokens / Second    : {tokensPerSecond:.2f}")
-        # print()
-
-        print(f"Created At         : {responseMetadata.get('created_at', 'Unknown')}")
-
-        print(
-            f"Load Duration      : "
-            f"{responseMetadata.get('load_duration', 0) / 1_000_000_000:.2f}s"
-        )
-
-        print(
-            f"Prompt Eval Time   : "
-            f"{responseMetadata.get('prompt_eval_duration', 0) / 1_000_000_000:.2f}s"
-        )
-
-        print(
-            f"Generation Time    : "
-            f"{responseMetadata.get('eval_duration', 0) / 1_000_000_000:.2f}s"
-        )
-
-        total_duration_ns = responseMetadata.get('total_duration', 0)
-        print(
-            f"Total Duration     : "
-            f"{total_duration_ns / 1_000_000_000:.2f}s"
-        )
-
-        # Record token usage to turn logger
-        model_name = responseMetadata.get('model_name', '')
+        # --- RECORD TO TURN LOGGER ---
         duration_s = total_duration_ns / 1_000_000_000 if total_duration_ns > 0 else None
         add_usage(input_tokens, output_tokens, total_tokens, duration_s, model_name)
 
-        if getattr(message, "tool_calls", None):
+        # --- TOOL CALLS VISIBILITY (FIX) ---
+        tool_calls = getattr(message, "tool_calls", None)
+        if not tool_calls:
+            # Check additional_kwargs for OpenAI-compatible APIs
+            additional_kwargs = getattr(message, "additional_kwargs", {}) or {}
+            tool_calls = additional_kwargs.get("tool_calls")
+
+        if tool_calls:
             print()
             print("Tool Calls:")
-            for index, toolCall in enumerate(message.tool_calls, start=1):
+            for index, toolCall in enumerate(tool_calls, start=1):
+                # Normalize tool call format
+                if isinstance(toolCall, dict):
+                    name = toolCall.get("name") or toolCall.get("function", {}).get("name", "unknown_tool")
+                    args = toolCall.get("args") or toolCall.get("function", {}).get("arguments", {})
+                    if isinstance(args, str):
+                        try:
+                            args = json.loads(args)
+                        except Exception:
+                            pass
+                    toolCall = {"name": name, "args": args}
                 print(f"  {index}. {toolCall}")
-                # Log tool call to turn logger (covers both auto-run and HITL tools)
                 add_tool_call(toolCall.get("name", "unknown_tool"), toolCall.get("args", {}))
-
-        # print()
-        # print("-" * 80)
-        # print("FINAL RESPONSE")
-        # print("-" * 80)
-        # print(message.content)
-        # print("=" * 80)
 
     except Exception as error:
         print(f"PrintPostProcessingLLMVariables Error: {error}")
+        import traceback
+        traceback.print_exc()
 
 # @PrintFunctionName
 def ExtractStreamContent(streamMode: str, content) -> str:

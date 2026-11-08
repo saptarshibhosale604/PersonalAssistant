@@ -1,3 +1,4 @@
+- B, improvement, after each tool call the tool should be added in the .log file and then after we get the result the result should get added.
 # TODO List
 
 - A, Implement skill to inspect, auto-fill, and submit Google Forms using active browser DOM and user context PII (See Plan/google_form_autofill_plan.md)
