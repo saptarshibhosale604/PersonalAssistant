@@ -114,6 +114,21 @@ BUDDY_SYSTEM_PROMPT = (
     "Your name is RPI. The user name is SSB, who is your best buddy"
 )
 
+# Skill-aware system prompt builder
+def BuildSystemPrompt(base_prompt: str, skill_prompt: str = None) -> str:
+    """Combine base personality with skill workflow guidance."""
+    if skill_prompt:
+        return f"""{base_prompt}
+
+=== ACTIVE SKILL WORKFLOW ===
+{skill_prompt}
+
+=== TOOL USAGE DIRECTIVE ===
+Follow the skill workflow above. Use tools only as directed by the skill.
+The skill defines WHAT to do and HOW to use tools. Do not improvise workflow.
+=== END SKILL WORKFLOW ==="""
+    return base_prompt
+
 # # Tools that require explicit human approval before execution.
 TOOL_INTERRUPT_POLICY = {
     # # toolsTest
@@ -213,8 +228,9 @@ class LlmPayloadDebugHandler(BaseCallbackHandler):
 
 
 @PrintFunctionName
-def BuildAgent():
+def BuildAgent(skill_prompt: str = None):
     """Create a new LangChain agent from the current global LLM/tools + HITL middleware + System Prompt."""
+    system_prompt = BuildSystemPrompt(MILITARY_SYSTEM_PROMPT, skill_prompt)
     middleware = [
         HumanInTheLoopMiddleware(
             interrupt_on=TOOL_INTERRUPT_POLICY,
@@ -224,7 +240,7 @@ def BuildAgent():
     return create_agent(
         model=LLM,
         tools=TOOLS,
-        system_prompt=MILITARY_SYSTEM_PROMPT,
+        system_prompt=system_prompt,
         middleware=middleware,
         checkpointer=CHECKPOINTER
     )
@@ -233,11 +249,11 @@ def BuildAgent():
 # Shared across agent rebuilds so thread memory survives LLM mode changes
 # (and history seeded by /resume is not lost on the first UpdateAgent call).
 CHECKPOINTER = InMemorySaver()
-AGENT = BuildAgent()
+AGENT = BuildAgent()  # Default agent without skill
 
 
 @PrintFunctionName
-def UpdateAgent(modeLLM: str) -> None:
+def UpdateAgent(modeLLM: str, skill_prompt: str = None) -> None:
     """Rebuild the global agent whenever the requested LLM mode changes."""
     global LLM, MODE_CURRENT_LLM, AGENT, TOOLS
 
@@ -440,7 +456,7 @@ def UpdateAgent(modeLLM: str) -> None:
     else:
         logger.warning(f"Unknown mode-llm '{modeLLM}' (names are case-sensitive); keeping previous LLM: {type(LLM).__name__}")
 
-    AGENT = BuildAgent()
+    AGENT = BuildAgent(skill_prompt)
 
 
 @PrintFunctionName
@@ -934,17 +950,18 @@ def PromptAndShowThreadInfo(configMemory: dict) -> None:
 
 
 @PrintFunctionName
-def Main(userInput: str, threadId, modeLLM: str, modeStream: str) -> str:
+def Main(userInput: str, threadId, modeLLM: str, modeStream: str, skill_prompt: str = None) -> str:
     """Route a user input to the appropriate LLM/agent execution strategy.
 
     `modeLLM` selects the backend/personality (e.g. "local", "local-buddy",
     "local-4b", "globalChatgpt01"...). `modeStream` ("true"/"false") only affects the
     "local-4b" mode, choosing between an auto-approving streaming loop and an
     interactive invoke-based approval loop.
+    `skill_prompt` Optional skill workflow prompt to inject into system prompt.
     """
     global REQUESTED_TOOLS_NUMBER_PER_USER_INPUT, REQUESTED_TOOLS_NUMBER_PER_AGENT_INTERRUPT
 
-    UpdateAgent(modeLLM)
+    UpdateAgent(modeLLM, skill_prompt)
 
     # print(f"agent.py Main : userInput {userInput}, threadId: {threadId}, "
     #       f"modeLLM: {modeLLM}, modeStream: {modeStream}")

@@ -15,7 +15,8 @@ defaultConfig = {
     'mode-sandbox': 'false',
     'mode-tools': 'update',
     'mode-reset': 'now',
-    'mode-os': 'windows'
+    'mode-os': 'windows',
+    'mode-skill-detection': 'keyword'
 }
 
 modeConfigInitializationJson = {
@@ -113,6 +114,14 @@ modeConfigInitializationJson = {
             'windows': 'Windows OS - prepend POWERSHELL CMD prefix to first input',
             'linux': 'Linux OS - no prefix added'
         }
+    },
+    'mode-skill-detection': {
+        'current': 'keyword',
+        'allowed': {
+            'keyword': 'Keyword/Pattern matching (fast, no external deps)',
+            'embedding': 'Semantic embedding matching (requires sentence-transformers)',
+            'hybrid': 'Keyword first, embedding fallback (best accuracy)'
+        }
     }
 }
 
@@ -126,7 +135,8 @@ presetDevelopment = {
     'mode-framework': 'langchain',
     'mode-tools': 'get',
     'mode-reset': 'now',
-    'mode-os': 'windows'
+    'mode-os': 'windows',
+    'mode-skill-detection': 'keyword'
 }
 
 # Preset 2: Production Mode
@@ -139,7 +149,8 @@ presetProduction = {
     'mode-framework': 'fabric',
     'mode-tools': 'update',
     'mode-reset': 'now',
-    'mode-os': 'windows'
+    'mode-os': 'windows',
+    'mode-skill-detection': 'hybrid'
 }
 
 # Preset 3: Testing Mode
@@ -152,7 +163,8 @@ presetTesting = {
     'mode-framework': 'langchain',
     'mode-tools': 'get',
     'mode-reset': 'now',
-    'mode-os': 'windows'
+    'mode-os': 'windows',
+    'mode-skill-detection': 'embedding'
 }
 
 PRESETS = {

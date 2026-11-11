@@ -22,9 +22,18 @@ import Langchain.sessionResume as sessionResume
 import Langchain.Tools.toolsManager as toolsManager
 import UI.modesManager as modesManager
 import UserContext.userContext as UserContext
-from Log.custom_logger import logger, log_path
+from Log import custom_logger
 from Log.log_utils import PrintFunctionName
 from Log.turn_logger import begin_turn, end_turn, set_agent_output, add_usage
+
+# ---- Skill System Imports ----
+try:
+    from Langchain.Skills.skillRegistry import get_registry as get_skill_registry
+    from Langchain.Skills.skillDetector import get_detector as get_skill_detector
+    SKILL_SYSTEM_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"Skill system not available: {e}")
+    SKILL_SYSTEM_AVAILABLE = False
 
 # Optional / alternate I/O backends (kept for reference, not currently wired in):
 # import readline
@@ -175,7 +184,7 @@ def BasicCmdsSkill(userInput: str) -> bool:
     Combines: <content in the skillName file> \n <userInput if provided>
     and passes the combined text to Agent (via Processing).
 
-    Returns True if a matching skill file was found and processed, otherwise False.
+    Returns combined input string if a matching skill file was found and processed, otherwise False.
     """
     userInput = userInput.strip()
 
@@ -208,9 +217,9 @@ def BasicCmdsSkill(userInput: str) -> bool:
         with open(skill_path, "r", encoding="utf-8", errors="ignore") as sf:
             skill_content = sf.read().strip()
 
-        # Combine skill content and optional user input
+        # Combine skill content and optional user input using the same format as auto-detection
         if optional_user_input:
-            combined_input = f"{skill_content}\n{optional_user_input}"
+            combined_input = f"{skill_content}\n\n[USER REQUEST]: {optional_user_input}"
         else:
             combined_input = skill_content
 
@@ -222,8 +231,6 @@ def BasicCmdsSkill(userInput: str) -> bool:
         print("-" * 40)
 
         # Pass combined input to Processing (which invokes Agent)
-        # Processing(combined_input)
-        # return True
         return combined_input
     except Exception as e:
         print(f"Error reading skill file '{matched_file}': {e}")
@@ -232,6 +239,7 @@ def BasicCmdsSkill(userInput: str) -> bool:
 
 @PrintFunctionName
 def BasicCmdsSlash(userInput: str) -> bool:
+    global custom_logger
     """
     Handle basic CLI commands.
 
@@ -295,7 +303,14 @@ def BasicCmdsSlash(userInput: str) -> bool:
         print("  /reset                   : Deletes and re-initializes the active mode configuration file.")
         print("  /exit                    : Safely shuts down the Personal Assistant CLI application and flushes logs.")
         print()
-        print(f"Log file: {os.path.abspath(log_path)}")
+        print("  --- Skill Auto-Detection ---")
+        print("  /skill-auto <true|false> : Enable/disable automatic skill detection (default: true)")
+        print("  /skill-threshold <0.0-1.0>: Set confidence threshold for auto-detection (default: 0.65)")
+        print("  /skill-detection <mode>  : Set detection method: keyword|embedding|hybrid")
+        print("  /skill-list              : List all registered skills with metadata")
+        print("  /skill-reload            : Reload skill registry from disk")
+        print()
+        print(f"Log file: {os.path.abspath(custom_logger.log_path)}")
         print()
         GetAllModeValues()
         return True
@@ -481,6 +496,86 @@ def BasicCmdsSlash(userInput: str) -> bool:
         return True
 
     # --------------------------------------------------
+    # Skill Auto-Detection Controls
+    # --------------------------------------------------
+
+    elif command == "/skill-auto":
+        if value in ("true", "false", "on", "off", "1", "0"):
+            normalized = "true" if value in ("true", "on", "1") else "false"
+            UpdateModeValue("mode-skill-auto", normalized)
+            print(f"Auto-skill detection: {normalized}")
+        else:
+            current = GetModeValue("mode-skill-auto")
+            print(f"Usage: /skill-auto <true|false> (current: {current})")
+        return True
+
+    elif command == "/skill-threshold":
+        if value:
+            try:
+                threshold = float(value)
+                if 0.0 <= threshold <= 1.0:
+                    UpdateModeValue("mode-skill-threshold", str(threshold))
+                    print(f"Skill detection threshold set to: {threshold}")
+                else:
+                    print("Threshold must be between 0.0 and 1.0")
+            except ValueError:
+                print("Invalid threshold value. Use a number between 0.0 and 1.0")
+        else:
+            current = GetModeValue("mode-skill-threshold")
+            print(f"Usage: /skill-threshold <0.0-1.0> (current: {current})")
+        return True
+
+    elif command == "/skill-list":
+        if SKILL_SYSTEM_AVAILABLE:
+            try:
+                skill_registry = get_skill_registry()
+                skills = skill_registry.get_all_skills()
+                print("\nRegistered Skills:")
+                print("-" * 60)
+                for skill in skills:
+                    print(f"  {skill.name}")
+                    print(f"    Display: {skill.display_name}")
+                    print(f"    Description: {skill.description[:80]}...")
+                    print(f"    Category: {skill.category} | Priority: {skill.priority}")
+                    print(f"    Keywords: {', '.join(skill.keywords[:8])}")
+                    print(f"    Required Tools: {', '.join(skill.required_tools) if skill.required_tools else 'None'}")
+                    print()
+            except Exception as e:
+                print(f"Error listing skills: {e}")
+        else:
+            print("Skill system not available")
+        return True
+
+    elif command == "/skill-reload":
+        if SKILL_SYSTEM_AVAILABLE:
+            try:
+                from Langchain.Skills.skillRegistry import _global_registry
+                from Langchain.Skills.skillDetector import _global_detector
+                if _global_registry:
+                    _global_registry.reload()
+                if _global_detector:
+                    _global_detector.invalidate_embedding_cache()
+                _global_detector = None  # Force recreation
+                print("Skill registry reloaded.")
+            except Exception as e:
+                print(f"Error reloading skills: {e}")
+        else:
+            print("Skill system not available")
+        return True
+
+    elif command == "/skill-detection":
+        if value in ("keyword", "embedding", "hybrid"):
+            UpdateModeValue("mode-skill-detection", value)
+            print(f"Skill detection mode set to: {value}")
+        else:
+            current = GetModeValue("mode-skill-detection")
+            print(f"Usage: /skill-detection <keyword|embedding|hybrid> (current: {current})")
+            print("  keyword  : Keyword/Pattern matching (fast, no external deps)")
+            print("  embedding: Semantic embedding matching (requires sentence-transformers)")
+            print("  hybrid   : Keyword first, embedding fallback (best accuracy)")
+        return True
+
+    # --------------------------------------------------
     # Skill Manager
     # --------------------------------------------------
 
@@ -550,7 +645,7 @@ def BasicCmdsSlash(userInput: str) -> bool:
 
     elif command == "/exit":
         print("Exiting Personal Assistant CLI...")
-        print(f"Log file: {os.path.abspath(log_path)}")
+        print(f"Log file: {os.path.abspath(custom_logger.log_path)}")
         sys.exit(0)
 
     return False
@@ -742,7 +837,7 @@ def Input() -> str:
             userInput = None
     except KeyboardInterrupt:
         print("\nExiting Personal Assistant CLI...")
-        print(f"Log file: {os.path.abspath(log_path)}")
+        print(f"Log file: {os.path.abspath(custom_logger.log_path)}")
         sys.exit(0)
 
     # Apply OS mode prefix for Windows on first input (only if it's not a slash command)
@@ -809,9 +904,49 @@ def Processing(userInput: str) -> Any:
         userInput = combined_input
         # return None combined_input
 
+    # NEW: Auto-detect skill if no explicit skill matched and skill system is available
+    elif not combined_input and SKILL_SYSTEM_AVAILABLE and GetModeValue("mode-skill-auto") == "true":
+        try:
+            skill_registry = get_skill_registry()
+            skill_detector = get_skill_detector(skill_registry)
+            
+            # Get threshold from config
+            threshold_str = GetModeValue("mode-skill-threshold")
+            try:
+                threshold = float(threshold_str) if threshold_str else 0.65
+            except ValueError:
+                threshold = 0.65
+            
+            # Get detection mode from config
+            detection_mode = GetModeValue("mode-skill-detection")
+            if detection_mode not in ("keyword", "embedding", "hybrid"):
+                detection_mode = "keyword"
+            
+            skill_meta, confidence, method = skill_detector.detect(userInput_str, threshold, detection_mode)
+            if skill_meta:
+                # Validate required tools are available
+                available_tools = toolsManager.Main("get")
+                if skill_registry.validate_tools_available(skill_meta, available_tools):
+                    # INJECT SKILL AS SYSTEM PROMPT PREFIX
+                    skill_prompt = skill_meta.content
+                    userInput = f"{skill_prompt}\n\n[USER REQUEST]: {userInput_str}"
+                    print(f"\n[Auto-Skill Detected: {skill_meta.display_name} (confidence: {confidence:.2f}, method: {method})]")
+                else:
+                    print(f"\n[Auto-Skill Skipped: {skill_meta.display_name} requires unavailable tools]")
+        except Exception as e:
+            logger.warning(f"Auto-skill detection error: {e}")
+
     # PromptInjection(userInput)
     if GetModeValue("mode-conversation") == "wakeUp":
         modeFramework = GetModeValue("mode-framework")
+
+        # Extract skill prompt if present (format: "SKILL_PROMPT\n\n[USER REQUEST]: actual_input")
+        skill_prompt = None
+        actual_user_input = userInput
+        if "\n\n[USER REQUEST]: " in userInput:
+            parts = userInput.split("\n\n[USER REQUEST]: ", 1)
+            skill_prompt = parts[0]
+            actual_user_input = parts[1]
 
         if modeFramework == "langchain":
             if GetModeValue("mode-context") == "no":
@@ -819,11 +954,11 @@ def Processing(userInput: str) -> Any:
 
             # UserContext.Main(userInput)
             # return Agent.Main(userInput, THREAD_ID, GetModeValue("mode-llm"))
-            return Agent.Main(userInput, THREAD_ID, GetModeValue("mode-llm"), GetModeValue("mode-stream"))
+            return Agent.Main(actual_user_input, THREAD_ID, GetModeValue("mode-llm"), GetModeValue("mode-stream"), skill_prompt)
 
         elif modeFramework == "fabric":
             logger.info("modeFramework: fabric")
-            return Fabric.Main(userInput, GetModeValue("mode-llm"))
+            return Fabric.Main(actual_user_input, GetModeValue("mode-llm"))
 
     return None
 
@@ -940,7 +1075,7 @@ if __name__ == "__main__":
             Main()
         except KeyboardInterrupt:
             print("\nExiting Personal Assistant CLI...")
-            print(f"Log file: {os.path.abspath(log_path)}")
+            print(f"Log file: {os.path.abspath(custom_logger.log_path)}")
             sys.exit(0)
         except Exception as e:
             # Show the error and keep the REPL alive (e.g. LLM rate limits, network errors).

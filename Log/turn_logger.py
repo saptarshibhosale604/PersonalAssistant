@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
 
-from Log.custom_logger import logger, log_path
+from Log import custom_logger
 
 # Module-level state for the current turn and session turns list
 _current_turn: Optional['TurnRecord'] = None
@@ -98,12 +98,12 @@ def _flush_session_to_disk() -> None:
     try:
         session_data = {
             "session_meta": {
-                "log_file": os.path.basename(log_path),
+                "log_file": os.path.basename(custom_logger.log_path),
                 "created_at": datetime.now(timezone.utc).isoformat(),
             },
             "turns": _session_turns
         }
-        with open(log_path, "w", encoding="utf-8") as f:
+        with open(custom_logger.log_path, "w", encoding="utf-8") as f:
             json.dump(session_data, f, indent=2, ensure_ascii=False)
     except Exception as e:
         print(f"[TurnLogger] Failed to write session JSON log: {e}")
