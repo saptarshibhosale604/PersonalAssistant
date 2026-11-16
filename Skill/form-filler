@@ -1,1 +1,10 @@
+# Skill: Google Form Filler
+# Display-Name: Google Form Auto-Filler
+# Description: Inspects active Google Form in Chrome, extracts questions and field types, presents fields with recommended answers, takes confirmation, and auto-fills the form
+# Keywords: form, google form, fill, auto-fill, chrome, browser, questionnaire, survey
+# Intent-Patterns: fill form, fill google form, auto fill form, complete form, submit form
+# Category: automation
+# Priority: 80
+# Required-Tools: toolBrowserAutomation, toolPlaywrightToolkit
+
 Inspect the active Google Form in Chrome, extract all questions and field types, present the fields list with recommended tactical answers and options, take confirmation from General SSB, and automatically fill out the Google Form.

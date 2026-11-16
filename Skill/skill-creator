@@ -1,0 +1,189 @@
+# Skill: Skill Creator & Generator
+# Display-Name: Skill Creator
+# Description: Generates new skill files in the standard format based on user requirements, including header metadata and workflow instructions
+# Keywords: create skill, generate skill, new skill, skill template, skill builder, make skill
+# Intent-Patterns: create a skill, generate a skill, make a new skill, build a skill, skill template
+# Category: development
+# Priority: 95
+# Required-Tools: toolReadFile, toolWriteFile, toolExecuteBash
+
+# SKILL: Skill Creator & Generator Protocol
+
+## Objective
+Guide the LLM agent in creating new skill files in the `Skill/` directory following the exact standardized format. The agent must interview the user for requirements, then generate a complete, valid skill file with proper header metadata and workflow instructions.
+
+---
+
+## Operational Workflow
+
+### Step 1: Requirements Gathering (Interactive Interview)
+Ask the user the following questions **one at a time** and wait for each answer:
+
+1. **Skill Name** (kebab-case, e.g., "git-push", "trip-planner"): 
+   - This becomes the filename and internal identifier
+   - Must be lowercase with hyphens only
+
+2. **Display Name** (human-readable, e.g., "Git Push Workflow"):
+
+3. **Description** (one sentence, what this skill does):
+
+4. **Category** (choose from: git, planning, travel, automation, network, productivity, analysis, user-management, development, general):
+
+5. **Priority** (integer, higher = more specific, default 100):
+
+6. **Keywords** (comma-separated trigger words for fallback matching):
+   - Example: "push, commit, stage, git push, version control"
+
+7. **Intent Patterns** (comma-separated natural language patterns):
+   - Example: "push my changes, commit and push, git push with message"
+
+8. **Required Tools** (comma-separated tool names from available tools):
+   - Example: "toolShell, toolPowershell, toolReadFile, toolWriteFile"
+   - Leave empty if no specific tools required
+
+9. **Workflow Steps** (detailed step-by-step instructions):
+   - Ask user to describe the workflow in their own words
+   - You will structure this into numbered steps with clear directives
+
+10. **Error Handling Rules** (optional, specific error scenarios and recovery):
+
+11. **Example User Inputs** (optional, 2-3 example prompts that should trigger this skill):
+
+---
+
+### Step 2: Generate Skill File Content
+Using the gathered information, construct the skill file with this **exact format**:
+
+```markdown
+# Skill: <Skill Name>
+# Display-Name: <Display Name>
+# Description: <Description>
+# Keywords: <Keywords>
+# Intent-Patterns: <Intent Patterns>
+# Category: <Category>
+# Priority: <Priority>
+# Required-Tools: <Required Tools>
+
+<Workflow Instructions>
+
+## WORKFLOW STEPS:
+1. **<Step Name>** - <Description>
+2. **<Step Name>** - <Description>
+...
+
+## TOOL USAGE RULES:
+- Use `<tool>` for <purpose>
+- Execute ONE command per tool call
+- Wait for each result before proceeding
+- Report each step outcome to user
+
+## ERROR HANDLING:
+- If <error condition>: <recovery action>
+- Always show command output to user
+
+## USER INPUT:
+<Guidance on user input handling>
+```
+
+---
+
+### Step 3: Present for Review
+Display the generated skill content to the user with:
+```
+### 📋 Generated Skill: <Display Name>
+**Target File:** `Skill/<skill-name>`
+
+<Full skill content>
+```
+
+Ask: **"Do you approve this skill file for creation, General?"**
+
+---
+
+### Step 4: Create File (Only After Explicit Approval)
+**CRITICAL APPROVAL GATE:** The agent **MUST STOP** and wait for explicit "yes/approved/proceed" confirmation.
+
+If approved:
+1. Write the skill file to `Skill/<skill-name>` (no extension)
+2. Verify file was created successfully
+3. Report success with file path
+
+If rejected:
+1. Ask what changes are needed
+2. Return to Step 1 or 2 as appropriate
+
+---
+
+### Step 5: Validation & Registry Reload
+After successful creation:
+1. Run validation: `python -c "from Langchain.Skills.skillRegistry import get_registry; r = get_registry(); print(f'Loaded {len(r.skills)} skills')" 2>/dev/null || echo "Registry reload needed"`
+2. Inform user the skill is ready for use
+
+---
+
+## Output Format Requirements
+
+### Header Rules:
+- All header lines start with `# `
+- Format: `# Key: Value` (exact spacing)
+- Keys must be: Skill, Display-Name, Description, Keywords, Intent-Patterns, Category, Priority, Required-Tools
+- Keywords and Intent-Patterns: comma-separated, no trailing comma
+- Required-Tools: comma-separated tool names, or empty
+
+### Body Rules:
+- Use `## WORKFLOW STEPS:` as main section header
+- Number steps: `1. **Step Name** - Description`
+- Use `## TOOL USAGE RULES:` for tool directives
+- Use `## ERROR HANDLING:` for error scenarios
+- Use `## USER INPUT:` for input guidance
+- Use tactical/military tone consistent with RPI persona
+
+---
+
+## Example Interaction Flow
+
+**User:** "Create a skill for backing up files to a remote server"
+
+**Agent:** "Understood, General. Let me gather the requirements.
+
+**Q1: Skill Name** (kebab-case): `remote-backup`
+
+**Q2: Display Name**: `Remote File Backup`
+
+**Q3: Description**: `Backs up specified files or directories to a remote server via SSH/rsync`
+
+**Q4: Category** (git/planning/travel/automation/network/productivity/analysis/user-management/development/general): `automation`
+
+**Q5: Priority** (default 100): `90`
+
+**Q6: Keywords**: `backup, rsync, ssh, remote, sync, archive`
+
+**Q7: Intent Patterns**: `backup files, sync to remote, backup to server, remote backup`
+
+**Q8: Required Tools**: `toolShell, toolPowershell`
+
+**Q9: Workflow Steps**: [User describes...]
+
+**Q10: Error Handling**: [User describes...]
+
+**Q11: Example Inputs**: `backup my documents to server`, `sync project folder to remote`
+
+[Agent generates file, presents for approval, creates on confirmation]"
+
+---
+
+## Edge Cases & Validation
+
+- **Invalid skill name**: Reject if not kebab-case (lowercase, hyphens only)
+- **Duplicate skill**: Check if `Skill/<name>` exists, warn user
+- **Missing required tools**: Validate tools exist in toolsManager
+- **Empty required fields**: All header fields mandatory except Required-Tools
+- **Malformed intent patterns**: Ensure comma-separated, non-empty
+
+---
+
+## Success Criteria
+- Skill file created at `Skill/<skill-name>` with correct format
+- Header parses correctly by `skillRegistry.py`
+- Skill appears in `registry.get_all_skills()` after reload
+- Skill detectable by `skillDetector.py` via keywords/patterns

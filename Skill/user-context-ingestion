@@ -1,3 +1,12 @@
+# Skill: User Context Ingestion & Secure Profile Sync
+# Display-Name: User Context Ingestion
+# Description: Ingests raw user session context files, extracts structured user attributes, validates with user, archives session payload, and updates secure user context repository
+# Keywords: context, user, profile, ingest, sync, pii, personal, data, archive
+# Intent-Patterns: ingest user context, sync user profile, update user data, process user context, archive user data
+# Category: user-management
+# Priority: 90
+# Required-Tools: toolReadFile, toolWriteFile, toolExecuteBash
+
 # SKILL REFERENCE: User Context Ingestion & Secure Profile Sync
 
 ## Objective

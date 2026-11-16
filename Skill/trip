@@ -1,3 +1,12 @@
+# Skill: Trip Management & Itinerary Synchronization
+# Display-Name: Trip Itinerary Manager
+# Description: Manages, diffs, backs up, and updates user travel itineraries with mandatory user approval gates
+# Keywords: trip, travel, itinerary, vacation, plan, schedule, backup, sync
+# Intent-Patterns: plan my trip, update itinerary, travel plan, manage trip, backup itinerary
+# Category: travel
+# Priority: 90
+# Required-Tools: toolReadFile, toolWriteFile, toolEditFile, toolExecuteBash
+
 # SKILL: Trip Management & Itinerary Synchronization Protocol
 
 ## Objective

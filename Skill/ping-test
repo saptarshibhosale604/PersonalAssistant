@@ -1,3 +1,12 @@
+# Skill: Network Ping Test
+# Display-Name: Network Ping Test
+# Description: Executes ping commands to test connectivity and latency to specified hosts, returns structured comparison
+# Keywords: ping, network, latency, connectivity, test, diagnose, ping test
+# Intent-Patterns: ping test, test connectivity, check latency, ping google, ping website, network diagnosis
+# Category: network
+# Priority: 80
+# Required-Tools: toolShell, toolPowershell
+
 ## **LLM Request Template for Ping Testing**
 
 ### **System Prompt**
@@ -43,5 +52,3 @@ Please ping google.com and riotgames.com with 4 packets each (use `ping -c 4 <do
 |--------|------------|--------------|----------|--------|----------|----------|----------|
 | google.com | 192.178.173.113 | 4 | 4 | 0% | 92 | 116 | 141 |
 | riotgames.com | 23.212.0.112 | 4 | 4 | 0% | 99 | 123 | 147 |
-
----

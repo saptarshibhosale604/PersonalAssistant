@@ -22,7 +22,7 @@ import Langchain.sessionResume as sessionResume
 import Langchain.Tools.toolsManager as toolsManager
 import UI.modesManager as modesManager
 import UserContext.userContext as UserContext
-from Log import custom_logger
+from Log.custom_logger import logger
 from Log.log_utils import PrintFunctionName
 from Log.turn_logger import begin_turn, end_turn, set_agent_output, add_usage
 
@@ -239,7 +239,7 @@ def BasicCmdsSkill(userInput: str) -> bool:
 
 @PrintFunctionName
 def BasicCmdsSlash(userInput: str) -> bool:
-    global custom_logger
+    global logger
     """
     Handle basic CLI commands.
 
@@ -310,7 +310,7 @@ def BasicCmdsSlash(userInput: str) -> bool:
         print("  /skill-list              : List all registered skills with metadata")
         print("  /skill-reload            : Reload skill registry from disk")
         print()
-        print(f"Log file: {os.path.abspath(custom_logger.log_path)}")
+        print(f"Log file: {os.path.abspath(logger.handlers[0].baseFilename)}")
         print()
         GetAllModeValues()
         return True
@@ -398,8 +398,8 @@ def BasicCmdsSlash(userInput: str) -> bool:
         _os_prefix_added = False  # Reset OS prefix flag for new session
         
         # Create a brand new session JSON file on disk and reset turn memory
-        from Log import custom_logger
-        new_log_path = custom_logger.start_new_session()
+        from Log.custom_logger import start_new_session
+        new_log_path = start_new_session()
         
         FormatMessageTypes("SystemMessage")
         print(f"New session initialized successfully!")
@@ -645,7 +645,7 @@ def BasicCmdsSlash(userInput: str) -> bool:
 
     elif command == "/exit":
         print("Exiting Personal Assistant CLI...")
-        print(f"Log file: {os.path.abspath(custom_logger.log_path)}")
+        print(f"Log file: {os.path.abspath(logger.handlers[0].baseFilename)}")
         sys.exit(0)
 
     return False
@@ -837,7 +837,7 @@ def Input() -> str:
             userInput = None
     except KeyboardInterrupt:
         print("\nExiting Personal Assistant CLI...")
-        print(f"Log file: {os.path.abspath(custom_logger.log_path)}")
+        print(f"Log file: {os.path.abspath(logger.handlers[0].baseFilename)}")
         sys.exit(0)
 
     # Apply OS mode prefix for Windows on first input (only if it's not a slash command)
@@ -1075,7 +1075,7 @@ if __name__ == "__main__":
             Main()
         except KeyboardInterrupt:
             print("\nExiting Personal Assistant CLI...")
-            print(f"Log file: {os.path.abspath(custom_logger.log_path)}")
+            print(f"Log file: {os.path.abspath(logger.handlers[0].baseFilename)}")
             sys.exit(0)
         except Exception as e:
             # Show the error and keep the REPL alive (e.g. LLM rate limits, network errors).

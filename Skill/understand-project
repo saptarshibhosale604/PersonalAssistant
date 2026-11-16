@@ -1,1 +1,10 @@
+# Skill: Project Architecture Analyzer
+# Display-Name: Project Understanding
+# Description: Examines workspace project structure, reads projectInfo.md and README.md, provides comprehensive architectural overview
+# Keywords: project, understand, architecture, overview, structure, analyze, codebase
+# Intent-Patterns: understand project, explain project, project overview, analyze codebase, project structure
+# Category: analysis
+# Priority: 85
+# Required-Tools: toolReadFile, toolExecuteBash
+
 Examine the workspace project structure, read projectInfo.md and README.md, and provide a comprehensive architectural overview of the Personal Assistant project, its technologies, components, and workflows.

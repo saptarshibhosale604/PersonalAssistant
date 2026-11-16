@@ -1,3 +1,12 @@
+# Skill: Implementation Planner
+# Display-Name: Feature Implementation Planner
+# Description: Analyzes requirements, reviews codebase architecture, and creates detailed step-by-step implementation plans
+# Keywords: plan, implement, blueprint, architecture, design, specification, roadmap
+# Intent-Patterns: create a plan, plan this feature, implementation plan, how to implement, design a solution, architecture review
+# Category: planning
+# Priority: 100
+# Required-Tools: toolReadFile, toolWriteFile, toolEditFile, toolExecuteBash, toolSearchDuckDuckGo, toolSearchWikipedia
+
 Review the provided feature requirement or user prompt, analyze existing codebase structure and architecture, and formulate a detailed, step-by-step implementation plan including files to modify, new files to create, and potential edge cases.
 
 STRICTLY FORMULATE A BLUEPRINT ONLY. DO NOT EXECUTE, DO NOT COMMIT, AND DO NOT MODIFY ANY CODEBASE FILES.

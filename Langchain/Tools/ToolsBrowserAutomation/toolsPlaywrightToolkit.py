@@ -15,10 +15,17 @@ import atexit
 import os
 import queue
 import threading
+import time
 from concurrent.futures import Future
 from typing import Any, Callable, List
 
 from langchain.tools import tool
+
+try:
+    import requests
+    REQUESTS_AVAILABLE = True
+except ImportError:
+    REQUESTS_AVAILABLE = False
 
 try:
     from playwright.sync_api import sync_playwright
@@ -33,6 +40,13 @@ CDP_URL = os.environ.get("RPI_BROWSER_CDP_URL", "http://localhost:9222")  # e.g.
 NAV_TIMEOUT_MS = 20000
 ACTION_TIMEOUT_MS = 8000
 TOOL_TIMEOUT_S = 60
+
+# Retry configuration for TargetClosedError
+MAX_RETRIES = 3
+RETRY_DELAY_S = 2
+CHROME_EXECUTABLE = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+CHROME_USER_DATA_DIR = r"E:\PlaywrightChromeProfile"
+CHROME_DEBUG_PORT = 9222
 
 _BLOCK_MARKERS = (
     "/sorry/", "captcha", "unusual traffic", "robot check",
@@ -83,26 +97,134 @@ _browser = None  # only set in CDP mode
 _context = None
 
 
+def _LaunchChromeWithDebugging():
+    """Launch Chrome with remote debugging enabled on port 9222."""
+    import subprocess
+    import time
+    
+    # Kill any existing Chrome processes on the debug port
+    try:
+        subprocess.run(["taskkill", "/F", "/IM", "chrome.exe"], capture_output=True, timeout=5)
+    except Exception:
+        pass
+    
+    time.sleep(1)
+    
+    # Launch Chrome with debugging
+    chrome_args = [
+        CHROME_EXECUTABLE,
+        f"--remote-debugging-port={CHROME_DEBUG_PORT}",
+        f"--user-data-dir={CHROME_USER_DATA_DIR}",
+        "--no-first-run",
+        "--no-default-browser-check"
+    ]
+    
+    try:
+        subprocess.Popen(chrome_args, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+        print(f"[INFO] Launched Chrome with remote debugging on port {CHROME_DEBUG_PORT}")
+    except Exception as e:
+        print(f"[ERROR] Failed to launch Chrome: {e}")
+        return False
+    
+    # Wait for Chrome to be ready
+    for _ in range(15):
+        try:
+            import requests
+            response = requests.get(f"http://localhost:{CHROME_DEBUG_PORT}/json/version", timeout=2)
+            if response.status_code == 200:
+                print(f"[INFO] Chrome debugging port {CHROME_DEBUG_PORT} is ready")
+                return True
+        except Exception:
+            time.sleep(1)
+    
+    print(f"[ERROR] Chrome debugging port {CHROME_DEBUG_PORT} not ready after 15 seconds")
+    return False
+
+
+def _ResetBrowserState():
+    """Reset all browser state variables."""
+    global _pw, _browser, _context
+    try:
+        if _browser is not None:
+            _browser.close()
+    except Exception:
+        pass
+    try:
+        if _context is not None:
+            _context.close()
+    except Exception:
+        pass
+    try:
+        if _pw is not None:
+            _pw.stop()
+    except Exception:
+        pass
+    _pw = _browser = _context = None
+
+
 def _EnsureContext():
     global _pw, _browser, _context
+    
+    # If context exists and is valid, return it
     if _context is not None:
-        return _context
-    if _pw is None:
-        _pw = sync_playwright().start()
-    if CDP_URL:
-        _browser = _pw.chromium.connect_over_cdp(CDP_URL)
-        _context = _browser.contexts[0] if _browser.contexts else _browser.new_context()
-    else:
-        opts = dict(
-            user_data_dir=PROFILE_DIR,
-            headless=HEADLESS,
-            viewport={"width": 1280, "height": 800},
-        )
         try:
-            _context = _pw.chromium.launch_persistent_context(channel="chrome", **opts)  # real Chrome if installed
+            # Quick health check
+            _ = _context.pages
+            return _context
         except Exception:
-            _context = _pw.chromium.launch_persistent_context(**opts)  # bundled Chromium
-    return _context
+            # Context is dead, reset and retry
+            _ResetBrowserState()
+    
+    # Retry loop with Chrome relaunch
+    for attempt in range(MAX_RETRIES):
+        try:
+            if _pw is None:
+                _pw = sync_playwright().start()
+            
+            if CDP_URL:
+                # Try to connect to existing Chrome
+                try:
+                    _browser = _pw.chromium.connect_over_cdp(CDP_URL)
+                    _context = _browser.contexts[0] if _browser.contexts else _browser.new_context()
+                    # Test the connection
+                    _ = _context.pages
+                    return _context
+                except Exception as e:
+                    error_msg = str(e).lower()
+                    if "targetclosed" in error_msg or "connection refused" in error_msg or "connect" in error_msg:
+                        print(f"[WARN] CDP connection failed (attempt {attempt + 1}/{MAX_RETRIES}): {e}")
+                        if attempt < MAX_RETRIES - 1:
+                            print(f"[INFO] Relaunching Chrome with debugging...")
+                            if _LaunchChromeWithDebugging():
+                                time.sleep(RETRY_DELAY_S)
+                                continue
+                    raise
+            else:
+                # Launch persistent context directly
+                opts = dict(
+                    user_data_dir=PROFILE_DIR,
+                    headless=HEADLESS,
+                    viewport={"width": 1280, "height": 800},
+                )
+                try:
+                    _context = _pw.chromium.launch_persistent_context(channel="chrome", **opts)
+                except Exception:
+                    _context = _pw.chromium.launch_persistent_context(**opts)
+                return _context
+                
+        except Exception as e:
+            error_msg = str(e).lower()
+            if "targetclosed" in error_msg and attempt < MAX_RETRIES - 1:
+                print(f"[WARN] TargetClosedError (attempt {attempt + 1}/{MAX_RETRIES}), relaunching Chrome...")
+                _ResetBrowserState()
+                if _LaunchChromeWithDebugging():
+                    time.sleep(RETRY_DELAY_S)
+                    continue
+            if attempt == MAX_RETRIES - 1:
+                raise
+            time.sleep(RETRY_DELAY_S)
+    
+    raise Exception("Failed to establish browser context after all retries")
 
 
 def _GetPage():

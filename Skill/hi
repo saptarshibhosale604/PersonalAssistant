@@ -1,1 +1,10 @@
-'Just say hello'
+# Skill: Greeting
+# Display-Name: Simple Greeting
+# Description: Responds with a friendly greeting
+# Keywords: hello, hi, hey, greetings, howdy
+# Intent-Patterns: say hello, say hi, greet me
+# Category: general
+# Priority: 50
+# Required-Tools: 
+
+Just say hello

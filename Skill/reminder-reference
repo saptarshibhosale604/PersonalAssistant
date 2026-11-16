@@ -1,3 +1,12 @@
+# Skill: Reminder Profile Mapping & Tactical Deployment
+# Display-Name: Reminder Profile Manager
+# Description: Maps user requests to specific reminder profiles (Alpha, Bravo, Charlie, Delta) and creates calendar events with appropriate reminders
+# Keywords: reminder, calendar, event, schedule, meeting, alert, notification, profile
+# Intent-Patterns: set reminder, create reminder, schedule meeting, remind me, calendar event with reminder
+# Category: productivity
+# Priority: 85
+# Required-Tools: create_calendar_event
+
 # SKILL REFERENCE: Reminder Profile Mapping & Tactical Deployment
 
 ## Objective

@@ -1,1 +1,10 @@
+# Skill: Code Implementer
+# Display-Name: Code Implementation Executor
+# Description: Takes a plan or feature specification, identifies necessary code changes across modules, implements the solution with clean code principles, tests functionality, and confirms successful execution
+# Keywords: implement, execute, build, code, develop, write, create, test, deploy
+# Intent-Patterns: implement this, build this, write the code, execute the plan, develop this feature, create the implementation
+# Category: development
+# Priority: 100
+# Required-Tools: toolReadFile, toolWriteFile, toolEditFile, toolExecuteBash, toolSearchDuckDuckGo, toolSearchWikipedia
+
 Take the specified plan or feature specification, identify the necessary code changes across modules, implement the solution with clean code principles, test the functionality, and confirm successful execution.
