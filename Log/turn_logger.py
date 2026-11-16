@@ -94,7 +94,7 @@ def _format_tokens_per_second(output_tokens: Optional[int], duration_s: Optional
 
 
 def _flush_session_to_disk() -> None:
-    """Write the complete session object to the JSON log file."""
+    """Write the complete session object to the JSON log file and a corresponding Markdown file."""
     try:
         session_data = {
             "session_meta": {
@@ -103,10 +103,67 @@ def _flush_session_to_disk() -> None:
             },
             "turns": _session_turns
         }
+        # 1. Write JSON log
         with open(custom_logger.log_path, "w", encoding="utf-8") as f:
             json.dump(session_data, f, indent=2, ensure_ascii=False)
+
+        # 2. Write Markdown log sidecar (.md)
+        md_path = os.path.splitext(custom_logger.log_path)[0] + ".md"
+        md_lines = [
+            f"# Session Log: {os.path.basename(custom_logger.log_path)}",
+            f"",
+            f"- **Created At (UTC):** {session_data['session_meta']['created_at']}",
+            f"- **Total Turns:** {len(_session_turns)}",
+            f"",
+            f"---",
+            f""
+        ]
+
+        for turn in _session_turns:
+            md_lines.append(f"## Turn {turn['turn_id']}")
+            md_lines.append(f"**Timestamp:** `{turn['timestamp']}`  ")
+            md_lines.append(f"**Model:** `{turn['metrics']['model_name']}` | **Duration:** `{turn['metrics']['duration_seconds']}s` | **Tokens:** In `{turn['metrics']['input_tokens']}` / Out `{turn['metrics']['output_tokens']}` (Total: `{turn['metrics']['total_tokens']}`)")
+            md_lines.append(f"")
+            md_lines.append(f"### User Input")
+            md_lines.append(f"```text")
+            md_lines.append(turn['user_input'])
+            md_lines.append(f"```")
+            md_lines.append(f"")
+
+            if turn['tool_calls']:
+                md_lines.append(f"### Tool Calls")
+                for tc in turn['tool_calls']:
+                    md_lines.append(f"- **`{tc['name']}`**")
+                    md_lines.append(f"  - Args: `{json.dumps(tc['args'], ensure_ascii=False)}`")
+                md_lines.append(f"")
+
+            if turn['tool_messages']:
+                md_lines.append(f"### Tool Messages / Results")
+                for tm in turn['tool_messages']:
+                    md_lines.append(f"- **`{tm['name']}`**")
+                    md_lines.append(f"  ```text")
+                    md_lines.append(f"{tm['result']}")
+                    md_lines.append(f"  ```")
+                md_lines.append(f"")
+
+            md_lines.append(f"### Agent Output")
+            md_lines.append(f"```text")
+            md_lines.append(turn['agent_output'])
+            md_lines.append(f"```")
+            md_lines.append(f"")
+
+            if turn['error']:
+                md_lines.append(f"> **Error:** `{turn['error']}`")
+                md_lines.append(f"")
+
+            md_lines.append(f"---")
+            md_lines.append(f"")
+
+        with open(md_path, "w", encoding="utf-8") as f_md:
+            f_md.write("\n".join(md_lines))
+
     except Exception as e:
-        print(f"[TurnLogger] Failed to write session JSON log: {e}")
+        print(f"[TurnLogger] Failed to write session JSON/MD logs: {e}")
 
 
 def begin_turn(count: int, user_input: str) -> TurnRecord:
