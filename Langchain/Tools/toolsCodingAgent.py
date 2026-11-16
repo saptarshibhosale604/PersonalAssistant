@@ -393,22 +393,22 @@ def GetBashOutput(pid: int, wait: bool = False, timeout: int = 30) -> str:
             return f"Error reading output: {str(e)}"
 
 
-@tool("toolAskHumanInput", description="Prompt the human user for input, clarification, confirmation, or additional instructions during execution.")
-def AskHumanInput(prompt_message: str) -> str:
-    """Pauses agent execution and prompts the human user in the terminal/UI for input or decision making."""
-    try:
-        print(f"\n[AGENT REQUESTS INPUT]: {prompt_message}")
-        user_response = input("Human Input Required > ").strip()
-        return f"Human response: {user_response}"
-    except Exception as e:
-        return f"Error obtaining human input: {str(e)}"
+# @tool("toolAskHumanInput", description="Prompt the human user for input, clarification, confirmation, or additional instructions during execution.")
+# def AskHumanInput(prompt_message: str) -> str:
+#     """Pauses agent execution and prompts the human user in the terminal/UI for input or decision making."""
+#     try:
+#         print(f"\n[AGENT REQUESTS INPUT]: {prompt_message}")
+#         user_response = input("Human Input Required > ").strip()
+#         return f"Human response: {user_response}"
+#     except Exception as e:
+#         return f"Error obtaining human input: {str(e)}"
 
 
 # --------------------------------------------------------------------------
 # TOOL COLLECTIONS
 # --------------------------------------------------------------------------
 # Tools requiring human confirmation/sensitive operations / interactive prompt
-toolsAdvance = [ExecuteBash, ExecuteBashAsync, KillBash, GetBashOutput, AskHumanInput]
+toolsAdvance = [ExecuteBash, ExecuteBashAsync, KillBash, GetBashOutput]
 
 # Read-only / safe tools
 toolsIntermediate = [ReadFile, WriteFile, EditFile, ListBash]
