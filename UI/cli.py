@@ -35,10 +35,11 @@ except ImportError as e:
     logger.warning(f"Skill system not available: {e}")
     SKILL_SYSTEM_AVAILABLE = False
 
-# Optional / alternate I/O backends (kept for reference, not currently wired in):
+# Optional / alternate I/O backends
 # import readline
-# import TextToSpeech.textToSpeechOnline02 as TTS
-# import SpeechToText.speechToTextOnline as STT
+import TextToSpeech.textToSpeechOnline02 as TTS_GTTS
+import TextToSpeech.textToSpeechPiper as TTS_PIPER
+import SpeechToText.speechToTextOnline as STT
 # import LLM.llm as LLM
 # import userInputToScriptInvocation as UITSI
 
@@ -905,7 +906,8 @@ def Processing(userInput: str) -> Any:
         # return None combined_input
 
     # NEW: Auto-detect skill if no explicit skill matched and skill system is available
-    elif not combined_input and SKILL_SYSTEM_AVAILABLE and GetModeValue("mode-skill-auto") == "true":
+    # elif not combined_input and SKILL_SYSTEM_AVAILABLE and GetModeValue("mode-skill-auto") == "true":
+    elif False:
         try:
             skill_registry = get_skill_registry()
             skill_detector = get_skill_detector(skill_registry)
@@ -971,10 +973,27 @@ def Output(assistantOutput: Any) -> None:
     # logger.info(f"[Info] assistantOutput: {assistantOutput}")
 
     modeOutput = GetModeValue("mode-output")
+    # Safe get with fallback for mode-tts-engine
+    try:
+        modeTtsEngine = GetModeValue("mode-tts-engine")
+    except KeyError:
+        modeTtsEngine = "piper"  # Default to Piper
+        # Optionally update config
+        try:
+            UpdateModeValue("mode-tts-engine", modeTtsEngine)
+        except:
+            pass
+    
     if modeOutput == "text":
         return
     elif modeOutput == "speech":
-        TTS.Main(assistantOutput)  # Text to speech
+        if modeTtsEngine == "piper":
+            print(f"[TTS] Using Piper TTS engine")
+            TTS_PIPER.Main(assistantOutput)
+        else:
+            # Default to gTTS (online)
+            print(f"[TTS] Using gTTS (Google) engine")
+            TTS_GTTS.Main(assistantOutput)
     else:
         logger.info(f"Error: Invalid modeOutput: {modeOutput}")
 

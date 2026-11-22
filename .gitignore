@@ -90,3 +90,10 @@ token.json
 
 Skill/file
 Plan/
+
+# External GitHub repositories
+Github/
+
+# Testing directories
+Testing/
+TextToSpeech/piper_voices/

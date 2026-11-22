@@ -115,10 +115,12 @@ BUDDY_SYSTEM_PROMPT = (
 )
 
 # Skill-aware system prompt builder
-def BuildSystemPrompt(base_prompt: str, skill_prompt: str = None) -> str:
-    """Combine base personality with skill workflow guidance."""
+def BuildSystemPrompt(base_prompt: str, skill_prompt: str = None, tts_mode: str = "text") -> str:
+    """Combine base personality with skill workflow guidance and TTS optimization."""
+    prompt = base_prompt
+    
     if skill_prompt:
-        return f"""{base_prompt}
+        prompt = f"""{base_prompt}
 
 === ACTIVE SKILL WORKFLOW ===
 {skill_prompt}
@@ -127,7 +129,26 @@ def BuildSystemPrompt(base_prompt: str, skill_prompt: str = None) -> str:
 Follow the skill workflow above. Use tools only as directed by the skill.
 The skill defines WHAT to do and HOW to use tools. Do not improvise workflow.
 === END SKILL WORKFLOW ==="""
-    return base_prompt
+    
+    # Add TTS optimization instructions when speech output is enabled
+    if tts_mode == "speech":
+        prompt += """
+
+=== TTS OUTPUT OPTIMIZATION ===
+Your response will be converted to speech via Text-to-Speech. Optimize for audio:
+- Use natural, conversational language with clear pronunciation cues
+- Avoid markdown formatting (no **bold**, *italic*, `code`, headers, bullet points)
+- Spell out abbreviations: "General" not "Gen.", "Captain" not "Cpt."
+- Use full words: "affirmative" not "affirm", "negative" not "neg"
+- Keep sentences concise and well-paced for speech synthesis
+- Avoid special characters: &, @, #, *, _, ~, |, <, >, [, ], {, }
+- Use commas and periods for natural breathing pauses
+- Numbers: spell out small numbers (one, two, three), use digits for large
+- No emoji or emoticons - they don't synthesize well
+- Acronyms: spell out on first use (TTS = Text to Speech)
+=== END TTS OPTIMIZATION ==="""
+    
+    return prompt
 
 # # Tools that require explicit human approval before execution.
 TOOL_INTERRUPT_POLICY = {
@@ -228,9 +249,9 @@ class LlmPayloadDebugHandler(BaseCallbackHandler):
 
 
 @PrintFunctionName
-def BuildAgent(skill_prompt: str = None):
+def BuildAgent(skill_prompt: str = None, tts_mode: str = "text"):
     """Create a new LangChain agent from the current global LLM/tools + HITL middleware + System Prompt."""
-    system_prompt = BuildSystemPrompt(MILITARY_SYSTEM_PROMPT, skill_prompt)
+    system_prompt = BuildSystemPrompt(MILITARY_SYSTEM_PROMPT, skill_prompt, tts_mode)
     middleware = [
         HumanInTheLoopMiddleware(
             interrupt_on=TOOL_INTERRUPT_POLICY,
@@ -249,7 +270,13 @@ def BuildAgent(skill_prompt: str = None):
 # Shared across agent rebuilds so thread memory survives LLM mode changes
 # (and history seeded by /resume is not lost on the first UpdateAgent call).
 CHECKPOINTER = InMemorySaver()
-AGENT = BuildAgent()  # Default agent without skill
+# Get initial TTS mode
+try:
+    from UI.cli import GetModeValue
+    initial_tts_mode = GetModeValue("mode-output")
+except:
+    initial_tts_mode = "text"
+AGENT = BuildAgent(tts_mode=initial_tts_mode)  # Default agent without skill
 
 
 @PrintFunctionName
@@ -456,7 +483,14 @@ def UpdateAgent(modeLLM: str, skill_prompt: str = None) -> None:
     else:
         logger.warning(f"Unknown mode-llm '{modeLLM}' (names are case-sensitive); keeping previous LLM: {type(LLM).__name__}")
 
-    AGENT = BuildAgent(skill_prompt)
+    # Get TTS mode from config
+    try:
+        from UI.cli import GetModeValue
+        tts_mode = GetModeValue("mode-output")
+    except:
+        tts_mode = "text"
+    
+    AGENT = BuildAgent(skill_prompt, tts_mode)
 
 
 @PrintFunctionName

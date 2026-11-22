@@ -9,8 +9,10 @@ langchain_mistralai
 langsmith
 
 ## TextToSpeech
-# gtts
-# paramiko
+gtts
+paramiko
+piper-tts
+onnxruntime
 
 ## UI/WebApp
 # flask
