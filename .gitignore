@@ -97,3 +97,22 @@ Github/
 # Testing directories
 Testing/
 TextToSpeech/piper_voices/
+
+# Certificates and Keys (Security)
+*.cer
+*.pem
+*.pfx
+*.p12
+*.crt
+*.key
+
+# Cert/Key generation scripts
+convert_final_cert.ps1
+create_final_cert.ps1
+export_final_cert.ps1
+gen_key.ps1
+
+# Runtime logs and temp files
+*.log
+help_output.txt
+temp.txt

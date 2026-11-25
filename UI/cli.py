@@ -317,10 +317,24 @@ def BasicCmdsSlash(userInput: str) -> bool:
         return True
 
     # --------------------------------------------------
+    # Startup Help
+    # --------------------------------------------------
+
+    elif command in ("/help-startup", "/help-start","/help-init"):
+        FormatMessageTypes("SystemMessage")
+        print("Help Startup:")
+        print("Available commands:")
+        print("  /help or /               : Displays the complete list of available project CLI control commands and current logs.")
+        print()
+        print(f"Log file: {os.path.abspath(logger.handlers[0].baseFilename)}")
+        print()
+        return True
+
+    # --------------------------------------------------
     # Update mode values
     # --------------------------------------------------
 
-    if command in ("/input", "/llm", "/stream", "/os"):
+    elif command in ("/input", "/llm", "/stream", "/os"):
         UpdateModeValue(f"mode-{command[1:]}", value)
         return True
 
@@ -382,7 +396,7 @@ def BasicCmdsSlash(userInput: str) -> bool:
     # --------------------------------------------------
 
     elif command == "/tools":
-        tools = toolsManager.Main(value)
+        tools = toolsManager.Main(value, printToolsListLocal=True)
         print("toolsManager: Goodbye!")
         # FormatToolsPrinting(tools)
         return True
@@ -1008,7 +1022,8 @@ def WelcomeUser() -> None:
     # logger.info("Welcome to Personal Assistant CLI")
     print("Welcome to Personal Assistant CLI")
 
-    assistantOutput = Processing("/help")
+    # assistantOutput = Processing("/help")
+    assistantOutput = Processing("/help-startup")
     if assistantOutput is not None:
         Output(assistantOutput)
 

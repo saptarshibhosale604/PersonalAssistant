@@ -33,6 +33,7 @@ TOOLS_MODULES = {
 
     # Domain: PC control
     "toolsWindowsOS": "Langchain.Tools.toolsWindowsOS",
+    "toolsWindowsMCP": "Langchain.Tools.toolsWindowsMCP",
     "toolsGoogleForms": "Langchain.Tools.ToolsBrowserAutomation.toolsGoogleForms",
     "toolsBrowserAutomation": "Langchain.Tools.ToolsBrowserAutomation.toolsBrowserAutomation",
     "toolsPlaywrightToolkit": "Langchain.Tools.ToolsBrowserAutomation.toolsPlaywrightToolkit",
@@ -68,6 +69,7 @@ DEFAULT_CONFIG = {
     "toolsFinanceAssist": True,
     "toolsContextManagerReadOnly": True,
     "toolsWindowsOS": True,
+    "toolsWindowsMCP": False,  # Disabled by default (requires Windows host)
     "toolsGoogleForms": True,
     "toolsBrowserAutomation": True,
     "toolsPlaywrightToolkit": True,
@@ -85,7 +87,7 @@ DEFAULT_CONFIG = {
 
 # Global state for tools configuration
 toolsConfig: Dict[str, bool] = {}
-
+printToolsList = False
 
 @PrintFunctionName
 def LoadToolsConfig() -> None:
@@ -206,6 +208,13 @@ def GetToolsList() -> List[Any]:
     Side Effects:
         Prints status messages for each tool module processed
     """
+    global toolsConfig
+    global printToolsList
+
+    # Ensure config is loaded
+    if not toolsConfig:
+        LoadToolsConfig()
+
     combinedToolsList: List[Any] = []
 
     try:
@@ -221,21 +230,21 @@ def GetToolsList() -> List[Any]:
                     # Call ToolsList() function from the module
                     if hasattr(module, 'ToolsList'):
                         toolsList = module.ToolsList()
-                        print(f"{toolTypeCounter} + Loaded {toolName}: {len(toolsList)} tools")
+                        if(printToolsList): print(f"{toolTypeCounter} + Loaded {toolName}: {len(toolsList)} tools")
                         for toolsCounter, tool in enumerate(toolsList):
-                            print(f"    {toolTypeCounter}.{toolsCounter+1}. {tool.name}: {tool.description}")
+                            if(printToolsList): print(f"    {toolTypeCounter}.{toolsCounter+1}. {tool.name}: {tool.description}")
                         combinedToolsList.extend(toolsList)
                     else:
-                        print(f"{toolTypeCounter} ⚠ Warning: {toolName} has no ToolsList() function")
+                        print(f"{toolTypeCounter} [WARN] Warning: {toolName} has no ToolsList() function")
 
                 except ImportError as importError:
-                    print(f"{toolTypeCounter} ⚠ Warning: Could not import {toolName}: {str(importError)}")
+                    print(f"{toolTypeCounter} [WARN] Warning: Could not import {toolName}: {str(importError)}")
                     print(f"  Module path: {modulePath}")
 
                 except Exception as error:
-                    print(f"{toolTypeCounter} ⚠ Warning: Error loading {toolName}: {str(error)}")
+                    print(f"{toolTypeCounter} [WARN] Warning: Error loading {toolName}: {str(error)}")
             else:
-                print(f"{toolTypeCounter} - Skipped {toolName} (disabled)")
+                if(printToolsList): print(f"{toolTypeCounter} - Skipped {toolName} (disabled)")
 
     except Exception as error:
         print(f"[ERROR] Error retrieving tools list: {str(error)}")
@@ -304,7 +313,7 @@ def ToggleToolManger(toolName: str) -> bool:
     elif choice == "1":
         newStatus = True
     else:
-        print("⚠ Invalid input. No changes made.")
+        print("[WARN] Invalid input. No changes made.")
         return False
 
     toolsConfig[toolName] = newStatus
@@ -318,7 +327,7 @@ def ToggleToolManger(toolName: str) -> bool:
 
 
 @PrintFunctionName
-def Main(inputChoice="none") -> List[Any]:
+def Main(inputChoice="none", printToolsListLocal=False) -> List[Any]:
     """
     Main entry point for the Tools Manager.
 
@@ -337,6 +346,8 @@ def Main(inputChoice="none") -> List[Any]:
         Loads configuration on startup; may update/save configuration;
         prints interactive prompts and status messages.
     """
+    global printToolsList
+    printToolsList = printToolsListLocal
     try:
         # Initialize by loading configuration
         LoadToolsConfig()
@@ -357,7 +368,7 @@ def Main(inputChoice="none") -> List[Any]:
             return GetToolsList()
 
         else:
-            print("⚠ Invalid tools choice option.")
+            print("[WARN] Invalid tools choice option.")
             return []
 
     except KeyboardInterrupt:

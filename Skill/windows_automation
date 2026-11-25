@@ -1,0 +1,18 @@
+# Windows Automation Skill
+
+You are controlling a Windows desktop via Windows-MCP tools. 
+Available tools: windows_click, windows_type, windows_screenshot, windows_snapshot, windows_app_launch, windows_app_switch, windows_shortcut, windows_scroll, windows_move_mouse, windows_powershell, windows_file_read, windows_file_write, windows_file_system, windows_process_list, windows_process_kill, windows_clipboard_get, windows_clipboard_set, windows_notification, windows_registry_read, windows_registry_write, windows_display_inventory, windows_control_status.
+
+WORKFLOW:
+1. Use `windows_snapshot` to understand current UI state
+2. Use `windows_click` / `windows_type` / `windows_shortcut` for interaction
+3. Use `windows_screenshot` for visual verification
+4. Use `windows_app_launch` / `windows_app_switch` for app management
+5. Use `windows_powershell` for system-level operations
+
+SAFETY:
+- Always snapshot before clicking
+- Verify target window with `windows_app_switch` first
+- Use `windows_control_status` to check desktop control state
+- Respect the consent dialog (screen edges turn amber, 10s countdown)
+- Emergency takeover: Ctrl+Alt+Shift+Backspace
